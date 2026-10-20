@@ -27,6 +27,7 @@ local M = {}
 ---@field index fun(): cds.Task                    -- of the index text as one string
 ---@field entries fun(lines: string[]): rfc.Entry[]  -- pure
 ---@field render fun(id: string, lines: string[]): rfc.HelpDoc  -- pure, total
+---@field placeholder nil|fun(lines: string[]): boolean  -- pure: whether a stored text stands in for the document rather than being it
 
 ---@type rfc.Source
 M.rfc = {
@@ -58,13 +59,12 @@ M.rfc = {
 local EIPS = { repo = "ethereum/EIPs", dir = "EIPS", prefix = "eip", site = "https://eips.ethereum.org/all" }
 local ERCS = { repo = "ethereum/ERCs", dir = "ERCS", prefix = "erc", site = "https://ercs.ethereum.org/all" }
 
---- Whether a fetched text is the stub the EIPs repository leaves behind
---- when a proposal moves to the ERCs repository.
----@param text string
+--- Whether a text is the stub the EIPs repository leaves behind when a
+--- proposal moves to the ERCs repository.
+---@param lines string[]
 ---@return boolean
-local function moved(text)
-    local fields = eip.frontmatter(help.clean(text))
-    return fields.status == "Moved"
+local function moved(lines)
+    return eip.frontmatter(lines).status == "Moved"
 end
 
 ---@type rfc.Source
@@ -77,12 +77,15 @@ M.eip = {
     -- the EIPs repository first; a moved stub means the text lives in ERCs
     fetch = function(id)
         return fetch.proposal(EIPS.repo, EIPS.dir, EIPS.prefix, id):bind(function(text)
-            if moved(text) then
+            if moved(help.clean(text)) then
                 return fetch.proposal(ERCS.repo, ERCS.dir, ERCS.prefix, id)
             end
             return Task.of(text)
         end)
     end,
+    -- a stub stored by a fetch that did not yet follow the move is no text to
+    -- render again; the document is fetched
+    placeholder = moved,
     -- both listing pages, one after the other, as one text
     index = function()
         return Task.all({

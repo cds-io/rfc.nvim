@@ -1,5 +1,6 @@
 -- Opening and navigating RFCs as help. Runs inside Neovim (make test-nvim).
 local editor = require("spec.editor")
+local fixtures = require("spec.fixtures")
 local store = require("rfc.store")
 local config = require("rfc.config")
 
@@ -387,7 +388,21 @@ describe("rfc", function()
             assert.are.same({}, case.notices)
             local fresh = vim.fn.readfile(path)
             assert.are.equal("  |eip1559-simple-summary|  Simple Summary", fresh[7])
-            assert.are.equal(" rfc.nvim render 4", fresh[#fresh])
+            assert.are.equal(" rfc.nvim render 5", fresh[#fresh])
+        end)
+
+        it("fetches again when the stored text is a moved stub, whatever render wrote the document", function()
+            local cfg = config.get()
+            vim.fn.writefile(fixtures.read(fixtures.eip20_moved), store.raw_path(cfg, "eip20", "md"))
+            vim.fn.writefile(
+                { "*eip20.txt*  ERC 20", " vim:ft=help:", " rfc.nvim render 1" },
+                store.doc_path(cfg, "eip20")
+            )
+            vim.cmd("Eip 20")
+            assert.is_true(editor.wait_help("eip20"))
+            assert.are.same({ "eip20", "erc20" }, case.fetched)
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^%*eip20%.txt%*  Token Standard"))
+            assert.are.equal("fetching EIP 20", case.notices[1].msg)
         end)
 
         it("shows the new render in a buffer that held the old one", function()

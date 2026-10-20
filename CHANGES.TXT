@@ -1,3 +1,15 @@
+2026-10-20  A stored stub is fetched past
+
+  lua/rfc/sources.lua
+    A source may name a placeholder predicate; the eip source's is the
+    moved stub.
+
+  lua/rfc/init.lua
+    ensure treats a stored text the source calls a placeholder as no
+    text and fetches, so a stub saved by an earlier build gives way to
+    the proposal on the next open. The render version is 5, which sends
+    every cached document through that check once.
+
 2026-10-20  The RFC render as one fold
 
   lua/rfc/help.lua

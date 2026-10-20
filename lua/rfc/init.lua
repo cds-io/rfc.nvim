@@ -72,6 +72,9 @@ function M.ensure(source, id)
         return Task.of(name)
     end
     local raw = store.raw(cfg, name, source.raw_ext)
+    if raw and source.placeholder and source.placeholder(raw) then
+        raw = nil
+    end
     local text = raw and Task.of(raw) or source.fetch(id):map(help.clean)
     return text:map(function(lines)
         return { raw = lines, doc = source.render(id, lines) }
@@ -147,7 +150,8 @@ function M.open(source, id, tag)
         M.jump(tag)
         return
     end
-    if not store.raw(config.get(), source.prefix .. id, source.raw_ext) then
+    local raw = store.raw(config.get(), source.prefix .. id, source.raw_ext)
+    if not raw or (source.placeholder and source.placeholder(raw)) then
         M.notify("fetching " .. source.label .. " " .. id)
     end
     run(M.ensure(source, id), source.label .. " " .. id, function(name, err)
