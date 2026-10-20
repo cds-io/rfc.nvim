@@ -1,6 +1,6 @@
 2026-10-19  RFCs as help documents
 
-  lua/cds/rfc.lua (pure; the house library's RFC reader)
+  cds.rfc (pure; the house library's RFC reader, specced in ../cds)
     contents: the table of contents as sections (number, printed label,
     title, heading line, row line), empty for a text without one; rows
     in the four shapes RFCs use
@@ -46,18 +46,17 @@
     cache_dir and notify.
 
   lua/cds/
-    task, async, proc, http and activity, copied from calplus unchanged
-    (its invariants say the modules are meant to be copied); fenced from
-    stylua in .styluaignore.
+    task, async, proc, http, activity and rfc, vendored from ../cds,
+    the house library's one source, by make vendor; make check refuses a
+    copy that differs. Fenced from stylua in .styluaignore.
 
   plugin/rfc.lua
     :Rfc takes a number, a tag or nothing; a FileType autocmd attaches
     the keys to the help buffers the store owns.
 
   spec/
-    spec/cds/ holds the reader's spec and its fixtures (five RFC texts
-    and an index excerpt from the RFC Editor), copying with the module.
-    58 pure cases over the reader and the render, 15 editor cases over
+    28 pure cases over the render (the reader's 30 run in ../cds),
+    15 editor cases over
     the command, :help, the keys and the index, with the store in a
     temporary directory and the network replaced by fixture text.
     make check runs both tiers, selene and stylua.

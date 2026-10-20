@@ -28,10 +28,10 @@ written fresh around Neovim's help system. It requires Neovim 0.13
 
 ## How it works
 
-The RFC's text is parsed by `cds.rfc` (`lua/cds/rfc.lua`, a module of the
-house library: the table of contents with each heading's line, the
-references and what an entry cites, the mentions a line makes, the RFC
-index) and rendered by a pure, total function (`lua/rfc/help.lua`)
+The RFC's text is parsed by `cds.rfc` (a module of the house library: the
+table of contents with each heading's line, the references and what an
+entry cites, the mentions a line makes, the RFC index) and rendered by a
+pure, total function (`lua/rfc/help.lua`)
 into a help document: a tag on every heading and reference entry, the table
 of contents' numbers turned into links, and every "Section 3.1", "RFC 2616"
 and "[CACHING]" in the body turned into a link to its target. Nothing in
@@ -72,9 +72,12 @@ out, with their seconds; `User RfcActivity` fires when one starts or ends.
 ## Development
 
 `make check` runs the pure specs under busted, the editor specs under
-busted inside Neovim (nlua), selene and stylua. The editor specs point the
-store at a temporary directory and replace the network with fixture text;
-`lua/cds/` is the house library in calplus's style: `rfc.lua` has its home
-here, with its spec and fixtures under `spec/cds/` so the three copy
-together, and the rest is copied from calplus unchanged. The fixtures are
-the RFC Editor's own texts.
+busted inside Neovim (nlua), selene and stylua, after checking that
+`lua/cds/` matches its source. The editor specs point the store at a
+temporary directory and replace the network with fixture text, the RFC
+Editor's own.
+
+`lua/cds/` is vendored from the house library in `../cds`, where the
+cds modules and their specs live: `make vendor` copies the six modules this
+plugin uses, and `make check` refuses a copy that differs. A change to
+`cds.rfc` is made and specced there first.

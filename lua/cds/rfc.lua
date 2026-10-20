@@ -63,15 +63,24 @@ end
 -- The shapes a numbered row takes. Each answers the row's indent, label and the
 -- text after it; `number` reads the section number out of the label.
 local ROWS = {
-  { pattern = "^(%s*)([Aa][Pp][Pp][Ee][Nn][Dd][Ii][Xx]%s+%u[%.:]?)%s+(%S.*)$", number = function(label)
-    return label:match("(%u)[%.:]?$")
-  end },
-  { pattern = "^(%s*)(%d[%d%.]*)%s+(%S.*)$", number = function(label)
-    return (label:gsub("%.$", ""))
-  end },
-  { pattern = "^(%s*)(%u%.[%d%.]*)%s+(%S.*)$", number = function(label)
-    return (label:gsub("%.$", ""))
-  end },
+  {
+    pattern = "^(%s*)([Aa][Pp][Pp][Ee][Nn][Dd][Ii][Xx]%s+%u[%.:]?)%s+(%S.*)$",
+    number = function(label)
+      return label:match("(%u)[%.:]?$")
+    end,
+  },
+  {
+    pattern = "^(%s*)(%d[%d%.]*)%s+(%S.*)$",
+    number = function(label)
+      return (label:gsub("%.$", ""))
+    end,
+  },
+  {
+    pattern = "^(%s*)(%u%.[%d%.]*)%s+(%S.*)$",
+    number = function(label)
+      return (label:gsub("%.$", ""))
+    end,
+  },
 }
 
 ---@param line string
@@ -148,7 +157,12 @@ function M.contents(lines)
   local is_furniture = furniture(lines)
   for i = header + 1, #lines do
     local line = lines[i]
-    if rows[1] and trim(line):match(rows[1].heading) and not has_page(line) and #line:match("^%s*") ~= rows[1].indent then
+    if
+      rows[1]
+      and trim(line):match(rows[1].heading)
+      and not has_page(line)
+      and #line:match("^%s*") ~= rows[1].indent
+    then
       stop = i
       break
     end
@@ -160,7 +174,12 @@ function M.contents(lines)
       row.heading = heading_prefix(row)
       table.insert(rows, row)
       last_row_at = i
-    elseif not is_furniture(line) and last_row_at == i - 1 and line:match("%S") and #line:match("^%s*") > rows[#rows].indent then
+    elseif
+      not is_furniture(line)
+      and last_row_at == i - 1
+      and line:match("%S")
+      and #line:match("^%s*") > rows[#rows].indent
+    then
       local last = rows[#rows]
       last.title = last.title .. " " .. row_title(trim(line))
       last.heading = heading_prefix(last)
