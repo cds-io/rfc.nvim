@@ -133,16 +133,16 @@ local function has_page(line)
 end
 
 --- The table of contents, each row with the line its heading sits on in the
---- body; nil when the text has no table of contents. The ToC ends where the
+--- body; empty when the text has no table of contents. The ToC ends where the
 --- first section begins: the first line that reads as the first row's heading
 --- and is not a row itself (no page number, a different indent). A row whose
 --- heading never appears is left out.
 ---@param lines string[]
----@return cds.rfc.Section[]|nil
+---@return cds.rfc.Section[]
 function M.contents(lines)
   local header = header_line(lines)
   if not header then
-    return nil
+    return {}
   end
   local rows, top_indent, stop, last_row_at = {}, nil, nil, nil
   local is_furniture = furniture(lines)

@@ -2,7 +2,8 @@
 
   lua/cds/rfc.lua (pure; the house library's RFC reader)
     contents: the table of contents as sections (number, printed label,
-    title, heading line, row line), rows in the four shapes RFCs use
+    title, heading line, row line), empty for a text without one; rows
+    in the four shapes RFCs use
     (numbered, Appendix A., B.1., unnumbered at the top-level indent),
     wrapped titles joined, running headers and footers inside the ToC
     skipped, and the ToC ending where its first section begins.

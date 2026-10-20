@@ -161,7 +161,7 @@ end
 ---@param lines string[]
 ---@return rfc.HelpDoc
 function M.render(rfc_num, lines)
-    local sections = rfc.contents(lines) or {}
+    local sections = rfc.contents(lines)
     local file_tag = "rfc" .. rfc_num
     local heading_tag, row_link, known = {}, {}, {}
     for _, s in ipairs(sections) do
