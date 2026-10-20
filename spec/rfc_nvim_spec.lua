@@ -387,7 +387,7 @@ describe("rfc", function()
             assert.are.same({}, case.notices)
             local fresh = vim.fn.readfile(path)
             assert.are.equal("  |eip1559-simple-summary|  Simple Summary", fresh[7])
-            assert.are.equal(" rfc.nvim render 2", fresh[#fresh])
+            assert.are.equal(" rfc.nvim render 3", fresh[#fresh])
         end)
 
         it("retires the documents of the old erc source when it registers", function()

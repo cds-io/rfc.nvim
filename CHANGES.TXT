@@ -1,8 +1,12 @@
 2026-10-20  A versioned render
 
   lua/rfc/help.lua
-    RENDER numbers the render and FOOTER writes it as every document's
-    last line, after the modeline; render_of reads it back.
+    RENDER numbers the render (3) and FOOTER writes it as every
+    document's last line, after the modeline; render_of reads it back.
+
+  lua/rfc/help_eip.lua
+    A heading's title goes through plain as well, so its emphasis is its
+    text in the heading, the contents and the tag.
 
   lua/rfc/store.lua
     has is true only for a document the current render wrote; raw reads

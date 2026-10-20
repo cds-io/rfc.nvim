@@ -101,10 +101,12 @@ function M.render(id, lines)
     end
     put("")
 
+    -- a heading's title through plain too: "The *Compiler Information* Object"
+    -- would read as a tag mark in help
     local headings = {}
     for _, h in ipairs(eip.headings(lines)) do
         if h.line >= body then
-            table.insert(headings, h)
+            table.insert(headings, { level = h.level, title = eip.plain(h.title), line = h.line })
         end
     end
     local tag_at, used = {}, {}
