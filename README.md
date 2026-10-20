@@ -21,12 +21,17 @@ highlighted in bold.
 
 This is a personal plugin on the functional-core-with-editor-rims pattern
 the plugins in this directory share, developed with help from a coding
-agent. It requires Neovim 0.13 (`vim.async`) and `curl`.
+agent. The idea of reading RFCs inside Neovim, and the ToC and reference
+following that make it worthwhile, come from must.nvim; the code here is
+written fresh around Neovim's help system. It requires Neovim 0.13
+(`vim.async`) and `curl`.
 
 ## How it works
 
-The RFC's text is parsed by a pure core (`lua/rfc/toc.lua`, `refs.lua`,
-`index.lua`) and rendered by a pure, total function (`lua/rfc/help.lua`)
+The RFC's text is parsed by `cds.rfc` (`lua/cds/rfc.lua`, a module of the
+house library: the table of contents with each heading's line, the
+references and what an entry cites, the mentions a line makes, the RFC
+index) and rendered by a pure, total function (`lua/rfc/help.lua`)
 into a help document: a tag on every heading and reference entry, the table
 of contents' numbers turned into links, and every "Section 3.1", "RFC 2616"
 and "[CACHING]" in the body turned into a link to its target. Nothing in
@@ -69,4 +74,5 @@ out, with their seconds; `User RfcActivity` fires when one starts or ends.
 `make check` runs the pure specs under busted, the editor specs under
 busted inside Neovim (nlua), selene and stylua. The editor specs point the
 store at a temporary directory and replace the network with fixture text;
-`lua/cds/` is copied from calplus unchanged.
+`lua/cds/` is the house library in calplus's style: `rfc.lua` has its home
+here, and the rest is copied from calplus unchanged.

@@ -3,8 +3,7 @@
 -- `:help rfc9110-3.1`, follow |links| with CTRL-] and come back with CTRL-T.
 -- Nothing here touches the editor; the store writes the document and the
 -- tags file, and `:help` does the rest.
-local toc = require("rfc.toc")
-local refs = require("rfc.refs")
+local rfc = require("cds.rfc")
 
 local M = {}
 
@@ -31,18 +30,14 @@ local function slug(s)
     return out
 end
 
---- The tag for a section: `rfc9110-3.1` for "3.1.", `rfc9110-A` for
---- "Appendix A.", and the slugged title for a row with no number (Index).
+--- The tag for a section: `rfc9110-3.1` for "3.1", `rfc9110-A` for appendix
+--- A, and the slugged title for a part with no number (Index).
 ---@param rfc_num string
----@param section string
+---@param number string
 ---@param title string
 ---@return string
-function M.tag(rfc_num, section, title)
-    local key = section:gsub("^Appendix%s*", ""):gsub("%.$", "")
-    if key == "" then
-        key = slug(title)
-    end
-    return "rfc" .. rfc_num .. "-" .. key
+function M.tag(rfc_num, number, title)
+    return "rfc" .. rfc_num .. "-" .. (number ~= "" and number or slug(title))
 end
 
 --- The tag for an entry in the references: `rfc9110-ref-CACHING` for
@@ -124,78 +119,41 @@ end
 ---@field ref_tags table<string, string> -- citation (with brackets) -> its ref tag
 ---@field cite_rfc fun(citation: string): string|nil
 
---- "Section 3.1" to |rfc9110-3.1|, "Section 14.4 of [RFC2616]" (or "of
---- RFC 2616") to |rfc2616-14.4|, and "Section 4.2 of [CACHING]" through the
---- references to |rfc9111-4.2|. A same-document section links only when the
---- heading was found, since a link to nothing is a dead end.
+--- The tag a mention links to, or nil when it has none: a same-document
+--- section links only when its heading was found, since a link to nothing
+--- is a dead end; a citation only when the references list it.
+---@param m cds.rfc.Mention
+---@param ctx rfc.help.Context
+---@return string|nil
+local function tag_for(m, ctx)
+    if m.kind == "rfc" then
+        return "rfc" .. m.rfc
+    elseif m.kind == "citation" then
+        return ctx.ref_tags[m.citation]
+    end
+    local target = m.rfc or (m.citation and ctx.cite_rfc(m.citation))
+    if target then
+        return "rfc" .. target .. "-" .. m.number
+    end
+    local own = "rfc" .. ctx.rfc_num .. "-" .. m.number
+    return ctx.known[own] and own or nil
+end
+
+--- Every mention on the line replaced by its link, last to first so the
+--- earlier spans stay where they were found.
 ---@param line string
 ---@param ctx rfc.help.Context
 ---@return string
-local function link_sections(line, ctx)
-    local out, pos = {}, 1
-    while true do
-        local first, last, section = line:find("[Ss]ection%s+(%d[%d%.]*)", pos)
-        if not first then
-            break
-        end
-        local number = section:gsub("%.$", "")
-        local rest = line:sub(last + 1)
-        local target = rest:match("^%s+of%s+%[?RFC%s*(%d+)%]?")
-        if not target then
-            local citation = rest:match("^%s+of%s+(%[[%w/%.%-]+%])")
-            if citation then
-                target = ctx.cite_rfc(citation)
-            end
-        end
-        local tag
-        if target then
-            tag = "rfc" .. target .. "-" .. number
-        elseif ctx.known["rfc" .. ctx.rfc_num .. "-" .. number] then
-            tag = "rfc" .. ctx.rfc_num .. "-" .. number
-        end
-        table.insert(out, line:sub(pos, first - 1))
-        local text = line:sub(first, last)
+local function link(line, ctx)
+    local mentions = rfc.mentions(line)
+    for i = #mentions, 1, -1 do
+        local m = mentions[i]
+        local tag = tag_for(m, ctx)
         if tag then
-            text = text:gsub(number:gsub("%.", "%%."), "|" .. tag .. "|", 1)
+            line = line:sub(1, m.first - 1) .. "|" .. tag .. "|" .. line:sub(m.last + 1)
         end
-        table.insert(out, text)
-        pos = last + 1
     end
-    table.insert(out, line:sub(pos))
-    return table.concat(out)
-end
-
---- [RFC2616] and "RFC 2616" to |rfc2616|; [CACHING] to its reference tag
---- when the references list it.
----@param line string
----@param ctx rfc.help.Context
----@return string
-local function link_mentions(line, ctx)
-    line = line:gsub("%[RFC(%d+)%]", "|rfc%1|")
-    line = line:gsub("(%f[%w])RFC%s*(%d+)", "%1|rfc%2|")
-    line = line:gsub("%[[%w/%.%-]+%]", function(citation)
-        local tag = ctx.ref_tags[citation]
-        return tag and ("|" .. tag .. "|") or citation
-    end)
     return line
-end
-
---- Every entry of the references section: the citation key and its line.
----@param lines string[]
----@param from integer|nil
----@return table<string, integer>
-local function reference_entries(lines, from)
-    local entries = {}
-    if not from then
-        return entries
-    end
-    for i = from, #lines do
-        local citation = lines[i]:match("^%s*(%[[%w/%.%-]+%])")
-        if citation and not entries[citation] then
-            entries[citation] = i
-        end
-    end
-    return entries
 end
 
 --- The document for an RFC's text.
@@ -203,18 +161,18 @@ end
 ---@param lines string[]
 ---@return rfc.HelpDoc
 function M.render(rfc_num, lines)
-    local entries = toc.get_entries(lines) or {}
+    local sections = rfc.contents(lines) or {}
     local file_tag = "rfc" .. rfc_num
     local heading_tag, row_link, known = {}, {}, {}
-    for _, e in ipairs(entries) do
-        local tag = M.tag(rfc_num, e.section, e.title)
-        heading_tag[e.line] = tag
-        row_link[e.toc_line] = { needle = e.section ~= "" and e.section or e.title, tag = tag }
+    for _, s in ipairs(sections) do
+        local tag = M.tag(rfc_num, s.number, s.title)
+        heading_tag[s.line] = tag
+        row_link[s.toc_line] = { needle = s.label ~= "" and s.label or s.title, tag = tag }
         known[tag] = true
     end
-    local ref_line = refs.reference_line(entries)
+    local references = rfc.references(lines, sections)
     local ref_tag_at, ref_tags = {}, {}
-    for citation, i in pairs(reference_entries(lines, ref_line)) do
+    for citation, i in pairs(references.entries) do
         if not citation:match("^%[RFC%d+%]$") then
             local tag = M.ref_tag(rfc_num, citation)
             ref_tag_at[i] = tag
@@ -226,7 +184,8 @@ function M.render(rfc_num, lines)
         known = known,
         ref_tags = ref_tags,
         cite_rfc = function(citation)
-            return refs.citation_rfc(lines, entries, citation)
+            local entry = references.entries[citation]
+            return entry and rfc.cited_rfc(lines, entry)
         end,
     }
 
@@ -244,7 +203,7 @@ function M.render(rfc_num, lines)
             table.insert(tags, { name = ref_tag_at[i], line = i + 1 })
         elseif not line:match("^RFC%s*%d+") then
             -- a page header names the RFC on every page; everything else may link
-            line = link_mentions(link_sections(line, ctx), ctx)
+            line = link(line, ctx)
         end
         table.insert(out, line)
     end

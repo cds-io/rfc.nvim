@@ -1,3 +1,4 @@
-# lua/cds/ is copied from calplus unchanged (its invariants say the modules
-# are meant to be copied), so it keeps that plugin's two-space style.
+# lua/cds/ is the house library in calplus's two-space style: rfc.lua has its
+# home here and the rest is copied from calplus unchanged, so the directory
+# keeps that style and stays byte-comparable.
 lua/cds/

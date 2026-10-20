@@ -2,10 +2,6 @@ MIT License
 
 Copyright (c) 2026 cds-amal
 
-The parsers in lua/rfc/toc.lua, lua/rfc/refs.lua and lua/rfc/index.lua and
-the RFC texts under spec/fixtures/ derive from must.nvim, which is
-Copyright (c) 2026 undont and licensed under the same terms.
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights

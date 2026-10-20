@@ -4,7 +4,7 @@ local config = require("rfc.config")
 local store = require("rfc.store")
 local fetch = require("rfc.fetch")
 local help = require("rfc.help")
-local index = require("rfc.index")
+local rfc = require("cds.rfc")
 local Task = require("cds.task")
 
 local M = {}
@@ -197,21 +197,24 @@ function M.pick()
             M.notify(err, vim.log.levels.ERROR)
             return
         end
-        vim.ui.select(index.parse(lines), {
+        vim.ui.select(rfc.index(lines), {
             kind = "rfc",
             prompt = "search/select an RFC",
             format_item = function(item)
-                return item.rfc_num .. " " .. item.rfc_label
+                return item.number .. " " .. item.label
             end,
         }, function(item)
             if not item then
                 return
             end
-            if item.is_pdf then
-                M.notify("RFC " .. item.rfc_num .. " is only published as PDF", vim.log.levels.WARN)
+            if not vim.tbl_contains(item.formats, "TXT") then
+                M.notify(
+                    ("RFC %s has no text version (%s)"):format(item.number, table.concat(item.formats, ", ")),
+                    vim.log.levels.WARN
+                )
                 return
             end
-            M.open(item.rfc_num)
+            M.open(item.number)
         end)
     end)
 end

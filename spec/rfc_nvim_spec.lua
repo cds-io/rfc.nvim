@@ -166,17 +166,17 @@ describe("rfc", function()
             assert.are.same({ "index" }, case.fetched)
         end)
 
-        it("declines an RFC the index marks as PDF", function()
+        it("declines an RFC the index lists without a text version", function()
             vim.ui.select = function(items, _, on_choice)
                 local chosen = vim.deepcopy(items[1])
-                chosen.is_pdf = true
+                chosen.formats = { "PDF" }
                 on_choice(chosen)
             end
             vim.cmd("Rfc")
             vim.wait(500, function()
                 return #case.notices == 1
             end)
-            assert.are.equal("RFC 31 is only published as PDF", case.notices[1].msg)
+            assert.are.equal("RFC 31 has no text version (PDF)", case.notices[1].msg)
             assert.are.equal(vim.log.levels.WARN, case.notices[1].level)
             assert.are.same({ "index" }, case.fetched)
         end)

@@ -1,9 +1,16 @@
 2026-10-19  RFCs as help documents
 
-  lua/rfc/toc.lua, refs.lua, index.lua (pure)
-    The RFC's table of contents as entries with their heading lines, the
-    references a line makes (RFC mentions, sections, citations), and the
-    RFC index as entries with their obsoletes and format.
+  lua/cds/rfc.lua (pure; the house library's RFC reader)
+    contents: the table of contents as sections (number, printed label,
+    title, heading line, row line), rows in the four shapes RFCs use
+    (numbered, Appendix A., B.1., unnumbered at the top-level indent),
+    wrapped titles joined, running headers and footers inside the ToC
+    skipped, and the ToC ending where its first section begins.
+    references and cited_rfc: the References section's entries and the
+    RFC an entry cites. mentions: every "[RFC2616]", "RFC 2616",
+    "Section 3.1 [of RFC n | of [CIT]]" and "[CIT]" on a line with the
+    byte span a link replaces. index: the RFC Editor's index as entries
+    with label, obsoletes, obsoleted_by and formats.
 
   lua/rfc/help.lua (pure)
     render(rfc_num, lines) is total: it answers a help document for any
@@ -47,7 +54,7 @@
     the keys to the help buffers the store owns.
 
   spec/
-    59 pure cases over the parsers and the render, 15 editor cases over
+    58 pure cases over the reader and the render, 15 editor cases over
     the command, :help, the keys and the index, with the store in a
     temporary directory and the network replaced by fixture text.
     make check runs both tiers, selene and stylua.

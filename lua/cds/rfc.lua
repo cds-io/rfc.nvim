@@ -1,0 +1,354 @@
+-- RFC text, read: the table of contents with each section's heading line,
+-- the references and the RFC an entry cites, the references a line makes,
+-- and the RFC Editor's index. Plain lines in, plain tables out; nothing
+-- here names the editor, so it runs under plain busted and copies into any
+-- plugin that reads RFCs.
+local M = {}
+
+---@class cds.rfc.Section
+---@field number string     -- "3.1"; "A" for an appendix; "" for an unnumbered part (Index)
+---@field label string      -- the number as the ToC row prints it: "3.1.", "Appendix A.", ""
+---@field title string
+---@field line integer      -- the heading's line in the text
+---@field toc_line integer  -- the row's line in the table of contents
+
+---@class cds.rfc.Mention
+---@field kind "rfc"|"section"|"citation"
+---@field first integer     -- byte range of the text a link would replace
+---@field last integer
+---@field rfc string|nil    -- rfc: the number; section: the RFC the "of" names, when it names one
+---@field number string|nil -- section: "3.1", without a trailing dot
+---@field citation string|nil -- citation: "[CACHING]"; section: the citation the "of" names
+
+---@class cds.rfc.IndexEntry
+---@field number string
+---@field label string        -- title, authors and date, as the index prints them
+---@field obsoletes string|nil
+---@field obsoleted_by string|nil
+---@field formats string[]    -- "TXT", "HTML", "PDF", ...
+
+---@param s string
+---@return string
+local function trim(s)
+  return (s:match("^%s*(.-)%s*$"))
+end
+
+---@param s string
+---@return string
+local function escape(s)
+  return (s:gsub("%p", "%%%0"))
+end
+
+-- The ToC header: "Contents" or "Table of Contents", in any case, alone on its line.
+---@param lines string[]
+---@return integer|nil
+local function header_line(lines)
+  for i, line in ipairs(lines) do
+    local t = trim(line):lower()
+    if t == "contents" or t == "table of contents" then
+      return i
+    end
+  end
+end
+
+-- A row's text after its label: the title, without dot leaders and a page number.
+-- A page number is taken only after leaders or a gap, so a title that ends in a
+-- number ("Changes from RFC 2818") keeps it.
+---@param rest string
+---@return string
+local function row_title(rest)
+  return rest:match("^(.-)%s*%.[%.%s]*%d+$") or rest:match("^(.-)%s%s+%d+$") or rest:match("^(.-)[%.%s]*$")
+end
+
+-- The shapes a numbered row takes. Each answers the row's indent, label and the
+-- text after it; `number` reads the section number out of the label.
+local ROWS = {
+  { pattern = "^(%s*)([Aa][Pp][Pp][Ee][Nn][Dd][Ii][Xx]%s+%u[%.:]?)%s+(%S.*)$", number = function(label)
+    return label:match("(%u)[%.:]?$")
+  end },
+  { pattern = "^(%s*)(%d[%d%.]*)%s+(%S.*)$", number = function(label)
+    return (label:gsub("%.$", ""))
+  end },
+  { pattern = "^(%s*)(%u%.[%d%.]*)%s+(%S.*)$", number = function(label)
+    return (label:gsub("%.$", ""))
+  end },
+}
+
+---@param line string
+---@param top_indent integer|nil   -- the indent of the ToC's top-level rows, once known
+---@return { indent: integer, number: string, label: string, title: string }|nil
+local function parse_row(line, top_indent)
+  for _, row in ipairs(ROWS) do
+    local indent, label, rest = line:match(row.pattern)
+    if indent then
+      return { indent = #indent, number = row.number(label), label = label, title = row_title(rest) }
+    end
+  end
+  -- An unnumbered part (Acknowledgements, Index) sits at the top-level indent and
+  -- starts with a capital; anything deeper is a wrapped title's second line.
+  if top_indent then
+    local indent, rest = line:match("^(%s*)(%u.*)$")
+    if indent and #indent == top_indent then
+      return { indent = #indent, number = "", label = "", title = row_title(rest) }
+    end
+  end
+end
+
+-- The pattern a heading line must start with, after trimming: the number with or
+-- without its dot ("1.1  Purpose" and "1.1.  Purpose" both occur), then
+-- separators; an unnumbered part is its title.
+---@param section cds.rfc.Section
+---@return string
+local function heading_prefix(section)
+  if section.number == "" then
+    return "^" .. escape(section.title)
+  end
+  local key = section.label:lower():match("^appendix") and ("[Aa][Pp][Pp][Ee][Nn][Dd][Ii][Xx]%s+" .. section.number)
+    or escape(section.number)
+  return "^" .. key .. "[%.:]?[%s%.:]+" .. escape(section.title)
+end
+
+-- Page furniture lands inside a table of contents when it crosses a page: a
+-- "[Page n]" footer, and the running header, which is the same text on every
+-- page. The headers are found by that repetition: any non-blank line that
+-- occurs three times or more in the text.
+---@param lines string[]
+---@return fun(line: string): boolean
+local function furniture(lines)
+  local seen = {}
+  for _, line in ipairs(lines) do
+    if line:match("%S") then
+      seen[line] = (seen[line] or 0) + 1
+    end
+  end
+  return function(line)
+    return (seen[line] or 0) >= 3 or line:match("%[Page%s+%w+%]%s*$") ~= nil
+  end
+end
+
+---@param line string
+---@return boolean
+local function has_page(line)
+  return line:match("%s%d+$") ~= nil or line:match("%.%d+$") ~= nil
+end
+
+--- The table of contents, each row with the line its heading sits on in the
+--- body; nil when the text has no table of contents. The ToC ends where the
+--- first section begins: the first line that reads as the first row's heading
+--- and is not a row itself (no page number, a different indent). A row whose
+--- heading never appears is left out.
+---@param lines string[]
+---@return cds.rfc.Section[]|nil
+function M.contents(lines)
+  local header = header_line(lines)
+  if not header then
+    return nil
+  end
+  local rows, top_indent, stop, last_row_at = {}, nil, nil, nil
+  local is_furniture = furniture(lines)
+  for i = header + 1, #lines do
+    local line = lines[i]
+    if rows[1] and trim(line):match(rows[1].heading) and not has_page(line) and #line:match("^%s*") ~= rows[1].indent then
+      stop = i
+      break
+    end
+    -- a page break inside the ToC is neither a row nor a wrapped title
+    local row = not is_furniture(line) and parse_row(line, top_indent) or nil
+    if row then
+      top_indent = top_indent and math.min(top_indent, row.indent) or row.indent
+      row.toc_line = i
+      row.heading = heading_prefix(row)
+      table.insert(rows, row)
+      last_row_at = i
+    elseif not is_furniture(line) and last_row_at == i - 1 and line:match("%S") and #line:match("^%s*") > rows[#rows].indent then
+      local last = rows[#rows]
+      last.title = last.title .. " " .. row_title(trim(line))
+      last.heading = heading_prefix(last)
+      last_row_at = i
+    end
+  end
+  -- Headings come in ToC order, so each search starts where the last one
+  -- ended; a row whose heading is missing costs one pass to the end.
+  local sections, from = {}, stop
+  for _, row in ipairs(rows) do
+    for i = from or (row.toc_line + 1), #lines do
+      if trim(lines[i]):match(row.heading) then
+        table.insert(sections, {
+          number = row.number,
+          label = row.label,
+          title = row.title,
+          line = i,
+          toc_line = row.toc_line,
+        })
+        from = i + 1
+        break
+      end
+    end
+  end
+  return sections
+end
+
+local CITATION = "%[[%w/%.%-]+%]"
+
+--- The references section: its heading line and every entry's citation key
+--- with the line it starts on. `line` is nil when no section is titled
+--- References, and the entries are then empty.
+---@param lines string[]
+---@param sections cds.rfc.Section[]
+---@return { line: integer|nil, entries: table<string, integer> }
+function M.references(lines, sections)
+  local from
+  for _, s in ipairs(sections) do
+    if s.title == "References" then
+      from = s.line
+      break
+    end
+  end
+  local entries = {}
+  if from then
+    for i = from, #lines do
+      local citation = lines[i]:match("^%s*(" .. CITATION .. ")")
+      if citation and not entries[citation] then
+        entries[citation] = i
+      end
+    end
+  end
+  return { line = from, entries = entries }
+end
+
+--- The RFC a reference entry cites: the first "RFC nnnn" in the entry's
+--- block, which runs to the next blank line.
+---@param lines string[]
+---@param entry_line integer
+---@return string|nil
+function M.cited_rfc(lines, entry_line)
+  for i = entry_line, #lines do
+    if not lines[i]:match("%S") then
+      return nil
+    end
+    local number = lines[i]:match("RFC%s*(%d+)")
+    if number then
+      return number
+    end
+  end
+end
+
+--- Every reference a line makes, in order of position: "[RFC2616]" and
+--- "RFC 2616" as rfc mentions, "Section 3.1" as a section (with the RFC or
+--- citation an "of" names), and "[CACHING]" as a citation.
+---@param line string
+---@return cds.rfc.Mention[]
+function M.mentions(line)
+  local found = {}
+  local function add(m)
+    table.insert(found, m)
+  end
+  local pos = 1
+  while true do
+    local first, last, number = line:find("%[RFC(%d+)%]", pos)
+    if not first then
+      break
+    end
+    add({ kind = "rfc", first = first, last = last, rfc = number })
+    pos = last + 1
+  end
+  local function inside_bracket(first)
+    for _, m in ipairs(found) do
+      if m.kind == "rfc" and first > m.first and first <= m.last then
+        return true
+      end
+    end
+    return false
+  end
+  pos = 1
+  while true do
+    local first, last, number = line:find("RFC%s*(%d+)", pos)
+    if not first then
+      break
+    end
+    if not inside_bracket(first) and not line:sub(first - 1, first - 1):match("%w") then
+      add({ kind = "rfc", first = first, last = last, rfc = number })
+    end
+    pos = last + 1
+  end
+  pos = 1
+  while true do
+    local first, last, citation = line:find("(" .. CITATION .. ")", pos)
+    if not first then
+      break
+    end
+    if not citation:match("^%[RFC%d+%]$") then
+      add({ kind = "citation", first = first, last = last, citation = citation })
+    end
+    pos = last + 1
+  end
+  pos = 1
+  while true do
+    local first, _, number_first, number, number_last = line:find("[Ss]ection%s+()(%d[%d%.]*)()", pos)
+    if not first then
+      break
+    end
+    local last = number_last - 1
+    if number:match("%.$") then
+      number, last = number:sub(1, -2), last - 1
+    end
+    local rest = line:sub(last + 1)
+    local m = { kind = "section", first = number_first, last = last, number = number }
+    m.rfc = rest:match("^%.?%s+of%s+%[?RFC%s*(%d+)%]?")
+    if not m.rfc then
+      m.citation = rest:match("^%.?%s+of%s+(" .. CITATION .. ")")
+    end
+    add(m)
+    pos = last + 1
+  end
+  table.sort(found, function(a, b)
+    return a.first < b.first
+  end)
+  return found
+end
+
+--- The RFC Editor's index (rfc-index.txt) as entries. A block is a number
+--- at column 0 and the indented lines that follow it; "Not Issued" numbers
+--- are left out.
+---@param lines string[]
+---@return cds.rfc.IndexEntry[]
+function M.index(lines)
+  local entries = {}
+  local block
+  local function close()
+    if not block then
+      return
+    end
+    local number, text = block.number, block.text
+    block = nil
+    if text:match("^Not Issued") then
+      return
+    end
+    local formats = {}
+    for format in (text:match("%(Format:%s*(.-)%)") or ""):gmatch("[^,%s]+") do
+      table.insert(formats, format)
+    end
+    table.insert(entries, {
+      number = number,
+      label = text:match("^(.-%u%l+ %d%d%d%d%.)") or (text:match("^(.-)%s*%(") or text),
+      obsoletes = text:match("%(Obsoletes%s+(.-)%)"),
+      obsoleted_by = text:match("%(Obsoleted by%s+(.-)%)"),
+      formats = formats,
+    })
+  end
+  for _, line in ipairs(lines) do
+    local number, text = line:match("^(%d+)%s+(%S.*)$")
+    if number then
+      close()
+      block = { number = number, text = trim(text) }
+    elseif block and line:match("^%s+%S") then
+      block.text = block.text .. " " .. trim(line)
+    elseif block then
+      close()
+    end
+  end
+  close()
+  return entries
+end
+
+return M
