@@ -121,40 +121,26 @@ end
 
 --- Every EIP or ERC a line mentions, in order of position: a markdown link
 --- whose text names one ("[EIP-2718](./eip-2718.md)", the whole link) and a
---- bare "EIP-155" or "ERC-20". The kind is the one the text uses.
+--- bare "EIP-155" or "ERC-20". The kind is the one the text uses. The links
+--- are blanked out of the line the bare scan reads, so a link's text is
+--- found once.
 ---@param line string
 ---@return cds.eip.Mention[]
 function M.mentions(line)
   local found = {}
-  local pos = 1
-  while true do
-    local first, last, kind, id = line:find("%[(E[IR][PC])%-(%d+)%]%(%./[%w%-/%.]+%)", pos)
-    if not first then
-      break
-    end
-    table.insert(found, { kind = kind:lower(), first = first, last = last, id = id })
-    pos = last + 1
+  local LINK = "%[(E[IR][PC])%-(%d+)%]%(%./[%w%-/%.]+%)"
+  for first, kind, id, after in line:gmatch("()" .. LINK .. "()") do
+    table.insert(found, { kind = kind:lower(), first = first, last = after - 1, id = id })
   end
-  local function inside_link(i)
-    for _, m in ipairs(found) do
-      if i >= m.first and i <= m.last then
-        return true
-      end
+  local bare = line:gsub(LINK, function(m)
+    return (" "):rep(#m)
+  end)
+  for first, kind, id, after in bare:gmatch("()(E[IR][PC])%-(%d+)()") do
+    local before = bare:sub(first - 1, first - 1)
+    local following = bare:sub(after, after)
+    if not before:match("[%w%-]") and not following:match("%w") then
+      table.insert(found, { kind = kind:lower(), first = first, last = after - 1, id = id })
     end
-    return false
-  end
-  pos = 1
-  while true do
-    local first, last, kind, id = line:find("(E[IR][PC])%-(%d+)", pos)
-    if not first then
-      break
-    end
-    local before = line:sub(first - 1, first - 1)
-    local after = line:sub(last + 1, last + 1)
-    if not inside_link(first) and not before:match("[%w%-]") and not after:match("%w") then
-      table.insert(found, { kind = kind:lower(), first = first, last = last, id = id })
-    end
-    pos = last + 1
   end
   table.sort(found, function(a, b)
     return a.first < b.first

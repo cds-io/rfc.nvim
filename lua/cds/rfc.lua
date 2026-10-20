@@ -39,6 +39,21 @@ local function escape(s)
   return (s:gsub("%p", "%%%0"))
 end
 
+--- The first non-nil `f(item)`, in order: a search that transforms as it
+--- goes, so the parsers below read as "the first rule that fits".
+---@generic T, R
+---@param items T[]
+---@param f fun(item: T): R|nil
+---@return R|nil
+local function find_map(items, f)
+  for _, item in ipairs(items) do
+    local result = f(item)
+    if result ~= nil then
+      return result
+    end
+  end
+end
+
 -- The ToC header: "Contents" or "Table of Contents", in any case, alone on its line.
 ---@param lines string[]
 ---@return integer|nil
@@ -83,24 +98,40 @@ local ROWS = {
   },
 }
 
+--- A numbered row, by the first shape that fits.
+---@param line string
+---@return { indent: integer, number: string, label: string, title: string }|nil
+local function parse_numbered_row(line)
+  return find_map(ROWS, function(row)
+    local indent, label, rest = line:match(row.pattern)
+    if not indent then
+      return nil
+    end
+    return { indent = #indent, number = row.number(label), label = label, title = row_title(rest) }
+  end)
+end
+
+--- An unnumbered part (Acknowledgements, Index): at the top-level indent,
+--- starting with a capital. Anything deeper is a wrapped title's second line.
 ---@param line string
 ---@param top_indent integer|nil   -- the indent of the ToC's top-level rows, once known
 ---@return { indent: integer, number: string, label: string, title: string }|nil
+local function parse_unnumbered_row(line, top_indent)
+  if not top_indent then
+    return nil
+  end
+  local indent, rest = line:match("^(%s*)(%u.*)$")
+  if not indent or #indent ~= top_indent then
+    return nil
+  end
+  return { indent = #indent, number = "", label = "", title = row_title(rest) }
+end
+
+---@param line string
+---@param top_indent integer|nil
+---@return { indent: integer, number: string, label: string, title: string }|nil
 local function parse_row(line, top_indent)
-  for _, row in ipairs(ROWS) do
-    local indent, label, rest = line:match(row.pattern)
-    if indent then
-      return { indent = #indent, number = row.number(label), label = label, title = row_title(rest) }
-    end
-  end
-  -- An unnumbered part (Acknowledgements, Index) sits at the top-level indent and
-  -- starts with a capital; anything deeper is a wrapped title's second line.
-  if top_indent then
-    local indent, rest = line:match("^(%s*)(%u.*)$")
-    if indent and #indent == top_indent then
-      return { indent = #indent, number = "", label = "", title = row_title(rest) }
-    end
-  end
+  return parse_numbered_row(line) or parse_unnumbered_row(line, top_indent)
 end
 
 -- The pattern a heading line must start with, after trimming: the number with or
@@ -216,13 +247,9 @@ local CITATION = "%[[%w/%.%-]+%]"
 ---@param sections cds.rfc.Section[]
 ---@return { line: integer|nil, entries: table<string, integer> }
 function M.references(lines, sections)
-  local from
-  for _, s in ipairs(sections) do
-    if s.title == "References" then
-      from = s.line
-      break
-    end
-  end
+  local from = find_map(sections, function(s)
+    return s.title == "References" and s.line or nil
+  end)
   local entries = {}
   if from then
     for i = from, #lines do
@@ -254,7 +281,10 @@ end
 
 --- Every reference a line makes, in order of position: "[RFC2616]" and
 --- "RFC 2616" as rfc mentions, "Section 3.1" as a section (with the RFC or
---- citation an "of" names), and "[CACHING]" as a citation.
+--- citation an "of" names), and "[CACHING]" as a citation. Each scan is a
+--- gmatch with position captures; the bracketed mentions are blanked out
+--- of the line the bare scan reads, so "RFC2616" inside "[RFC2616]" is
+--- found once.
 ---@param line string
 ---@return cds.rfc.Mention[]
 function M.mentions(line)
@@ -262,63 +292,34 @@ function M.mentions(line)
   local function add(m)
     table.insert(found, m)
   end
-  local pos = 1
-  while true do
-    local first, last, number = line:find("%[RFC(%d+)%]", pos)
-    if not first then
-      break
-    end
-    add({ kind = "rfc", first = first, last = last, rfc = number })
-    pos = last + 1
+  for first, number, after in line:gmatch("()%[RFC(%d+)%]()") do
+    add({ kind = "rfc", first = first, last = after - 1, rfc = number })
   end
-  local function inside_bracket(first)
-    for _, m in ipairs(found) do
-      if m.kind == "rfc" and first > m.first and first <= m.last then
-        return true
-      end
+  local bare = line:gsub("%[RFC%d+%]", function(m)
+    return (" "):rep(#m)
+  end)
+  for first, number, after in bare:gmatch("()RFC%s*(%d+)()") do
+    if not bare:sub(first - 1, first - 1):match("%w") then
+      add({ kind = "rfc", first = first, last = after - 1, rfc = number })
     end
-    return false
   end
-  pos = 1
-  while true do
-    local first, last, number = line:find("RFC%s*(%d+)", pos)
-    if not first then
-      break
-    end
-    if not inside_bracket(first) and not line:sub(first - 1, first - 1):match("%w") then
-      add({ kind = "rfc", first = first, last = last, rfc = number })
-    end
-    pos = last + 1
-  end
-  pos = 1
-  while true do
-    local first, last, citation = line:find("(" .. CITATION .. ")", pos)
-    if not first then
-      break
-    end
+  for first, citation, after in line:gmatch("()(" .. CITATION .. ")()") do
     if not citation:match("^%[RFC%d+%]$") then
-      add({ kind = "citation", first = first, last = last, citation = citation })
+      add({ kind = "citation", first = first, last = after - 1, citation = citation })
     end
-    pos = last + 1
   end
-  pos = 1
-  while true do
-    local first, _, number_first, number, number_last = line:find("[Ss]ection%s+()(%d[%d%.]*)()", pos)
-    if not first then
-      break
-    end
-    local last = number_last - 1
+  for first, number, after in line:gmatch("[Ss]ection%s+()(%d[%d%.]*)()") do
+    local last = after - 1
     if number:match("%.$") then
       number, last = number:sub(1, -2), last - 1
     end
     local rest = line:sub(last + 1)
-    local m = { kind = "section", first = number_first, last = last, number = number }
+    local m = { kind = "section", first = first, last = last, number = number }
     m.rfc = rest:match("^%.?%s+of%s+%[?RFC%s*(%d+)%]?")
     if not m.rfc then
       m.citation = rest:match("^%.?%s+of%s+(" .. CITATION .. ")")
     end
     add(m)
-    pos = last + 1
   end
   table.sort(found, function(a, b)
     return a.first < b.first
