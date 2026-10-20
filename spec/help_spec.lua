@@ -77,8 +77,8 @@ describe("render", function()
             assert.are.equal(#lines + 4, #doc.lines)
             assert.are.equal("", doc.lines[#doc.lines - 2])
             assert.are.equal(" vim:tw=78:ts=8:ft=help:norl:", doc.lines[#doc.lines - 1])
-            assert.are.equal(" rfc.nvim render 3", doc.lines[#doc.lines])
-            assert.are.equal(3, help.render_of(doc.lines))
+            assert.are.equal(" rfc.nvim render 4", doc.lines[#doc.lines])
+            assert.are.equal(4, help.render_of(doc.lines))
         end)
         it("tags each heading at column 78", function()
             assert.are.equal("1.1.  Purpose", doc.lines[383]:match("^(.-)%s+%*rfc9110%-1%.1%*$"))
@@ -106,6 +106,10 @@ describe("render", function()
                 doc.lines[5648]
             )
         end)
+        it("links an RFC named on a ToC row or a heading, beside the row link or the tag", function()
+            assert.are.equal("     |rfc9110-B.1|  Changes from |rfc2818|", doc.lines[368])
+            assert.are.equal("B.1.  Changes from |rfc2818|", doc.lines[9981]:match("^(.-)%s+%*rfc9110%-B%.1%*$"))
+        end)
         it("links a named citation to its entry in the references, and tags the entry", function()
             assert.are.equal('   |rfc9110-ref-CACHING|, and "HTTP/1.1" |rfc9110-ref-HTTP-1.1|.', doc.lines[674])
             assert.are.equal(
@@ -130,6 +134,12 @@ describe("render", function()
     end)
 
     describe("of other formats", function()
+        it("links the RFC a reference entry names on its own line, beside the entry's tag", function()
+            local doc = help.render("2616", fixtures.read(fixtures.rfc2616))
+            local line = doc.lines[8841]
+            assert.is_truthy(line:match('^   %[11%] Fielding, R%., "Relative Uniform Resource Locators", |rfc1808|,'))
+            assert.is_truthy(line:match("%*rfc2616%-ref%-11%*$"))
+        end)
         it("links the dot-leader rows and tags the headings of RFC 2616", function()
             local doc = help.render("2616", fixtures.read(fixtures.rfc2616))
             assert.is_truthy(doc.lines[70]:find("   |rfc2616-1.4|   Overall Operation", 1, true))
@@ -162,7 +172,7 @@ describe("render", function()
                 "*rfc1.txt*  RFC 1" .. string.rep(" ", 78 - #"*rfc1.txt*  RFC 1" - #"*rfc1*") .. "*rfc1*",
                 "",
                 " vim:tw=78:ts=8:ft=help:norl:",
-                " rfc.nvim render 3",
+                " rfc.nvim render 4",
             }, doc.lines)
             assert.are.equal(2, #doc.tags)
         end)
@@ -176,7 +186,7 @@ end)
 
 describe("render_of", function()
     it("reads the version from the last line, 0 when there is none", function()
-        assert.are.equal(3, help.render_of({ "x", " rfc.nvim render 3" }))
+        assert.are.equal(4, help.render_of({ "x", " rfc.nvim render 4" }))
         assert.are.equal(7, help.render_of({ " rfc.nvim render 7" }))
         assert.are.equal(0, help.render_of({ "x", " vim:ft=help:" }))
         assert.are.equal(0, help.render_of({}))

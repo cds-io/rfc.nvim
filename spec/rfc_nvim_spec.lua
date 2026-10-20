@@ -387,7 +387,7 @@ describe("rfc", function()
             assert.are.same({}, case.notices)
             local fresh = vim.fn.readfile(path)
             assert.are.equal("  |eip1559-simple-summary|  Simple Summary", fresh[7])
-            assert.are.equal(" rfc.nvim render 3", fresh[#fresh])
+            assert.are.equal(" rfc.nvim render 4", fresh[#fresh])
         end)
 
         it("shows the new render in a buffer that held the old one", function()

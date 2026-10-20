@@ -1,3 +1,11 @@
+2026-10-20  Every line of an RFC links what it names
+
+  lua/rfc/help.lua
+    render links every line's mentions first and decorates it after:
+    the tag on a heading or a reference entry, the row link on a ToC
+    row. A reference entry links the RFCs it names and never the
+    citation it defines. The render version is 4.
+
 2026-10-20  The proposal render as one fold
 
   lua/rfc/help_eip.lua

@@ -23,7 +23,7 @@ local MODELINE = " vim:tw=78:ts=8:ft=help:norl:"
 -- The render's version, written as the document's last line. A cached
 -- document whose line names an older version is rendered again from the
 -- stored text, so a better render reaches what is already on disk.
-M.RENDER = 3
+M.RENDER = 4
 M.FOOTER = " rfc.nvim render " .. M.RENDER
 
 --- The render version a document's last line names, 0 when it names none.
@@ -140,34 +140,37 @@ end
 
 --- The tag a mention links to, or nil when it has none: a same-document
 --- section links only when its heading was found, since a link to nothing
---- is a dead end; a citation only when the references list it.
+--- is a dead end; a citation only when the references list it, and never
+--- the one a reference entry is defining on that line.
 ---@param m cds.rfc.Mention
 ---@param ctx rfc.help.Context
+---@param own? string   -- the citation the line defines, if it is a reference entry
 ---@return string|nil
-local function tag_for(m, ctx)
+local function tag_for(m, ctx, own)
     if m.kind == "rfc" then
         return "rfc" .. m.rfc
     elseif m.kind == "citation" then
-        return ctx.ref_tags[m.citation]
+        return m.citation ~= own and ctx.ref_tags[m.citation] or nil
     end
     local target = m.rfc or (m.citation and ctx.cite_rfc(m.citation))
     if target then
         return "rfc" .. target .. "-" .. m.number
     end
-    local own = "rfc" .. ctx.rfc_num .. "-" .. m.number
-    return ctx.known[own] and own or nil
+    local here = "rfc" .. ctx.rfc_num .. "-" .. m.number
+    return ctx.known[here] and here or nil
 end
 
 --- Every mention on the line replaced by its link, last to first so the
 --- earlier spans stay where they were found.
 ---@param line string
 ---@param ctx rfc.help.Context
+---@param own? string
 ---@return string
-local function link(line, ctx)
+local function link(line, ctx, own)
     local mentions = rfc.mentions(line)
     for i = #mentions, 1, -1 do
         local m = mentions[i]
-        local tag = tag_for(m, ctx)
+        local tag = tag_for(m, ctx, own)
         if tag then
             line = line:sub(1, m.first - 1) .. "|" .. tag .. "|" .. line:sub(m.last + 1)
         end
@@ -190,8 +193,9 @@ function M.render(rfc_num, lines)
         known[tag] = true
     end
     local references = rfc.references(lines, sections)
-    local ref_tag_at, ref_tags = {}, {}
+    local ref_tag_at, ref_tags, citation_at = {}, {}, {}
     for citation, i in pairs(references.entries) do
+        citation_at[i] = citation
         if not citation:match("^%[RFC%d+%]$") then
             local tag = M.ref_tag(rfc_num, citation)
             ref_tag_at[i] = tag
@@ -211,7 +215,13 @@ function M.render(rfc_num, lines)
     local title = M.title(lines) or ("RFC " .. rfc_num)
     local out = { with_tag("*" .. file_tag .. ".txt*  " .. title, file_tag) }
     local tags = { { name = file_tag, line = 1 }, { name = file_tag .. ".txt", line = 1 } }
+    -- every line links what it mentions, then gets its decoration: the tag
+    -- on a heading or a reference entry, the link on a ToC row. A page header
+    -- names the RFC on every page and is the one line left as it is.
     for i, line in ipairs(lines) do
+        if not line:match("^RFC%s*%d+") then
+            line = link(line, ctx, citation_at[i])
+        end
         if heading_tag[i] then
             line = with_tag(line, heading_tag[i])
             table.insert(tags, { name = heading_tag[i], line = i + 1 })
@@ -220,9 +230,6 @@ function M.render(rfc_num, lines)
         elseif ref_tag_at[i] then
             line = with_tag(line, ref_tag_at[i])
             table.insert(tags, { name = ref_tag_at[i], line = i + 1 })
-        elseif not line:match("^RFC%s*%d+") then
-            -- a page header names the RFC on every page; everything else may link
-            line = link(line, ctx)
         end
         table.insert(out, line)
     end
