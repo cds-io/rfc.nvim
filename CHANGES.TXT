@@ -1,3 +1,13 @@
+2026-10-20  The proposal render as one fold
+
+  lua/rfc/help_eip.lua
+    render folds over cds.eip.blocks, the body as headings, fences,
+    tables and lines whose text is already plain, with one renderer per
+    kind; the tags and the contents come from the heading blocks.
+
+  lua/cds/eip.lua
+    Vendored from ../cds: blocks, and pipe-table cells plain.
+
 2026-10-20  A versioned render
 
   lua/rfc/help.lua

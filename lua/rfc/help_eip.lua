@@ -101,75 +101,58 @@ function M.render(id, lines)
     end
     put("")
 
-    -- a heading's title through plain too: "The *Compiler Information* Object"
-    -- would read as a tag mark in help
-    local headings = {}
-    for _, h in ipairs(eip.headings(lines)) do
-        if h.line >= body then
-            table.insert(headings, { level = h.level, title = eip.plain(h.title), line = h.line })
+    -- the body as blocks whose text is already plain; the render is one fold
+    -- over them, a renderer per kind, so nothing below can skip that pass
+    local blocks = eip.blocks(lines, body)
+    local tag_of, used = {}, {}
+    for _, b in ipairs(blocks) do
+        if b.kind == "heading" then
+            local name = file_tag .. "-" .. help.slug(b.title)
+            if used[name] then
+                used[name] = used[name] + 1
+                name = name .. "-" .. used[name]
+            else
+                used[name] = 1
+            end
+            tag_of[b] = name
         end
     end
-    local tag_at, used = {}, {}
-    for _, h in ipairs(headings) do
-        local name = file_tag .. "-" .. help.slug(h.title)
-        if used[name] then
-            used[name] = used[name] + 1
-            name = name .. "-" .. used[name]
-        else
-            used[name] = 1
-        end
-        tag_at[h.line] = { name = name, heading = h }
-    end
-    if #headings > 0 then
+    if next(tag_of) then
         put("CONTENTS")
-        for _, h in ipairs(headings) do
-            put(string.rep("  ", math.max(h.level - 1, 1)) .. "|" .. tag_at[h.line].name .. "|  " .. h.title)
+        for _, b in ipairs(blocks) do
+            if b.kind == "heading" then
+                put(string.rep("  ", math.max(b.level - 1, 1)) .. "|" .. tag_of[b] .. "|  " .. b.title)
+            end
         end
         put("")
     end
 
-    local table_at, in_table = {}, {}
-    for _, t in ipairs(eip.tables(lines)) do
-        table_at[t.first] = t
-        for i = t.first, t.last do
-            in_table[i] = true
-        end
-    end
-    local opens, closes, inside = {}, {}, {}
-    for _, f in ipairs(eip.fences(lines)) do
-        opens[f.first] = f.lang
-        if lines[f.last]:match("^%s*```") and f.last ~= f.first then
-            closes[f.last] = true
-        end
-        for i = f.first + 1, f.last do
-            inside[i] = true
-        end
-    end
-    for i = body, #lines do
-        local line = lines[i]
-        if tag_at[i] then
-            local h = tag_at[i].heading
-            put(help.with_tag(h.level <= 2 and h.title:upper() or h.title, tag_at[i].name))
-            tag(tag_at[i].name)
-        elseif opens[i] then
-            put(">" .. opens[i])
-        elseif closes[i] then
-            put("<")
-        elseif inside[i] then
-            put("    " .. line)
-        elseif table_at[i] then
-            for _, row in ipairs(layout(table_at[i])) do
-                put(row)
+    local render = {
+        heading = function(b)
+            return { help.with_tag(b.level <= 2 and b.title:upper() or b.title, tag_of[b]) }
+        end,
+        fence = function(b)
+            local block = { ">" .. b.lang }
+            for _, code in ipairs(b.code) do
+                table.insert(block, "    " .. code)
             end
-        elseif not in_table[i] then
-            -- the rest of a table was laid out at its first line
-            local text = link(eip.plain(line))
+            table.insert(block, "<")
+            return block
+        end,
+        table = layout,
+        line = function(b)
+            local text = link(b.text)
             -- a leading < would read as the end of a code block and vanish
-            put(text:match("^<") and (" " .. text) or text)
+            return { text:match("^<") and (" " .. text) or text }
+        end,
+    }
+    for _, b in ipairs(blocks) do
+        for _, line in ipairs(render[b.kind](b)) do
+            put(line)
         end
-    end
-    if inside[#lines] and not closes[#lines] then
-        put("<")
+        if b.kind == "heading" then
+            tag(tag_of[b])
+        end
     end
     put("")
     put(help.MODELINE)

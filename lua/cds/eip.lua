@@ -26,6 +26,17 @@ local M = {}
 ---@field header boolean     -- whether the first row is a heading row
 ---@field rows string[][]    -- each row's cells, as plain text
 
+---@class cds.eip.Block
+---@field kind "heading"|"fence"|"table"|"line"
+---@field line integer        -- the block's first line in the text
+---@field level integer|nil   -- heading: the number of # signs
+---@field title string|nil    -- heading: the title, plain
+---@field lang string|nil     -- fence: the info string, "" when none
+---@field code string[]|nil   -- fence: the lines between the fences, as written
+---@field header boolean|nil  -- table: whether the first row is a heading row
+---@field rows string[][]|nil -- table: the cells, plain
+---@field text string|nil     -- line: the line, plain; "" for a blank line
+
 ---@class cds.eip.Entry
 ---@field id string
 ---@field title string
@@ -187,13 +198,13 @@ function M.plain(s)
   end))
 end
 
---- A pipe table's cells: the text between the bars, trimmed.
+--- A pipe table's cells: the text between the bars, trimmed and plain.
 ---@param line string
 ---@return string[]
 local function pipe_cells(line)
   local cells = {}
   for cell in line:gsub("^%s*|", ""):gsub("|%s*$", ""):gmatch("[^|]+") do
-    table.insert(cells, trim(cell))
+    table.insert(cells, trim(M.plain(cell)))
   end
   return cells
 end
@@ -240,6 +251,53 @@ function M.tables(lines)
     end
   end
   return tables
+end
+
+--- The body as blocks, every piece of text already plain: a heading, a
+--- fenced code block, a table, or one line. This is the view a renderer
+--- folds over, so no kind of text can miss the plain-text pass.
+---@param lines string[]
+---@param from? integer   -- the first body line; 1 unless given
+---@return cds.eip.Block[]
+function M.blocks(lines, from)
+  local fence_at, table_at, skip = {}, {}, {}
+  for _, f in ipairs(M.fences(lines)) do
+    fence_at[f.first] = f
+    for i = f.first, f.last do
+      skip[i] = true
+    end
+  end
+  for _, t in ipairs(M.tables(lines)) do
+    table_at[t.first] = t
+    for i = t.first, t.last do
+      skip[i] = true
+    end
+  end
+  local heading_at = {}
+  for _, h in ipairs(M.headings(lines)) do
+    heading_at[h.line] = h
+  end
+  local blocks = {}
+  for i = from or 1, #lines do
+    if fence_at[i] then
+      local f = fence_at[i]
+      local last = lines[f.last]:match("^%s*```") and f.last ~= f.first and f.last - 1 or f.last
+      local code = {}
+      for j = f.first + 1, last do
+        table.insert(code, lines[j])
+      end
+      table.insert(blocks, { kind = "fence", line = i, lang = f.lang, code = code })
+    elseif table_at[i] then
+      local t = table_at[i]
+      table.insert(blocks, { kind = "table", line = i, header = t.header, rows = t.rows })
+    elseif heading_at[i] then
+      local h = heading_at[i]
+      table.insert(blocks, { kind = "heading", line = i, level = h.level, title = M.plain(h.title) })
+    elseif not skip[i] then
+      table.insert(blocks, { kind = "line", line = i, text = M.plain(lines[i]) })
+    end
+  end
+  return blocks
 end
 
 --- The listing page as entries: each table row's number and title, under
