@@ -1,9 +1,10 @@
 # rfc.nvim
 
 RFCs, and Ethereum's EIPs and ERCs, as Neovim help. `:Rfc 9110` fetches
-the RFC's text from the RFC Editor, renders it as a help document and
-opens it with `:help`, so from then on the editor's own help navigation is
-the whole interface:
+the RFC's text from the RFC Editor, `:Eip 1559` fetches the proposal's
+from its repository; each is rendered as a help document and opened with
+`:help`, so from then on the editor's own help navigation is the whole
+interface:
 
 ```
 :help rfc9110            the RFC
@@ -22,35 +23,44 @@ highlighted in bold.
 
 ## Finding a document
 
+Two commands, one per source, each with the same four forms:
+
 ```
-:Rfc                     every enabled index in vim.ui.select
-:Rfc token standard      the entries whose number or title match, fuzzily;
+:Rfc                     the RFC index in vim.ui.select
+:Rfc http semantics      the entries whose number or title match, fuzzily;
                          one match opens at once, several are offered
 :Rfc 9110                an RFC by number
-:Rfc eip1559             a tag: rfc2616-14.4, eip1559, erc20-methods
-:Rfc tok<Tab>            completion by number or title over the cached
-                         indices and the tags of cached documents
+:Rfc rfc2616-14.4        a tag
+:Rfc sem<Tab>            completion by number or title over the cached
+                         index and the tags of cached RFCs
+
+:Eip                     EIPs and ERCs, one index
+:Eip token standard      a search over it
+:Eip 20                  ERC-20: the EIP and ERC numbers are one space
+:Eip erc20               a tag, by either name
+:Eip tok<Tab>            completion
 ```
 
-A picked or completed item reads `erc20  Token Standard (Final)`: the tag
+A picked or completed item reads `eip20  Token Standard (Final)`: the tag
 first, then the title, and the command takes the first word. Completion
-cannot wait on the network, so it offers what the last `:Rfc` left in the
-cache; the picker and the search fetch an index that is missing or a day
-old.
+cannot wait on the network, so it offers what the last picker or search
+left in the cache; those fetch an index that is missing or a day old.
 
 ## Sources
 
-Three sources, chosen in `setup`; only the RFC Editor is on by default.
+Two sources, chosen in `setup`; only the RFC Editor is on by default.
 
-| Source | Tags | Text | Index |
-|---|---|---|---|
-| `rfc` | `rfc9110`, `rfc9110-3.1` | rfc-editor.org | rfc-index.txt |
-| `eip` | `eip1559`, `eip1559-specification` | github.com/ethereum/EIPs | eips.ethereum.org/all |
-| `erc` | `erc20` (and `eip20`), `erc20-methods` | github.com/ethereum/ERCs | ercs.ethereum.org/all |
+| Source | Command | Tags | Text | Index |
+|---|---|---|---|---|
+| `rfc` | `:Rfc` | `rfc9110`, `rfc9110-3.1` | rfc-editor.org | rfc-index.txt |
+| `eip` | `:Eip` | `eip1559`, `eip1559-specification`, `eip20` with `erc20` as its alias | github.com/ethereum/EIPs, then ethereum/ERCs | eips.ethereum.org/all and ercs.ethereum.org/all, as one |
 
-An ERC carries its EIP number as a second tag, so `|eip20|` in another
-proposal's text lands on ERC-20. EIP-20 in the EIPs repository is a stub
-that says it moved; its document links to `|erc20|`.
+EIPs and ERCs share one number space, so the `eip` source covers both
+repositories: `:Eip 20` asks the EIPs repository, finds the stub that says
+EIP-20 moved, and fetches ERC-20 from the ERCs repository instead. A
+proposal in the ERC category is tagged by both names, so `|erc20|` in
+another proposal's text and `:help erc20` land on it, and the index is both
+listing pages with each number once.
 
 This is a personal plugin on the functional-core-with-editor-rims pattern
 the plugins in this directory share, developed with help from a coding
@@ -59,13 +69,15 @@ following that make it worthwhile, come from must.nvim; the code here is
 written fresh around Neovim's help system. It requires Neovim 0.13
 (`vim.async`) and `curl`.
 
+Thanks to [@gnidan](https://github.com/gnidan) for the feedback that
+shaped the commands: `:Rfc` for the IETF alone, `:Eip` for the proposals,
+and no ERC to tell apart from an EIP.
+
 ## How it works
 
 A source is one record (`lua/rfc/sources.lua`): where its text and its
-index come from, how the index reads, and how the text renders. The two
-Ethereum sources come from one constructor, since both are a markdown file
-in a repository plus a listing page. The pipeline is the same for all:
-fetch, clean, render, write, then `:help`.
+index come from, how the index reads, and how the text renders. The
+pipeline is the same for both: fetch, clean, render, write, then `:help`.
 
 An RFC's text is parsed by `cds.rfc` and rendered by a pure, total function
 (`lua/rfc/help.lua`) into a help document: a tag on every heading and reference
@@ -103,7 +115,7 @@ With lazy.nvim:
 
 ```lua
 require("rfc").setup({
-    sources = { rfc = true, eip = false, erc = false },
+    sources = { rfc = true, eip = false },
     cache_dir = nil, -- stdpath("cache") .. "/rfc"
     -- where messages go; vim.notify with an "rfc: " prefix by default
     notify = function(msg, level, opts) end,

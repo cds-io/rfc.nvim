@@ -108,8 +108,9 @@ local function vim_error(err)
 end
 
 --- `:help tag`. A tag of a document its source has not been asked for
---- fetches it first and tries again; a tag of a source the reader has not
---- enabled says so; any other refusal is shown as :help would show it.
+--- fetches it first and tries again (erc20 is eip20's alias, so the fetch
+--- is eip20's); a tag of a source the reader has not enabled says so; any
+--- other refusal is shown as :help would show it.
 ---@param tag string
 function M.jump(tag)
     ensure_setup()
@@ -223,14 +224,16 @@ function M.index_lines(source)
         end)
 end
 
---- Picks a document from the enabled sources' indices with vim.ui.select
---- and opens it. With a query, only the entries that fuzzily match it are
---- offered, and a single match opens at once.
+--- Picks a document from the given sources' indices (the enabled ones,
+--- by default) with vim.ui.select and opens it. With a query, only the
+--- entries that fuzzily match it are offered, and a single match opens at
+--- once.
 ---@param query? string
-function M.pick(query)
+---@param from? rfc.Source[]
+function M.pick(query, from)
     ensure_setup()
     local tasks = {}
-    for _, source in ipairs(sources.all) do
+    for _, source in ipairs(from or sources.all) do
         if enabled(source) then
             table.insert(
                 tasks,
@@ -287,15 +290,16 @@ end
 -- The entries of each cached index, parsed once per version of the file.
 local parsed = {}
 
---- What :Rfc can complete to, from what is on disk: every entry of each
---- enabled source's cached index (fresh or stale; completion cannot wait
---- on the network), and every tag of every cached document.
+--- What a command can complete to, from what is on disk: every entry of
+--- each given source's cached index (fresh or stale; completion cannot wait
+--- on the network), and every tag of those sources' cached documents.
+---@param from rfc.Source[]
 ---@return string[]
-function M.candidates()
+function M.candidates(from)
     ensure_setup()
     local cfg = config.get()
     local out = {}
-    for _, source in ipairs(sources.all) do
+    for _, source in ipairs(from) do
         if enabled(source) then
             local path = store.index_path(cfg, source.index_file)
             local stat = vim.uv.fs_stat(path)
@@ -316,7 +320,7 @@ function M.candidates()
     if vim.fn.filereadable(tags) == 1 then
         for _, line in ipairs(vim.fn.readfile(tags)) do
             local name = line:match("^([^\t]+)\t")
-            if name and not name:match("%.txt$") then
+            if name and not name:match("%.txt$") and vim.tbl_contains(from, sources.of(name)) then
                 table.insert(out, name)
             end
         end
@@ -324,16 +328,43 @@ function M.candidates()
     return out
 end
 
---- The completion of :Rfc's argument: every candidate when nothing is
---- typed, the fuzzy matches otherwise.
+--- The completion of a command's argument: every candidate when nothing
+--- is typed, the fuzzy matches otherwise.
+---@param from rfc.Source[]
 ---@param arglead string
 ---@return string[]
-function M.complete(arglead)
-    local candidates = M.candidates()
+function M.complete(from, arglead)
+    local candidates = M.candidates(from)
     if arglead == "" then
         return candidates
     end
     return vim.fn.matchfuzzy(candidates, arglead)
+end
+
+--- The command for a source: a number, a tag (the source's own or an
+--- alias), words to search its index, or nothing for its picker. A
+--- completed item carries its title after the tag, so only the first word
+--- is the tag.
+---@param source rfc.Source
+---@return fun(cmd: table), fun(arglead: string): string[]
+function M.command(source)
+    local from = { source }
+    local function run_command(cmd)
+        local arg = vim.trim(cmd.args)
+        local first = arg:match("^(%S+)") or ""
+        if arg == "" then
+            M.pick(nil, from)
+        elseif first:match("^%d+$") then
+            M.jump(source.prefix .. first)
+        elseif sources.of(first) == source then
+            M.jump(first)
+        else
+            M.pick(arg, from)
+        end
+    end
+    return run_command, function(arglead)
+        return M.complete(from, arglead)
+    end
 end
 
 -- The requirement keywords of RFC 2119, highlighted in a document's help

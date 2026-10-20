@@ -18,15 +18,16 @@ local function link(line)
     return line
 end
 
---- The document for a proposal's text.
----@param prefix "eip"|"erc"
+--- The document for a proposal's text. Every proposal is tagged by its EIP
+--- number; one in the ERC category also carries its ERC name, since the
+--- texts of other proposals use both.
 ---@param id string
 ---@param lines string[]
 ---@return rfc.HelpDoc
-function M.render(prefix, id, lines)
+function M.render(id, lines)
     local fields, body = eip.frontmatter(lines)
-    local label = prefix:upper()
-    local file_tag = prefix .. id
+    local label = fields.category == "ERC" and "ERC" or "EIP"
+    local file_tag = "eip" .. id
     local out, tags = {}, {}
     local function put(line)
         table.insert(out, line)
@@ -38,10 +39,9 @@ function M.render(prefix, id, lines)
     put(help.with_tag("*" .. file_tag .. ".txt*  " .. (fields.title or (label .. " " .. id)), file_tag))
     tag(file_tag)
     tag(file_tag .. ".txt")
-    if prefix == "erc" then
-        -- an ERC keeps its EIP number, and the text of other proposals uses both
-        out[1] = out[1] .. " *eip" .. id .. "*"
-        tag("eip" .. id)
+    if fields.category == "ERC" then
+        out[1] = out[1] .. " *erc" .. id .. "*"
+        tag("erc" .. id)
     end
     local header = { label .. "-" .. id }
     for _, key in ipairs({ "status", "type", "category", "created" }) do

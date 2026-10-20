@@ -38,7 +38,7 @@ function M.start()
             end,
         })
     end
-    case.setup({ rfc = true, eip = true, erc = true })
+    case.setup({ rfc = true, eip = true })
     local bodies = {
         ["9110"] = fixtures.rfc9110,
         ["2616"] = fixtures.rfc2616,

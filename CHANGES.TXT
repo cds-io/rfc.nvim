@@ -1,3 +1,36 @@
+2026-10-20  :Eip, one command for EIPs and ERCs
+
+  plugin/rfc.lua
+    One command per source: :Rfc for the RFC Editor, :Eip for Ethereum's
+    proposals. Each takes a number, a tag, words to search its own index,
+    or nothing for its own picker, and completes over its own index and
+    documents.
+
+  lua/rfc/sources.lua
+    The eip source covers both repositories, since EIPs and ERCs share one
+    number space: its fetch asks ethereum/EIPs and, on the stub that says
+    a proposal moved, ethereum/ERCs; its index is both listing pages as
+    one text, each number once; erc is its alias prefix, so a tag by
+    either name resolves to it.
+
+  lua/rfc/help_eip.lua
+    render(id, lines): every proposal is tagged eip<number>, and one in
+    the ERC category carries erc<number> as a second tag on its first
+    line.
+
+  lua/rfc/init.lua
+    pick, candidates and complete take the sources they cover; command
+    builds a source's command and completion.
+
+  lua/rfc/config.lua
+    sources: rfc and eip.
+
+  spec/rfc_nvim_spec.lua
+    30 editor cases, :Eip and the alias among them.
+
+  Thanks to @gnidan, whose feedback shaped this: :Rfc for the IETF
+  alone, :Eip for the proposals, and no ERC to tell apart from an EIP.
+
 2026-10-20  Search and completion
 
   lua/rfc/init.lua

@@ -5,12 +5,12 @@ local M = {}
 ---@class rfc.Config
 ---@field cache_dir string|nil   -- where documents live; stdpath("cache")/rfc by default
 ---@field notify fun(msg: string, level: integer, opts: { title: string })|nil  -- where messages go; vim.notify by default
----@field sources table<string, boolean>  -- which sources :Rfc reads: rfc (the RFC Editor), eip and erc (the Ethereum repositories)
+---@field sources table<string, boolean>  -- rfc (the RFC Editor, behind :Rfc) and eip (Ethereum's EIPs and ERCs, behind :Eip)
 
 M.defaults = {
     cache_dir = nil,
     notify = nil,
-    sources = { rfc = true, eip = false, erc = false },
+    sources = { rfc = true, eip = false },
 }
 
 local current = vim.deepcopy(M.defaults)

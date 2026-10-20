@@ -140,7 +140,6 @@ describe("rfc", function()
 
     describe(":Rfc", function()
         it("fetches the index, offers it through vim.ui.select and opens the choice", function()
-            case.setup({ rfc = true })
             local offered, opts
             vim.ui.select = function(items, o, on_choice)
                 offered, opts = items, o
@@ -158,25 +157,21 @@ describe("rfc", function()
             assert.are.equal(1, vim.fn.filereadable(store.index_path(config.get(), "rfc-index.txt")))
         end)
 
-        it("lists every enabled source's index, RFCs then EIPs then ERCs", function()
-            local offered, opts
-            vim.ui.select = function(items, o, on_choice)
-                offered, opts = items, o
+        it("lists the RFC index alone, whatever else is enabled", function()
+            local offered
+            vim.ui.select = function(items, _, on_choice)
+                offered = items
                 on_choice(nil)
             end
             vim.cmd("Rfc")
             vim.wait(500, function()
                 return offered ~= nil
             end)
-            assert.are.equal(4 + 5 + 3, #offered)
-            assert.are.equal("eip1559  Fee market change for ETH 1.0 chain (Final)", opts.format_item(offered[9]))
-            assert.are.equal("erc20  Token Standard (Final)", opts.format_item(offered[11]))
-            table.sort(case.fetched)
-            assert.are.same({ "eips-index", "ercs-index", "index" }, case.fetched)
+            assert.are.equal(4, #offered)
+            assert.are.same({ "index" }, case.fetched)
         end)
 
         it("reads the index from the store while it is fresh", function()
-            case.setup({ rfc = true })
             local offered = 0
             vim.ui.select = function(_, _, on_choice)
                 offered = offered + 1
@@ -195,7 +190,6 @@ describe("rfc", function()
         end)
 
         it("declines an RFC the index lists without a text version", function()
-            case.setup({ rfc = true })
             vim.ui.select = function(items, _, on_choice)
                 local chosen = vim.deepcopy(items[1])
                 chosen.entry.text = false
@@ -211,9 +205,9 @@ describe("rfc", function()
         end)
     end)
 
-    describe("an Ethereum proposal", function()
-        it("opens on :Rfc eip<number> with its title, header and contents", function()
-            vim.cmd("Rfc eip1559")
+    describe(":Eip", function()
+        it("opens a proposal by number with its title, header and contents", function()
+            vim.cmd("Eip 1559")
             assert.is_true(editor.wait_help("eip1559"))
             assert.are.same({ "eip1559" }, case.fetched)
             local lines = vim.api.nvim_buf_get_lines(0, 0, 8, false)
@@ -228,7 +222,7 @@ describe("rfc", function()
         end)
 
         it("lands on a section by its tag and follows a ToC row", function()
-            vim.cmd("Rfc eip1559")
+            vim.cmd("Eip eip1559")
             assert.is_true(editor.wait_help("eip1559"))
             vim.cmd("help eip1559-specification")
             assert.is_truthy(vim.api.nvim_get_current_line():match("^SPECIFICATION%s+%*eip1559%-specification%*$"))
@@ -241,7 +235,7 @@ describe("rfc", function()
         end)
 
         it("reports a link to a proposal that does not exist", function()
-            vim.cmd("Rfc eip1559")
+            vim.cmd("Eip 1559")
             assert.is_true(editor.wait_help("eip1559"))
             vim.cmd("3")
             vim.fn.search("|eip2718|")
@@ -254,37 +248,57 @@ describe("rfc", function()
             assert.are.equal("EIP 2718 does not exist", case.notices[3].msg)
         end)
 
-        it("opens an ERC under both its names", function()
-            vim.cmd("Rfc erc20")
-            assert.is_true(editor.wait_help("erc20"))
-            assert.is_truthy(vim.api.nvim_get_current_line():match("%*erc20%* %*eip20%*$"))
-            vim.cmd("helpclose")
-            vim.cmd("help eip20")
-            assert.is_true(editor.wait_help("erc20"))
-            assert.are.same({ "erc20" }, case.fetched)
-        end)
-
-        it("renders a moved stub with a link to where it went", function()
-            vim.cmd("Rfc eip20")
+        it("follows a moved stub into the ERCs repository and tags the result by both names", function()
+            vim.cmd("Eip 20")
             assert.is_true(editor.wait_help("eip20"))
-            assert.are.equal("Moved: see |erc20|", vim.api.nvim_buf_get_lines(0, 2, 3, false)[1])
+            assert.are.same({ "eip20", "erc20" }, case.fetched)
+            assert.is_truthy(
+                vim.api.nvim_get_current_line():match("^%*eip20%.txt%*  Token Standard.*%*eip20%* %*erc20%*$")
+            )
+            vim.cmd("helpclose")
+            vim.cmd("help erc20")
+            assert.is_true(editor.wait_help("eip20"))
         end)
 
-        it("says which source to enable for a tag of a disabled one", function()
+        it("fetches eip20 when the erc20 alias is asked for", function()
+            vim.cmd("Eip erc20")
+            assert.is_true(editor.wait_help("eip20"))
+            assert.are.same({ "eip20", "erc20" }, case.fetched)
+            assert.is_truthy(vim.api.nvim_get_current_line():match("%*eip20%* %*erc20%*$"))
+        end)
+
+        it("lists both listings as one index, a number listed twice once", function()
+            local offered, opts
+            vim.ui.select = function(items, o, on_choice)
+                offered, opts = items, o
+                on_choice(nil)
+            end
+            vim.cmd("Eip")
+            vim.wait(500, function()
+                return offered ~= nil
+            end)
+            assert.are.equal(5 + 3 - 1, #offered)
+            assert.are.equal("eip1559  Fee market change for ETH 1.0 chain (Final)", opts.format_item(offered[5]))
+            assert.are.equal("eip20  Token Standard (Final)", opts.format_item(offered[6]))
+            table.sort(case.fetched)
+            assert.are.same({ "eips-index", "ercs-index" }, case.fetched)
+        end)
+
+        it("says which source to enable when eip is off", function()
             case.setup({ rfc = true })
-            vim.cmd("Rfc eip1559")
+            vim.cmd("Eip 1559")
             assert.are.equal("eip1559 is EIP; enable sources.eip in setup()", case.notices[1].msg)
             assert.are.equal(vim.log.levels.WARN, case.notices[1].level)
             assert.are.same({}, case.fetched)
         end)
     end)
 
-    describe(":Rfc <words>", function()
+    describe("search", function()
         it("opens the one document whose number or title matches", function()
             vim.ui.select = function()
                 error("the picker should not open for a single match")
             end
-            vim.cmd("Rfc fee market change")
+            vim.cmd("Eip fee market change")
             assert.is_true(editor.wait_help("eip1559"))
         end)
 
@@ -294,59 +308,63 @@ describe("rfc", function()
                 offered, opts = items, o
                 on_choice(nil)
             end
-            vim.cmd("Rfc token")
+            vim.cmd("Eip token")
             vim.wait(500, function()
                 return offered ~= nil
             end)
             assert.are.equal("documents matching token", opts.prompt)
-            assert.is_true(#offered >= 2)
+            assert.are.equal(2, #offered)
             local texts = vim.tbl_map(opts.format_item, offered)
-            assert.is_truthy(vim.tbl_contains(texts, "erc20  Token Standard (Final)"))
+            assert.is_truthy(vim.tbl_contains(texts, "eip20  Token Standard (Final)"))
         end)
 
-        it("says when nothing matches", function()
-            vim.cmd("Rfc zzzz qqqq")
+        it("searches only the command's own index", function()
+            vim.cmd("Rfc fee market change")
             vim.wait(500, function()
                 return #case.notices == 1
             end)
-            assert.are.equal("nothing matches zzzz qqqq", case.notices[1].msg)
+            assert.are.equal("nothing matches fee market change", case.notices[1].msg)
+            assert.are.same({ "index" }, case.fetched)
         end)
     end)
 
-    describe("completion of :Rfc", function()
+    describe("completion", function()
         it("offers nothing before any index or document is cached", function()
             assert.are.same({}, vim.fn.getcompletion("Rfc ", "cmdline"))
+            assert.are.same({}, vim.fn.getcompletion("Eip ", "cmdline"))
         end)
 
-        it("completes a number or a title from the cached indices", function()
-            local offered = false
+        it("completes a number or a title from the command's cached index", function()
+            local offered = 0
             vim.ui.select = function(_, _, on_choice)
-                offered = true
+                offered = offered + 1
                 on_choice(nil)
             end
             vim.cmd("Rfc")
+            vim.cmd("Eip")
             vim.wait(500, function()
-                return offered
+                return offered == 2
             end)
-            local all = vim.fn.getcompletion("Rfc ", "cmdline")
-            assert.are.equal(4 + 5 + 3, #all)
+            assert.are.equal(4, #vim.fn.getcompletion("Rfc ", "cmdline"))
+            assert.are.equal(7, #vim.fn.getcompletion("Eip ", "cmdline"))
             assert.are.equal(
                 "eip1559  Fee market change for ETH 1.0 chain (Final)",
-                vim.fn.getcompletion("Rfc 1559", "cmdline")[1]
+                vim.fn.getcompletion("Eip 1559", "cmdline")[1]
             )
-            assert.are.equal("erc20  Token Standard (Final)", vim.fn.getcompletion("Rfc tokenstand", "cmdline")[1])
+            assert.are.equal("eip20  Token Standard (Final)", vim.fn.getcompletion("Eip tokenstand", "cmdline")[1])
+            assert.are.same({}, vim.fn.getcompletion("Rfc 1559", "cmdline"))
         end)
 
-        it("completes the tags of cached documents, sections included", function()
+        it("completes the tags of the command's cached documents, sections included", function()
             vim.cmd("Rfc 9110")
             assert.is_true(editor.wait_help("9110"))
-            local tags = vim.fn.getcompletion("Rfc rfc9110-3.1", "cmdline")
-            assert.are.equal("rfc9110-3.1", tags[1])
+            assert.are.equal("rfc9110-3.1", vim.fn.getcompletion("Rfc rfc9110-3.1", "cmdline")[1])
             assert.is_false(vim.tbl_contains(vim.fn.getcompletion("Rfc rfc9110", "cmdline"), "rfc9110.txt"))
+            assert.are.same({}, vim.fn.getcompletion("Eip rfc9110", "cmdline"))
         end)
 
         it("opens the first word of a completed item", function()
-            vim.cmd("Rfc eip1559  Fee market change for ETH 1.0 chain (Final)")
+            vim.cmd("Eip eip1559  Fee market change for ETH 1.0 chain (Final)")
             assert.is_true(editor.wait_help("eip1559"))
         end)
     end)

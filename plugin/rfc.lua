@@ -1,28 +1,24 @@
--- Neovim calls in here: the command, and the help buffers that are ours.
--- :Rfc takes a number (an RFC), a tag (rfc9110-3.1, eip1559, erc20), words
--- to search the indices by number or title, or nothing for the picker. A
--- completed item carries its title after the tag, so only the first word
--- is the tag.
-vim.api.nvim_create_user_command("Rfc", function(cmd)
-    local rfc = require("rfc")
-    local arg = vim.trim(cmd.args)
-    local first = arg:match("^(%S+)") or ""
-    if arg == "" then
-        rfc.pick()
-    elseif first:match("^%d+$") then
-        rfc.jump("rfc" .. first)
-    elseif first:match("^%l+%d+") then
-        rfc.jump(first)
-    else
-        rfc.pick(arg)
-    end
-end, {
-    nargs = "*",
-    complete = function(arglead)
-        return require("rfc").complete(arglead)
-    end,
-    desc = "Open an RFC, EIP or ERC as help: a number, a tag, a search, or nothing for the index",
-})
+-- Neovim calls in here: one command per source, and the help buffers that
+-- are ours. :Rfc is the RFC Editor; :Eip is Ethereum's EIPs and ERCs, which
+-- share one number space, so `:Eip 20` is ERC-20. Each takes a number, a
+-- tag, words to search its index, or nothing for its picker, and completes
+-- by number or title over what is cached.
+local function define(name, prefix, desc)
+    vim.api.nvim_create_user_command(name, function(cmd)
+        local run, _ = require("rfc").command(require("rfc.sources")[prefix])
+        run(cmd)
+    end, {
+        nargs = "*",
+        complete = function(arglead)
+            local _, complete = require("rfc").command(require("rfc.sources")[prefix])
+            return complete(arglead)
+        end,
+        desc = desc,
+    })
+end
+
+define("Rfc", "rfc", "Open an RFC as help: a number, a tag, a search, or nothing for the index")
+define("Eip", "eip", "Open an EIP or ERC as help: a number, a tag, a search, or nothing for the index")
 
 vim.api.nvim_create_autocmd("FileType", {
     pattern = "help",
