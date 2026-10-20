@@ -1,3 +1,21 @@
+2026-10-20  Search and completion
+
+  lua/rfc/init.lua
+    pick takes a query and offers the entries whose number or title
+    fuzzily match it, opening a single match at once; candidates reads
+    every enabled source's cached index (parsed once per version of the
+    file) and every tag of every cached document; complete fuzzily
+    matches the typed text against them. The picker and completion show
+    an entry as its tag, two spaces, its title.
+
+  plugin/rfc.lua
+    :Rfc takes words to search as well as a number or a tag, completes
+    with rfc.complete, and reads the first word of a completed item as
+    the tag.
+
+  spec/rfc_nvim_spec.lua
+    Seven cases over the search and the completion; 29 editor cases.
+
 2026-10-20  Ethereum proposals as sources
 
   lua/rfc/sources.lua (rim)

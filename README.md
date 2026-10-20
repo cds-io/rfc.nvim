@@ -17,10 +17,26 @@ CTRL-T                   back through the tag stack, across documents
 
 A link to a document that is not cached yet (`|rfc2616|` in RFC 9110's
 text, `|eip2718|` in EIP-1559's) fetches it on `CTRL-]` and then jumps.
-`:Rfc` with no argument offers the indices of the enabled sources through
-`vim.ui.select`; `:Rfc rfc2616-14.4`, `:Rfc eip1559` and `:Rfc erc20` open
-a tag directly. The requirement keywords of RFC 2119 (MUST, SHOULD NOT,
-MAY) are highlighted in bold.
+The requirement keywords of RFC 2119 (MUST, SHOULD NOT, MAY) are
+highlighted in bold.
+
+## Finding a document
+
+```
+:Rfc                     every enabled index in vim.ui.select
+:Rfc token standard      the entries whose number or title match, fuzzily;
+                         one match opens at once, several are offered
+:Rfc 9110                an RFC by number
+:Rfc eip1559             a tag: rfc2616-14.4, eip1559, erc20-methods
+:Rfc tok<Tab>            completion by number or title over the cached
+                         indices and the tags of cached documents
+```
+
+A picked or completed item reads `erc20  Token Standard (Final)`: the tag
+first, then the title, and the command takes the first word. Completion
+cannot wait on the network, so it offers what the last `:Rfc` left in the
+cache; the picker and the search fetch an index that is missing or a day
+old.
 
 ## Sources
 

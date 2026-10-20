@@ -178,6 +178,15 @@ function M.follow_line()
     M.jump(tag)
 end
 
+--- How the picker and completion show an entry: its tag, then its title,
+--- so the tag is the first word of whatever the reader picks.
+---@param source rfc.Source
+---@param entry rfc.Entry
+---@return string
+local function label(source, entry)
+    return source.prefix .. entry.id .. "  " .. entry.label
+end
+
 --- A source's index as a Task of its lines: the cached copy while it is a
 --- day old, fetched otherwise, and the stale copy when the fetch fails.
 ---@param source rfc.Source
@@ -215,8 +224,10 @@ function M.index_lines(source)
 end
 
 --- Picks a document from the enabled sources' indices with vim.ui.select
---- and opens it.
-function M.pick()
+--- and opens it. With a query, only the entries that fuzzily match it are
+--- offered, and a single match opens at once.
+---@param query? string
+function M.pick(query)
     ensure_setup()
     local tasks = {}
     for _, source in ipairs(sources.all) do
@@ -226,7 +237,7 @@ function M.pick()
                 M.index_lines(source):map(function(lines)
                     local items = {}
                     for _, entry in ipairs(source.entries(lines)) do
-                        table.insert(items, { source = source, entry = entry })
+                        table.insert(items, { source = source, entry = entry, text = label(source, entry) })
                     end
                     return items
                 end)
@@ -242,13 +253,14 @@ function M.pick()
         for _, list in ipairs(lists) do
             vim.list_extend(items, list)
         end
-        vim.ui.select(items, {
-            kind = "rfc",
-            prompt = "search/select a document",
-            format_item = function(item)
-                return item.source.label .. " " .. item.entry.id .. "  " .. item.entry.label
-            end,
-        }, function(item)
+        if query and query ~= "" then
+            items = vim.fn.matchfuzzy(items, query, { key = "text" })
+            if #items == 0 then
+                M.notify("nothing matches " .. query, vim.log.levels.WARN)
+                return
+            end
+        end
+        local function choose(item)
             if not item then
                 return
             end
@@ -257,8 +269,71 @@ function M.pick()
                 return
             end
             M.open(item.source, item.entry.id)
-        end)
+        end
+        if query and #items == 1 then
+            choose(items[1])
+            return
+        end
+        vim.ui.select(items, {
+            kind = "rfc",
+            prompt = query and ("documents matching " .. query) or "search/select a document",
+            format_item = function(item)
+                return item.text
+            end,
+        }, choose)
     end)
+end
+
+-- The entries of each cached index, parsed once per version of the file.
+local parsed = {}
+
+--- What :Rfc can complete to, from what is on disk: every entry of each
+--- enabled source's cached index (fresh or stale; completion cannot wait
+--- on the network), and every tag of every cached document.
+---@return string[]
+function M.candidates()
+    ensure_setup()
+    local cfg = config.get()
+    local out = {}
+    for _, source in ipairs(sources.all) do
+        if enabled(source) then
+            local path = store.index_path(cfg, source.index_file)
+            local stat = vim.uv.fs_stat(path)
+            if stat then
+                local memo = parsed[path]
+                if not memo or memo.mtime ~= stat.mtime.sec then
+                    memo = { mtime = stat.mtime.sec, labels = {} }
+                    for _, entry in ipairs(source.entries(vim.fn.readfile(path))) do
+                        table.insert(memo.labels, label(source, entry))
+                    end
+                    parsed[path] = memo
+                end
+                vim.list_extend(out, memo.labels)
+            end
+        end
+    end
+    local tags = store.doc_dir(cfg) .. "/tags"
+    if vim.fn.filereadable(tags) == 1 then
+        for _, line in ipairs(vim.fn.readfile(tags)) do
+            local name = line:match("^([^\t]+)\t")
+            if name and not name:match("%.txt$") then
+                table.insert(out, name)
+            end
+        end
+    end
+    return out
+end
+
+--- The completion of :Rfc's argument: every candidate when nothing is
+--- typed, the fuzzy matches otherwise.
+---@param arglead string
+---@return string[]
+function M.complete(arglead)
+    local candidates = M.candidates()
+    if arglead == "" then
+        return candidates
+    end
+    return vim.fn.matchfuzzy(candidates, arglead)
 end
 
 -- The requirement keywords of RFC 2119, highlighted in a document's help
