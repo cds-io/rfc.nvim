@@ -171,6 +171,7 @@ function M.render(id, lines)
     end
     put("")
     put(help.MODELINE)
+    put(help.FOOTER)
     return { lines = out, tags = tags }
 end
 

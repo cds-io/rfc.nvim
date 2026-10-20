@@ -20,6 +20,20 @@ local M = {}
 local WIDTH = 78
 local MODELINE = " vim:tw=78:ts=8:ft=help:norl:"
 
+-- The render's version, written as the document's last line. A cached
+-- document whose line names an older version is rendered again from the
+-- stored text, so a better render reaches what is already on disk.
+M.RENDER = 2
+M.FOOTER = " rfc.nvim render " .. M.RENDER
+
+--- The render version a document's last line names, 0 when it names none.
+---@param lines string[]
+---@return integer
+function M.render_of(lines)
+    local last = lines[#lines] or ""
+    return tonumber(last:match("^ rfc%.nvim render (%d+)$")) or 0
+end
+
 --- Lowercase, with every run of characters outside [%w.-] collapsed to one
 --- dash, so a title or a citation key spells a tag the help tag scanner
 --- and the search command both accept.
@@ -214,6 +228,7 @@ function M.render(rfc_num, lines)
     end
     table.insert(out, "")
     table.insert(out, MODELINE)
+    table.insert(out, M.FOOTER)
     return { lines = out, tags = tags }
 end
 

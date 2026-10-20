@@ -39,12 +39,29 @@ function M.doc_path(cfg, name)
     return M.doc_dir(cfg) .. "/" .. name .. ".txt"
 end
 
---- Whether the document is on disk.
+--- Whether the document is on disk and rendered by the current render.
 ---@param cfg rfc.Config
 ---@param name string
 ---@return boolean
 function M.has(cfg, name)
-    return vim.fn.filereadable(M.doc_path(cfg, name)) == 1
+    local path = M.doc_path(cfg, name)
+    if vim.fn.filereadable(path) ~= 1 then
+        return false
+    end
+    return help.render_of(vim.fn.readfile(path)) == help.RENDER
+end
+
+--- The stored text, as fetched, or nil when there is none.
+---@param cfg rfc.Config
+---@param name string
+---@param ext string
+---@return string[]|nil
+function M.raw(cfg, name, ext)
+    local path = M.raw_path(cfg, name, ext)
+    if vim.fn.filereadable(path) ~= 1 then
+        return nil
+    end
+    return vim.fn.readfile(path)
 end
 
 --- The doc directory exists and the root is on the runtimepath. Documents

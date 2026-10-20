@@ -60,7 +60,8 @@ local function enabled(source)
     return config.get().sources[source.prefix] == true
 end
 
---- The document in the store: fetched, rendered and written when absent.
+--- The document in the store: fetched, rendered and written when absent,
+--- rendered again from the stored text when an older render wrote it.
 ---@param source rfc.Source
 ---@param id string
 ---@return cds.Task  -- of the document's name
@@ -70,12 +71,11 @@ function M.ensure(source, id)
     if store.has(cfg, name) then
         return Task.of(name)
     end
-    return source
-        .fetch(id)
-        :map(help.clean)
-        :map(function(lines)
-            return { raw = lines, doc = source.render(id, lines) }
-        end)
+    local raw = store.raw(cfg, name, source.raw_ext)
+    local text = raw and Task.of(raw) or source.fetch(id):map(help.clean)
+    return text:map(function(lines)
+        return { raw = lines, doc = source.render(id, lines) }
+    end)
         :on_main()
         :bind(function(r)
             local ok, err = store.write(cfg, name, source.raw_ext, r.raw, r.doc)
@@ -107,32 +107,30 @@ local function vim_error(err)
     return err:match("E%d+:.*") or err
 end
 
---- `:help tag`. A tag of a document its source has not been asked for
---- fetches it first and tries again (erc20 is eip20's alias, so the fetch
---- is eip20's); a tag of a source the reader has not enabled says so; any
---- other refusal is shown as :help would show it.
+--- `:help tag`. A tag of a document that is not in the store, or that an
+--- older render wrote, goes through open first (erc20 is eip20's alias, so
+--- the document is eip20's); a tag of a source the reader has not enabled
+--- says so; any other refusal is shown as :help would show it.
 ---@param tag string
 function M.jump(tag)
     ensure_setup()
+    local source = sources.of(tag)
+    local id = source and tag:match("^%l+(%d+)")
+    if source and id and enabled(source) and not store.has(config.get(), source.prefix .. id) then
+        M.open(source, id, tag)
+        return
+    end
     local ok, err = pcall(vim.cmd.help, tag)
     if ok then
         return
     end
     err = vim_error(tostring(err))
-    local source = err:match("^E149") and sources.of(tag)
-    if source then
-        if not enabled(source) then
-            M.notify(
-                ("%s is %s; enable sources.%s in setup()"):format(tag, source.label, source.prefix),
-                vim.log.levels.WARN
-            )
-            return
-        end
-        local id = tag:match("^%l+(%d+)")
-        if not store.has(config.get(), source.prefix .. id) then
-            M.open(source, id, tag)
-            return
-        end
+    if err:match("^E149") and source and not enabled(source) then
+        M.notify(
+            ("%s is %s; enable sources.%s in setup()"):format(tag, source.label, source.prefix),
+            vim.log.levels.WARN
+        )
+        return
     end
     M.notify(err, vim.log.levels.ERROR)
 end
@@ -149,7 +147,9 @@ function M.open(source, id, tag)
         M.jump(tag)
         return
     end
-    M.notify("fetching " .. source.label .. " " .. id)
+    if not store.raw(config.get(), source.prefix .. id, source.raw_ext) then
+        M.notify("fetching " .. source.label .. " " .. id)
+    end
     run(M.ensure(source, id), source.label .. " " .. id, function(_, err)
         if err then
             M.notify(err, vim.log.levels.ERROR)

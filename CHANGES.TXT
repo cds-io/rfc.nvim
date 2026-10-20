@@ -1,3 +1,22 @@
+2026-10-20  A versioned render
+
+  lua/rfc/help.lua
+    RENDER numbers the render and FOOTER writes it as every document's
+    last line, after the modeline; render_of reads it back.
+
+  lua/rfc/store.lua
+    has is true only for a document the current render wrote; raw reads
+    the stored text.
+
+  lua/rfc/init.lua
+    ensure renders a missing or outdated document from the stored text
+    when there is one, and fetches only when there is none; jump sends a
+    tag whose document is missing or outdated through open before :help,
+    so a cached document meets each render improvement on its next open.
+
+  spec/
+    render_of and the re-render case: 44 pure and 32 editor cases.
+
 2026-10-20  Tables and inline markup in proposals
 
   lua/rfc/help_eip.lua

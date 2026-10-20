@@ -370,6 +370,26 @@ describe("rfc", function()
     end)
 
     describe("the store", function()
+        it("renders a document again from the stored text when an older render wrote it", function()
+            vim.cmd("Eip 1559")
+            assert.is_true(editor.wait_help("eip1559"))
+            vim.cmd("helpclose")
+            local cfg = config.get()
+            local path = store.doc_path(cfg, "eip1559")
+            local old = vim.fn.readfile(path)
+            old[#old] = " rfc.nvim render 1"
+            old[7] = "stale"
+            vim.fn.writefile(old, path)
+            case.notices = {}
+            vim.cmd("Eip 1559")
+            assert.is_true(editor.wait_help("eip1559"))
+            assert.are.same({ "eip1559" }, case.fetched)
+            assert.are.same({}, case.notices)
+            local fresh = vim.fn.readfile(path)
+            assert.are.equal("  |eip1559-simple-summary|  Simple Summary", fresh[7])
+            assert.are.equal(" rfc.nvim render 2", fresh[#fresh])
+        end)
+
         it("retires the documents of the old erc source when it registers", function()
             local cfg = config.get()
             vim.fn.writefile({ "*erc55.txt*  Old  *erc55* *eip55*" }, store.doc_path(cfg, "erc55"))
