@@ -150,10 +150,16 @@ function M.open(source, id, tag)
     if not store.raw(config.get(), source.prefix .. id, source.raw_ext) then
         M.notify("fetching " .. source.label .. " " .. id)
     end
-    run(M.ensure(source, id), source.label .. " " .. id, function(_, err)
+    run(M.ensure(source, id), source.label .. " " .. id, function(name, err)
         if err then
             M.notify(err, vim.log.levels.ERROR)
             return
+        end
+        -- a buffer still holding the document's earlier render goes, so :help
+        -- reads the file written just now rather than showing what it loaded
+        local stale = vim.fn.bufnr(store.doc_path(config.get(), name))
+        if stale ~= -1 then
+            vim.api.nvim_buf_delete(stale, { force = true })
         end
         M.jump(tag)
     end)

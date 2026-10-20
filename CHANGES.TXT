@@ -16,7 +16,9 @@
     ensure renders a missing or outdated document from the stored text
     when there is one, and fetches only when there is none; jump sends a
     tag whose document is missing or outdated through open before :help,
-    so a cached document meets each render improvement on its next open.
+    so a cached document meets each render improvement on its next open,
+    and a buffer still holding the earlier render is dropped first so
+    :help shows the file just written.
 
   spec/
     render_of and the re-render case: 44 pure and 32 editor cases.

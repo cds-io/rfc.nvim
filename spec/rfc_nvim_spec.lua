@@ -390,6 +390,27 @@ describe("rfc", function()
             assert.are.equal(" rfc.nvim render 3", fresh[#fresh])
         end)
 
+        it("shows the new render in a buffer that held the old one", function()
+            vim.cmd("Eip 1559")
+            assert.is_true(editor.wait_help("eip1559"))
+            local cfg = config.get()
+            local path = store.doc_path(cfg, "eip1559")
+            local old = vim.fn.readfile(path)
+            old[#old] = " rfc.nvim render 1"
+            old[7] = "stale"
+            vim.fn.writefile(old, path)
+            vim.cmd("edit!")
+            assert.are.equal("stale", vim.api.nvim_buf_get_lines(0, 6, 7, false)[1])
+            vim.cmd("Eip 1559")
+            assert.is_true(vim.wait(2000, function()
+                return editor.wait_help("eip1559") and vim.api.nvim_buf_get_lines(0, 6, 7, false)[1] ~= "stale"
+            end))
+            assert.are.equal(
+                "  |eip1559-simple-summary|  Simple Summary",
+                vim.api.nvim_buf_get_lines(0, 6, 7, false)[1]
+            )
+        end)
+
         it("retires the documents of the old erc source when it registers", function()
             local cfg = config.get()
             vim.fn.writefile({ "*erc55.txt*  Old  *erc55* *eip55*" }, store.doc_path(cfg, "erc55"))
