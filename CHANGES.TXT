@@ -1,0 +1,53 @@
+2026-10-19  RFCs as help documents
+
+  lua/rfc/toc.lua, refs.lua, index.lua (pure)
+    The RFC's table of contents as entries with their heading lines, the
+    references a line makes (RFC mentions, sections, citations), and the
+    RFC index as entries with their obsoletes and format.
+
+  lua/rfc/help.lua (pure)
+    render(rfc_num, lines) is total: it answers a help document for any
+    text, with the file tag on line 1, a tag at column 78 on every
+    heading the ToC names and on every entry of the references, each
+    ToC row's number as a link to its heading, and the body's "Section
+    3.1", "Section 14.4 of [RFC2616]", "RFC 2616", "[RFC2616]" and
+    "[CACHING]" as links; a same-document section links only when its
+    heading was found. title reads the centred title after the header
+    block; clean turns a fetched body into lines; tags_in reads a
+    document's tags back and tags_file writes the sorted tags file the
+    store keeps, so a stray *tag* in an RFC's text never becomes one.
+
+  lua/rfc/store.lua (rim)
+    The cache directory as a runtimepath entry: the text as fetched, the
+    document under doc/, the tags file rebuilt from every document, and
+    the index with its day-long freshness.
+
+  lua/rfc/fetch.lua (rim)
+    The RFC Editor over cds.http as Tasks; a 404 reads as the RFC not
+    existing.
+
+  lua/rfc/init.lua (rim)
+    open (fetch, clean, render, write, then :help, as one Task tracked in
+    the activity segment), jump (:help with a fetch on E149 for an RFC
+    tag not in the store), follow and follow_line for CTRL-] and <CR> in
+    the plugin's help buffers, pick for the index, attach for the keys
+    and the requirement-keyword highlight, notify through the reader's
+    handler, and activity for the statusline.
+
+  lua/rfc/config.lua
+    cache_dir and notify.
+
+  lua/cds/
+    task, async, proc, http and activity, copied from calplus unchanged
+    (its invariants say the modules are meant to be copied); fenced from
+    stylua in .styluaignore.
+
+  plugin/rfc.lua
+    :Rfc takes a number, a tag or nothing; a FileType autocmd attaches
+    the keys to the help buffers the store owns.
+
+  spec/
+    59 pure cases over the parsers and the render, 15 editor cases over
+    the command, :help, the keys and the index, with the store in a
+    temporary directory and the network replaced by fixture text.
+    make check runs both tiers, selene and stylua.

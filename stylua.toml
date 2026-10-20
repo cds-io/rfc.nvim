@@ -1,0 +1,8 @@
+# The house style: 4-space indent, double quotes, calls always parenthesised,
+# width 120.
+column_width = 120
+line_endings = "Unix"
+indent_type = "Spaces"
+indent_width = 4
+quote_style = "AutoPreferDouble"
+call_parentheses = "Always"

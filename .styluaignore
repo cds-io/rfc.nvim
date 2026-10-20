@@ -1,0 +1,3 @@
+# lua/cds/ is copied from calplus unchanged (its invariants say the modules
+# are meant to be copied), so it keeps that plugin's two-space style.
+lua/cds/
