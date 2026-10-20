@@ -1,3 +1,55 @@
+2026-10-20  Ethereum proposals as sources
+
+  lua/rfc/sources.lua (rim)
+    A source is one record: prefix and label, where its text and index
+    come from, how the index reads into entries, and how the text
+    renders. rfc is the RFC Editor; eip and erc come from one
+    constructor over a GitHub repository and a listing page.
+    sources.all orders the picker; sources.of names a tag's source.
+
+  lua/rfc/help_eip.lua (pure)
+    render(prefix, id, lines) is total: the file tag line with the
+    frontmatter's title (an ERC also carries its EIP number as a tag), a
+    header of status, type, category and created, the requires as
+    links, the author, a CONTENTS of links to every heading indented by
+    level, each heading tagged by its slug (level two in capitals, a
+    repeated heading numbered), fenced code as help code blocks, every
+    EIP or ERC the text names as a link, and a moved stub linking to
+    where it went.
+
+  lua/rfc/config.lua
+    sources: which of rfc, eip and erc :Rfc reads; rfc alone by
+    default.
+
+  lua/rfc/init.lua
+    open, ensure and the picker take a source; jump reads a tag's
+    source by its prefix, fetches on E149 when the source is enabled
+    and says which setting to enable otherwise; the picker lists every
+    enabled source's index, RFCs then EIPs then ERCs.
+
+  lua/rfc/store.lua
+    Documents are named by their tag, with the text stored under the
+    source's extension; the index file is the source's.
+
+  lua/rfc/fetch.lua
+    proposal (a markdown file in a repository) and listing (a page).
+
+  lua/rfc/help.lua
+    tags_in reads every tag shaped as a prefix and a number, whichever
+    source wrote it; slug, with_tag and MODELINE are shared.
+
+  lua/cds/eip.lua
+    Vendored from ../cds.
+
+  plugin/rfc.lua
+    :Rfc takes a number, any source's tag, or nothing.
+
+  spec/
+    11 pure cases over the EIP render and 7 editor cases over the
+    Ethereum sources, with EIP-1, EIP-1559, ERC-20, the moved EIP-20
+    stub and excerpts of both listing pages as fixtures: 39 pure and 22
+    editor cases in all.
+
 2026-10-19  RFCs as help documents
 
   cds.rfc (pure; the house library's RFC reader, specced in ../cds)

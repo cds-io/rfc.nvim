@@ -25,10 +25,11 @@ local MODELINE = " vim:tw=78:ts=8:ft=help:norl:"
 --- and the search command both accept.
 ---@param s string
 ---@return string
-local function slug(s)
+function M.slug(s)
     local out = s:lower():gsub("[^%w%.%-]+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
     return out
 end
+local slug = M.slug
 
 --- The tag for a section: `rfc9110-3.1` for "3.1", `rfc9110-A` for appendix
 --- A, and the slugged title for a part with no number (Index).
@@ -90,14 +91,18 @@ function M.clean(body)
     return lines
 end
 
+--- The line with `*tag*` ending at column 78, or one space after the
+--- line when it leaves no room.
 ---@param line string
 ---@param tag string
 ---@return string
-local function with_tag(line, tag)
+function M.with_tag(line, tag)
     local star = "*" .. tag .. "*"
     local pad = WIDTH - #line - #star
     return line .. string.rep(" ", math.max(pad, 1)) .. star
 end
+local with_tag = M.with_tag
+M.MODELINE = MODELINE
 
 --- Replaces the first plain occurrence of `needle` in `line` with `repl`.
 ---@param line string
@@ -212,20 +217,16 @@ function M.render(rfc_num, lines)
     return { lines = out, tags = tags }
 end
 
---- The tags a rendered document carries: the file tag on its first line and
---- the tag at the end of every heading and reference entry. The store reads
---- every document back through this to rebuild the tags file.
+--- The tags a rendered document carries: every `*tag*` whose name is a
+--- source prefix and a number (rfc9110, eip1559-abstract, erc20.txt), which
+--- is the shape every render declares and no text contains by accident. The
+--- store reads every document back through this to rebuild the tags file.
 ---@param lines string[]
 ---@return rfc.HelpTag[]
 function M.tags_in(lines)
     local tags = {}
-    local file_tag = lines[1] and lines[1]:match("^%*(rfc%d+%.txt)%*")
-    if file_tag then
-        table.insert(tags, { name = file_tag, line = 1 })
-    end
     for i, line in ipairs(lines) do
-        local name = line:match("%*(rfc%d[^%s%*]*)%*$")
-        if name then
+        for name in line:gmatch("%*(%l%l%l%d[%w%.%-]*)%*") do
             table.insert(tags, { name = name, line = i })
         end
     end

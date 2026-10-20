@@ -5,13 +5,13 @@ vim.api.nvim_create_user_command("Rfc", function(cmd)
     if arg == "" then
         rfc.pick()
     elseif arg:match("^%d+$") then
-        rfc.open(arg)
-    elseif arg:match("^rfc%d+") then
+        rfc.jump("rfc" .. arg)
+    elseif arg:match("^%l+%d+") then
         rfc.jump(arg)
     else
-        rfc.notify("usage: :Rfc [<number> | rfc<number>[-<section>]]", vim.log.levels.WARN)
+        rfc.notify("usage: :Rfc [<number> | rfc<number>[-<section>] | eip<number> | erc<number>]", vim.log.levels.WARN)
     end
-end, { nargs = "?", desc = "Open an RFC as help: a number, a tag, or nothing for the index" })
+end, { nargs = "?", desc = "Open an RFC, EIP or ERC as help: a number, a tag, or nothing for the index" })
 
 vim.api.nvim_create_autocmd("FileType", {
     pattern = "help",

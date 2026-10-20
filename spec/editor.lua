@@ -14,19 +14,31 @@ function M.load_plugin()
     vim.cmd("runtime plugin/rfc.lua")
 end
 
---- A fresh store in a temporary directory, the network replaced by the
---- fixtures (an RFC outside them does not exist), vim.notify and
---- vim.ui.select captured. Returns the case's record and its restore.
+--- A fresh store in a temporary directory, every source enabled, the
+--- network replaced by the fixtures (a document outside them does not
+--- exist), vim.notify and vim.ui.select captured. Returns the case's record
+--- and its restore; `case.setup(sources)` reconfigures the sources.
 function M.start()
     local fetch = require("rfc.fetch")
-    local saved = { rfc = fetch.rfc, index = fetch.index, select = vim.ui.select, rtp = vim.o.runtimepath }
+    local saved = {
+        rfc = fetch.rfc,
+        index = fetch.index,
+        proposal = fetch.proposal,
+        listing = fetch.listing,
+        select = vim.ui.select,
+        rtp = vim.o.runtimepath,
+    }
     local case = { dir = vim.fn.tempname(), notices = {}, fetched = {} }
-    require("rfc").setup({
-        cache_dir = case.dir,
-        notify = function(msg, level, opts)
-            table.insert(case.notices, { msg = msg, level = level, title = opts.title })
-        end,
-    })
+    function case.setup(sources)
+        require("rfc").setup({
+            cache_dir = case.dir,
+            sources = sources,
+            notify = function(msg, level, opts)
+                table.insert(case.notices, { msg = msg, level = level, title = opts.title })
+            end,
+        })
+    end
+    case.setup({ rfc = true, eip = true, erc = true })
     local bodies = {
         ["9110"] = fixtures.rfc9110,
         ["2616"] = fixtures.rfc2616,
@@ -45,9 +57,29 @@ function M.start()
         table.insert(case.fetched, "index")
         return Task.of(table.concat(fixtures.read(fixtures.rfc_index), "\n") .. "\n")
     end
+    local proposals = {
+        eip1 = fixtures.eip1,
+        eip1559 = fixtures.eip1559,
+        eip20 = fixtures.eip20_moved,
+        erc20 = fixtures.erc20,
+    }
+    fetch.proposal = function(_, _, prefix, id)
+        table.insert(case.fetched, prefix .. id)
+        if not proposals[prefix .. id] then
+            return Task.fail(prefix:upper() .. " " .. id .. " does not exist")
+        end
+        return Task.of(table.concat(fixtures.read(proposals[prefix .. id]), "\n") .. "\n")
+    end
+    fetch.listing = function(url)
+        local which = url:match("eips") and "eips" or "ercs"
+        table.insert(case.fetched, which .. "-index")
+        return Task.of(table.concat(fixtures.read(fixtures[which .. "_all"]), "\n") .. "\n")
+    end
     local function restore()
         fetch.rfc = saved.rfc
         fetch.index = saved.index
+        fetch.proposal = saved.proposal
+        fetch.listing = saved.listing
         vim.ui.select = saved.select
         -- every help window and document buffer goes, then the store's root
         -- leaves the runtimepath so the next case's root is the only one
@@ -63,12 +95,16 @@ function M.start()
     return case, restore
 end
 
---- Waits for the current buffer to be the help document of `rfc_num`.
----@param rfc_num string
+--- Waits for the current buffer to be the help document named `name`
+--- (an RFC number, or a tag such as eip1559).
+---@param name string
 ---@return boolean
-function M.wait_help(rfc_num)
+function M.wait_help(name)
+    if name:match("^%d") then
+        name = "rfc" .. name
+    end
     return vim.wait(2000, function()
-        return vim.bo.filetype == "help" and vim.api.nvim_buf_get_name(0):match("/rfc" .. rfc_num .. "%.txt$") ~= nil
+        return vim.bo.filetype == "help" and vim.api.nvim_buf_get_name(0):match("/" .. name .. "%.txt$") ~= nil
     end)
 end
 

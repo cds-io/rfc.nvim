@@ -16,7 +16,8 @@ check: vendor-check test test-nvim lint fmt-check
 # `vendor-check` refuses a copy that differs. A checkout without ../cds
 # (CI) skips the check.
 CDS_SRC ?= ../cds
-CDS_FILES := lua/cds/task.lua lua/cds/async.lua lua/cds/proc.lua lua/cds/http.lua lua/cds/activity.lua lua/cds/rfc.lua
+CDS_FILES := lua/cds/task.lua lua/cds/async.lua lua/cds/proc.lua lua/cds/http.lua lua/cds/activity.lua lua/cds/rfc.lua \
+	lua/cds/eip.lua
 
 vendor:
 	@for f in $(CDS_FILES); do cp "$(CDS_SRC)/$$f" "$$f"; done

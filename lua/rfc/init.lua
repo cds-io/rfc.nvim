@@ -1,10 +1,10 @@
--- The dispatch rim: :Rfc, the keys in an RFC's help buffer, and the
--- pipeline that fetches an RFC, renders it and hands it to :help.
+-- The dispatch rim: :Rfc, the keys in a document's help buffer, and the
+-- pipeline that fetches a document from its source, renders it and hands
+-- it to :help.
 local config = require("rfc.config")
 local store = require("rfc.store")
-local fetch = require("rfc.fetch")
 local help = require("rfc.help")
-local rfc = require("cds.rfc")
+local sources = require("rfc.sources")
 local Task = require("cds.task")
 
 local M = {}
@@ -54,27 +54,35 @@ local function ensure_setup()
     end
 end
 
---- The RFC in the store: fetched, rendered and written when it is absent.
----@param rfc_num string
----@return cds.Task  -- of rfc_num
-function M.ensure(rfc_num)
+---@param source rfc.Source
+---@return boolean
+local function enabled(source)
+    return config.get().sources[source.prefix] == true
+end
+
+--- The document in the store: fetched, rendered and written when absent.
+---@param source rfc.Source
+---@param id string
+---@return cds.Task  -- of the document's name
+function M.ensure(source, id)
     local cfg = config.get()
-    if store.has(cfg, rfc_num) then
-        return Task.of(rfc_num)
+    local name = source.prefix .. id
+    if store.has(cfg, name) then
+        return Task.of(name)
     end
-    return fetch
-        .rfc(rfc_num)
+    return source
+        .fetch(id)
         :map(help.clean)
         :map(function(lines)
-            return { raw = lines, doc = help.render(rfc_num, lines) }
+            return { raw = lines, doc = source.render(id, lines) }
         end)
         :on_main()
         :bind(function(r)
-            local ok, err = store.write(cfg, rfc_num, r.raw, r.doc)
+            local ok, err = store.write(cfg, name, source.raw_ext, r.raw, r.doc)
             if not ok then
                 return Task.fail(err)
             end
-            return Task.of(rfc_num)
+            return Task.of(name)
         end)
 end
 
@@ -99,8 +107,9 @@ local function vim_error(err)
     return err:match("E%d+:.*") or err
 end
 
---- `:help tag`. A tag of an RFC not in the store fetches it first and
---- tries again; any other refusal is shown as :help would show it.
+--- `:help tag`. A tag of a document its source has not been asked for
+--- fetches it first and tries again; a tag of a source the reader has not
+--- enabled says so; any other refusal is shown as :help would show it.
 ---@param tag string
 function M.jump(tag)
     ensure_setup()
@@ -109,26 +118,38 @@ function M.jump(tag)
         return
     end
     err = vim_error(tostring(err))
-    local rfc_num = tag:match("^rfc(%d+)")
-    if rfc_num and err:match("^E149") and not store.has(config.get(), rfc_num) then
-        M.open(rfc_num, tag)
-        return
+    local source = err:match("^E149") and sources.of(tag)
+    if source then
+        if not enabled(source) then
+            M.notify(
+                ("%s is %s; enable sources.%s in setup()"):format(tag, source.label, source.prefix),
+                vim.log.levels.WARN
+            )
+            return
+        end
+        local id = tag:match("^%l+(%d+)")
+        if not store.has(config.get(), source.prefix .. id) then
+            M.open(source, id, tag)
+            return
+        end
     end
     M.notify(err, vim.log.levels.ERROR)
 end
 
---- Opens the RFC at `tag` (its own tag by default), fetching it when needed.
----@param rfc_num string
+--- Opens the document at `tag` (its own tag by default), fetching it from
+--- its source when needed.
+---@param source rfc.Source
+---@param id string
 ---@param tag? string
-function M.open(rfc_num, tag)
+function M.open(source, id, tag)
     ensure_setup()
-    tag = tag or ("rfc" .. rfc_num)
-    if store.has(config.get(), rfc_num) then
+    tag = tag or (source.prefix .. id)
+    if store.has(config.get(), source.prefix .. id) then
         M.jump(tag)
         return
     end
-    M.notify("fetching RFC " .. rfc_num)
-    run(M.ensure(rfc_num), "RFC " .. rfc_num, function(_, err)
+    M.notify("fetching " .. source.label .. " " .. id)
+    run(M.ensure(source, id), source.label .. " " .. id, function(_, err)
         if err then
             M.notify(err, vim.log.levels.ERROR)
             return
@@ -157,21 +178,22 @@ function M.follow_line()
     M.jump(tag)
 end
 
---- The index as a Task of its lines: the cached copy while it is a day
---- old, fetched otherwise, and the stale copy when the fetch fails.
+--- A source's index as a Task of its lines: the cached copy while it is a
+--- day old, fetched otherwise, and the stale copy when the fetch fails.
+---@param source rfc.Source
 ---@return cds.Task
-function M.index_lines()
+function M.index_lines(source)
     local cfg = config.get()
-    local cached, fresh = store.read_index(cfg)
+    local cached, fresh = store.read_index(cfg, source.index_file)
     if cached and fresh then
         return Task.of(cached)
     end
-    return fetch
+    return source
         .index()
         :map(help.clean)
         :on_main()
         :bind(function(lines)
-            local ok, err = store.write_index(cfg, lines)
+            local ok, err = store.write_index(cfg, source.index_file, lines)
             if not ok then
                 return Task.fail(err)
             end
@@ -180,7 +202,10 @@ function M.index_lines()
         :recover(function(err)
             if cached then
                 M.notify(
-                    "the RFC index could not be refreshed (" .. tostring(err) .. "); using the stale copy",
+                    ("the %s index could not be refreshed (%s); using the stale copy"):format(
+                        source.label,
+                        tostring(err)
+                    ),
                     vim.log.levels.WARN
                 )
                 return Task.of(cached)
@@ -189,38 +214,55 @@ function M.index_lines()
         end)
 end
 
---- Picks an RFC from the index with vim.ui.select and opens it.
+--- Picks a document from the enabled sources' indices with vim.ui.select
+--- and opens it.
 function M.pick()
     ensure_setup()
-    run(M.index_lines(), "RFC index", function(lines, err)
+    local tasks = {}
+    for _, source in ipairs(sources.all) do
+        if enabled(source) then
+            table.insert(
+                tasks,
+                M.index_lines(source):map(function(lines)
+                    local items = {}
+                    for _, entry in ipairs(source.entries(lines)) do
+                        table.insert(items, { source = source, entry = entry })
+                    end
+                    return items
+                end)
+            )
+        end
+    end
+    run(Task.all(tasks), "index", function(lists, err)
         if err then
             M.notify(err, vim.log.levels.ERROR)
             return
         end
-        vim.ui.select(rfc.index(lines), {
+        local items = {}
+        for _, list in ipairs(lists) do
+            vim.list_extend(items, list)
+        end
+        vim.ui.select(items, {
             kind = "rfc",
-            prompt = "search/select an RFC",
+            prompt = "search/select a document",
             format_item = function(item)
-                return item.number .. " " .. item.label
+                return item.source.label .. " " .. item.entry.id .. "  " .. item.entry.label
             end,
         }, function(item)
             if not item then
                 return
             end
-            if not vim.tbl_contains(item.formats, "TXT") then
-                M.notify(
-                    ("RFC %s has no text version (%s)"):format(item.number, table.concat(item.formats, ", ")),
-                    vim.log.levels.WARN
-                )
+            if not item.entry.text then
+                M.notify(("%s %s has no text version"):format(item.source.label, item.entry.id), vim.log.levels.WARN)
                 return
             end
-            M.open(item.number)
+            M.open(item.source, item.entry.id)
         end)
     end)
 end
 
--- The requirement keywords of RFC 2119, highlighted in an RFC's help buffer.
--- A keyword may wrap, so a space in it matches across a line break.
+-- The requirement keywords of RFC 2119, highlighted in a document's help
+-- buffer. A keyword may wrap, so a space in it matches across a line break.
 -- stylua: ignore
 local REQUIREMENTS = {
     "MUST NOT", "MUST", "NOT REQUIRED", "REQUIRED", "SHALL NOT", "SHALL", "SHOULD NOT", "SHOULD",
@@ -238,7 +280,7 @@ function M.owns(buf)
     return vim.startswith(name, dir)
 end
 
---- The keys and highlights of an RFC's help buffer; a no-op for any other.
+--- The keys and highlights of a document's help buffer; a no-op for any other.
 ---@param buf integer
 function M.attach(buf)
     ensure_setup()
