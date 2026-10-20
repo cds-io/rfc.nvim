@@ -1,3 +1,15 @@
+2026-10-20  The RFC render as one fold
+
+  lua/rfc/help.lua
+    render folds over cds.rfc.blocks, the text as classified lines
+    (page header, heading, ToC row, reference entry, line) carrying
+    their mentions, with one decoration per kind after the link pass;
+    the tags come from the heading and reference blocks. The same shape
+    as the proposal render.
+
+  lua/cds/rfc.lua
+    Vendored from ../cds: blocks.
+
 2026-10-20  Every line of an RFC links what it names
 
   lua/rfc/help.lua

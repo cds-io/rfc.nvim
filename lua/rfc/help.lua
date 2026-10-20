@@ -160,17 +160,16 @@ local function tag_for(m, ctx, own)
     return ctx.known[here] and here or nil
 end
 
---- Every mention on the line replaced by its link, last to first so the
---- earlier spans stay where they were found.
----@param line string
+--- A block's text with every mention replaced by its link, last to first
+--- so the earlier spans stay where the reader found them.
+---@param b cds.rfc.Block
 ---@param ctx rfc.help.Context
----@param own? string
 ---@return string
-local function link(line, ctx, own)
-    local mentions = rfc.mentions(line)
-    for i = #mentions, 1, -1 do
-        local m = mentions[i]
-        local tag = tag_for(m, ctx, own)
+local function link(b, ctx)
+    local line = b.text
+    for i = #b.mentions, 1, -1 do
+        local m = b.mentions[i]
+        local tag = tag_for(m, ctx, b.citation)
         if tag then
             line = line:sub(1, m.first - 1) .. "|" .. tag .. "|" .. line:sub(m.last + 1)
         end
@@ -178,28 +177,28 @@ local function link(line, ctx, own)
     return line
 end
 
---- The document for an RFC's text.
+--- The document for an RFC's text: one fold over the reader's blocks.
+--- Every block links what it names, then gets its kind's decoration: the
+--- tag on a heading or a reference entry, the row link on a ToC row; a
+--- page header is left as written.
 ---@param rfc_num string
 ---@param lines string[]
 ---@return rfc.HelpDoc
 function M.render(rfc_num, lines)
-    local sections = rfc.contents(lines)
+    local blocks = rfc.blocks(lines)
     local file_tag = "rfc" .. rfc_num
-    local heading_tag, row_link, known = {}, {}, {}
-    for _, s in ipairs(sections) do
-        local tag = M.tag(rfc_num, s.number, s.title)
-        heading_tag[s.line] = tag
-        row_link[s.toc_line] = { needle = s.label ~= "" and s.label or s.title, tag = tag }
-        known[tag] = true
-    end
-    local references = rfc.references(lines, sections)
-    local ref_tag_at, ref_tags, citation_at = {}, {}, {}
-    for citation, i in pairs(references.entries) do
-        citation_at[i] = citation
-        if not citation:match("^%[RFC%d+%]$") then
-            local tag = M.ref_tag(rfc_num, citation)
-            ref_tag_at[i] = tag
-            ref_tags[citation] = tag
+    local tag_of, known, ref_tags, entry_at = {}, {}, {}, {}
+    for _, b in ipairs(blocks) do
+        if b.kind == "heading" or b.kind == "row" then
+            local tag = M.tag(rfc_num, b.section.number, b.section.title)
+            tag_of[b] = tag
+            known[tag] = true
+        elseif b.kind == "reference" then
+            entry_at[b.citation] = b.line
+            if not b.citation:match("^%[RFC%d+%]$") then
+                tag_of[b] = M.ref_tag(rfc_num, b.citation)
+                ref_tags[b.citation] = tag_of[b]
+            end
         end
     end
     local ctx = {
@@ -207,31 +206,38 @@ function M.render(rfc_num, lines)
         known = known,
         ref_tags = ref_tags,
         cite_rfc = function(citation)
-            local entry = references.entries[citation]
-            return entry and rfc.cited_rfc(lines, entry)
+            return entry_at[citation] and rfc.cited_rfc(lines, entry_at[citation])
+        end,
+    }
+
+    local decorate = {
+        header = function(b)
+            return b.text
+        end,
+        heading = function(b)
+            return with_tag(link(b, ctx), tag_of[b])
+        end,
+        row = function(b)
+            local needle = b.section.label ~= "" and b.section.label or b.section.title
+            return replace_first(link(b, ctx), needle, "|" .. tag_of[b] .. "|")
+        end,
+        reference = function(b)
+            local text = link(b, ctx)
+            return tag_of[b] and with_tag(text, tag_of[b]) or text
+        end,
+        line = function(b)
+            return link(b, ctx)
         end,
     }
 
     local title = M.title(lines) or ("RFC " .. rfc_num)
     local out = { with_tag("*" .. file_tag .. ".txt*  " .. title, file_tag) }
     local tags = { { name = file_tag, line = 1 }, { name = file_tag .. ".txt", line = 1 } }
-    -- every line links what it mentions, then gets its decoration: the tag
-    -- on a heading or a reference entry, the link on a ToC row. A page header
-    -- names the RFC on every page and is the one line left as it is.
-    for i, line in ipairs(lines) do
-        if not line:match("^RFC%s*%d+") then
-            line = link(line, ctx, citation_at[i])
+    for _, b in ipairs(blocks) do
+        table.insert(out, decorate[b.kind](b))
+        if tag_of[b] and b.kind ~= "row" then
+            table.insert(tags, { name = tag_of[b], line = #out })
         end
-        if heading_tag[i] then
-            line = with_tag(line, heading_tag[i])
-            table.insert(tags, { name = heading_tag[i], line = i + 1 })
-        elseif row_link[i] then
-            line = replace_first(line, row_link[i].needle, "|" .. row_link[i].tag .. "|")
-        elseif ref_tag_at[i] then
-            line = with_tag(line, ref_tag_at[i])
-            table.insert(tags, { name = ref_tag_at[i], line = i + 1 })
-        end
-        table.insert(out, line)
     end
     table.insert(out, "")
     table.insert(out, MODELINE)

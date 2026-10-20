@@ -20,6 +20,14 @@ local M = {}
 ---@field number string|nil -- section: "3.1", without a trailing dot
 ---@field citation string|nil -- citation: "[CACHING]"; section: the citation the "of" names
 
+---@class cds.rfc.Block
+---@field kind "header"|"heading"|"row"|"reference"|"line"
+---@field line integer
+---@field text string                 -- the line as written
+---@field mentions cds.rfc.Mention[]  -- what the line names; none for a page header
+---@field section cds.rfc.Section|nil -- heading, row: the section
+---@field citation string|nil         -- reference: the key the entry defines
+
 ---@class cds.rfc.IndexEntry
 ---@field number string
 ---@field label string        -- title, authors and date, as the index prints them
@@ -325,6 +333,45 @@ function M.mentions(line)
     return a.first < b.first
   end)
   return found
+end
+
+--- The text as blocks, one per line, each classified and carrying what it
+--- names: a page header (left alone by a renderer), a section heading, a
+--- row of the table of contents, the first line of a reference entry, or
+--- any other line. This is the view a renderer folds over.
+---@param lines string[]
+---@return cds.rfc.Block[]
+function M.blocks(lines)
+  local sections = M.contents(lines)
+  local heading_at, row_at = {}, {}
+  for _, s in ipairs(sections) do
+    heading_at[s.line] = s
+    row_at[s.toc_line] = s
+  end
+  local citation_at = {}
+  for citation, i in pairs(M.references(lines, sections).entries) do
+    citation_at[i] = citation
+  end
+  local blocks = {}
+  for i, line in ipairs(lines) do
+    local block = { line = i, text = line, mentions = {} }
+    if line:match("^RFC%s*%d+") then
+      block.kind = "header"
+    else
+      block.mentions = M.mentions(line)
+      if heading_at[i] then
+        block.kind, block.section = "heading", heading_at[i]
+      elseif row_at[i] then
+        block.kind, block.section = "row", row_at[i]
+      elseif citation_at[i] then
+        block.kind, block.citation = "reference", citation_at[i]
+      else
+        block.kind = "line"
+      end
+    end
+    table.insert(blocks, block)
+  end
+  return blocks
 end
 
 --- The RFC Editor's index (rfc-index.txt) as entries. A block is a number
