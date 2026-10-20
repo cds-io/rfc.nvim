@@ -1,5 +1,5 @@
 local rfc = require("cds.rfc")
-local fixtures = require("spec.fixtures")
+local fixtures = require("spec.cds.fixtures")
 
 local function section(sections, number, title)
     for _, s in ipairs(sections) do

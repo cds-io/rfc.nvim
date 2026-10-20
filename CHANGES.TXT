@@ -55,6 +55,8 @@
     the keys to the help buffers the store owns.
 
   spec/
+    spec/cds/ holds the reader's spec and its fixtures (five RFC texts
+    and an index excerpt from the RFC Editor), copying with the module.
     58 pure cases over the reader and the render, 15 editor cases over
     the command, :help, the keys and the index, with the store in a
     temporary directory and the network replaced by fixture text.

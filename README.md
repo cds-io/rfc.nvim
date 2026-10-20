@@ -75,4 +75,6 @@ out, with their seconds; `User RfcActivity` fires when one starts or ends.
 busted inside Neovim (nlua), selene and stylua. The editor specs point the
 store at a temporary directory and replace the network with fixture text;
 `lua/cds/` is the house library in calplus's style: `rfc.lua` has its home
-here, and the rest is copied from calplus unchanged.
+here, with its spec and fixtures under `spec/cds/` so the three copy
+together, and the rest is copied from calplus unchanged. The fixtures are
+the RFC Editor's own texts.

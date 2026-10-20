@@ -56,7 +56,7 @@ Table of Contents
 
 
 Berners-Lee, et al           Informational                      [Page 1]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -112,7 +112,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                      [Page 2]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -168,7 +168,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                      [Page 3]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -224,7 +224,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                      [Page 4]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -280,7 +280,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                      [Page 5]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -336,7 +336,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                      [Page 6]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -392,7 +392,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                      [Page 7]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -448,7 +448,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                      [Page 8]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -504,7 +504,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                      [Page 9]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -560,7 +560,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 10]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -616,7 +616,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 11]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -672,7 +672,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 12]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -728,7 +728,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 13]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -784,7 +784,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 14]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -840,7 +840,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 15]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -896,7 +896,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 16]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -952,7 +952,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 17]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -1008,7 +1008,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 18]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -1064,7 +1064,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 19]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -1120,7 +1120,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 20]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -1176,7 +1176,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 21]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -1232,7 +1232,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 22]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -1288,7 +1288,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 23]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -1344,7 +1344,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 24]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -1400,7 +1400,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 25]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -1456,7 +1456,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 26]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -1512,7 +1512,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 27]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -1568,7 +1568,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 28]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -1624,7 +1624,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 29]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -1680,7 +1680,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 30]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -1736,7 +1736,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 31]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -1792,7 +1792,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 32]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -1848,7 +1848,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 33]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -1904,7 +1904,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 34]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -1960,7 +1960,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 35]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -2016,7 +2016,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 36]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -2072,7 +2072,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 37]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -2128,7 +2128,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 38]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -2184,7 +2184,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 39]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -2240,7 +2240,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 40]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -2296,7 +2296,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 41]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -2352,7 +2352,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 42]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -2408,7 +2408,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 43]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -2464,7 +2464,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 44]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -2520,7 +2520,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 45]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -2576,7 +2576,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 46]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -2632,7 +2632,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 47]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -2688,7 +2688,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 48]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -2744,7 +2744,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 49]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -2800,7 +2800,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 50]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -2856,7 +2856,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 51]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -2912,7 +2912,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 52]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -2968,7 +2968,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 53]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -3024,7 +3024,7 @@ RFC 1945                        HTTP/1.0                        May 1996
 
 
 Berners-Lee, et al           Informational                     [Page 54]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -3080,7 +3080,7 @@ B.  Tolerant Applications
 
 
 Berners-Lee, et al           Informational                     [Page 55]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -3136,7 +3136,7 @@ C.1  Conversion to Canonical Form
 
 
 Berners-Lee, et al           Informational                     [Page 56]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -3192,7 +3192,7 @@ D.  Additional Features
 
 
 Berners-Lee, et al           Informational                     [Page 57]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -3248,7 +3248,7 @@ D.2.1 Accept
 
 
 Berners-Lee, et al           Informational                     [Page 58]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -3304,7 +3304,7 @@ D.2.7 MIME-Version
 
 
 Berners-Lee, et al           Informational                     [Page 59]
-
+
 RFC 1945                        HTTP/1.0                        May 1996
 
 
@@ -3360,4 +3360,4 @@ D.2.10 URI
 
 
 Berners-Lee, et al           Informational                     [Page 60]
-
+

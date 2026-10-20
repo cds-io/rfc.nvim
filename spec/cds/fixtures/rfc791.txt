@@ -50,8 +50,8 @@ RFC:  791
                    University of Southern California
                            4676 Admiralty Way
                    Marina del Rey, California  90291
-
-
+
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -110,7 +110,7 @@ REFERENCES .......................................................... 45
 
 
                                                                 [Page i]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -169,7 +169,7 @@ Internet Protocol
 
 
 [Page ii]                                                               
-
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -228,8 +228,8 @@ handling restriction features of the internet protocol.
 
 
                                                               [Page iii]
-
-
+
+
 
                                                           September 1981
 
@@ -288,7 +288,7 @@ IENs 128, 123, 111,
 
 
                                                                 [Page 1]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -347,7 +347,7 @@ Introduction
 
 
 [Page 2]                                                                
-
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -406,7 +406,7 @@ September 1981
 
 
                                                                 [Page 3]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -465,7 +465,7 @@ Internet Protocol
 
 
 [Page 4]                                                                
-
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -524,7 +524,7 @@ September 1981
 
 
                                                                 [Page 5]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -583,7 +583,7 @@ Overview
 
 
 [Page 6]                                                                
-
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -642,7 +642,7 @@ September 1981
 
 
                                                                 [Page 7]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -701,7 +701,7 @@ Overview
 
 
 [Page 8] 
-
+
 
 September 1981 
                                                        Internet Protocol
@@ -760,7 +760,7 @@ September 1981
 
 
                                                                 [Page 9]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -819,7 +819,7 @@ Internet Protocol
 
 
 [Page 10]                                                               
-
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -878,7 +878,7 @@ September 1981
 
 
                                                                [Page 11]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -937,7 +937,7 @@ Specification
 
 
 [Page 12]                                                               
-
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -996,7 +996,7 @@ September 1981
 
 
                                                                [Page 13]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -1055,7 +1055,7 @@ Specification
 
 
 [Page 14]                                                               
-
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -1114,7 +1114,7 @@ September 1981
 
 
                                                                [Page 15]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -1173,7 +1173,7 @@ Specification
 
 
 [Page 16]                                                               
-
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -1232,7 +1232,7 @@ September 1981
 
 
                                                                [Page 17]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -1291,7 +1291,7 @@ Specification
 
 
 [Page 18]                                                               
-
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -1350,7 +1350,7 @@ September 1981
 
 
                                                                [Page 19]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -1409,7 +1409,7 @@ Specification
 
 
 [Page 20]                                                               
-
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -1468,7 +1468,7 @@ September 1981
 
 
                                                                [Page 21]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -1527,7 +1527,7 @@ Specification
 
 
 [Page 22]                                                               
-
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -1586,7 +1586,7 @@ September 1981
 
 
                                                                [Page 23]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -1645,7 +1645,7 @@ Specification
 
 
 [Page 24]                                                               
-
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -1704,7 +1704,7 @@ September 1981
 
 
                                                                [Page 25]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -1763,7 +1763,7 @@ Specification
 
 
 [Page 26]                                                               
-
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -1822,7 +1822,7 @@ September 1981
 
 
                                                                [Page 27]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -1881,7 +1881,7 @@ Specification
 
 
 [Page 28]                                                               
-
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -1940,7 +1940,7 @@ September 1981
 
 
                                                                [Page 29]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -1999,7 +1999,7 @@ Specification
 
 
 [Page 30]                                                               
-
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -2058,7 +2058,7 @@ September 1981
 
 
                                                                [Page 31]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -2117,7 +2117,7 @@ Specification
 
 
 [Page 32]                                                               
-
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -2176,7 +2176,7 @@ September 1981
 
 
                                                                [Page 33]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -2235,7 +2235,7 @@ Example 1:
 
 
 [Page 34]                                                               
-
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -2294,7 +2294,7 @@ Example 2:
 
 
                                                                [Page 35]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -2353,7 +2353,7 @@ Internet Protocol
 
 
 [Page 36]                                                               
-
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -2412,7 +2412,7 @@ September 1981
 
 
                                                                [Page 37]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -2471,7 +2471,7 @@ Example 3:
 
 
 [Page 38]                                                               
-
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -2530,7 +2530,7 @@ transmitted first.
 
 
                                                                [Page 39]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -2589,7 +2589,7 @@ Internet Protocol
 
 
 [Page 40]                                                               
-
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -2648,7 +2648,7 @@ ICMP
 
 
                                                                [Page 41]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -2707,7 +2707,7 @@ NFB
 
 
 [Page 42]                                                               
-
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -2766,7 +2766,7 @@ TTL
 
 
                                                                [Page 43]
-
+
 
                                                           September 1981
 Internet Protocol
@@ -2825,7 +2825,7 @@ Version
 
 
 [Page 44]                                                               
-
+
 
 September 1981                                                          
                                                        Internet Protocol
@@ -2884,4 +2884,4 @@ September 1981
 
 
                                                                [Page 45]
-
+
