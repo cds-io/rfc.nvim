@@ -18,6 +18,7 @@ local M = {
     eip1559 = "eip-1559.md",
     erc20 = "erc-20.md",
     eip20_moved = "eip-20-moved.md",
+    erc1123 = "erc-1123.md",
     eips_all = "eips-all.html",
     ercs_all = "ercs-all.html",
 }

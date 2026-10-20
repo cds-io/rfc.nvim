@@ -1,7 +1,8 @@
 -- An Ethereum proposal as a Vim help document. render is total: the
 -- frontmatter becomes a header block, the headings get tags and a table of
--- contents of links, fenced code becomes help code blocks, and every EIP or
--- ERC the text names becomes a link. Nothing here touches the editor.
+-- contents of links, fenced code becomes help code blocks, tables become
+-- aligned columns, inline HTML and emphasis become their text, and every
+-- EIP or ERC the text names becomes a link. Nothing here touches the editor.
 local eip = require("cds.eip")
 local help = require("rfc.help")
 
@@ -16,6 +17,40 @@ local function link(line)
         line = line:sub(1, m.first - 1) .. "|" .. m.kind .. m.id .. "|" .. line:sub(m.last + 1)
     end
     return line
+end
+
+--- A table as aligned columns: cells padded to their column, two spaces
+--- apart, indented by two, and a rule of dashes under a heading row. No bar
+--- survives, since help would read |cell| as a link.
+---@param t cds.eip.Table
+---@return string[]
+local function layout(t)
+    local widths = {}
+    for _, row in ipairs(t.rows) do
+        for c, cell in ipairs(row) do
+            widths[c] = math.max(widths[c] or 0, #cell)
+        end
+    end
+    local function line(cells)
+        local padded = {}
+        for c, width in ipairs(widths) do
+            local cell = cells[c] or ""
+            padded[c] = cell .. string.rep(" ", width - #cell)
+        end
+        return ("  " .. table.concat(padded, "  ")):gsub("%s+$", "")
+    end
+    local out = {}
+    for r, row in ipairs(t.rows) do
+        table.insert(out, (line(row)))
+        if r == 1 and t.header then
+            local rule = {}
+            for c, width in ipairs(widths) do
+                rule[c] = string.rep("-", width)
+            end
+            table.insert(out, (line(rule)))
+        end
+    end
+    return out
 end
 
 --- The document for a proposal's text. Every proposal is tagged by its EIP
@@ -91,6 +126,13 @@ function M.render(id, lines)
         put("")
     end
 
+    local table_at, in_table = {}, {}
+    for _, t in ipairs(eip.tables(lines)) do
+        table_at[t.first] = t
+        for i = t.first, t.last do
+            in_table[i] = true
+        end
+    end
     local opens, closes, inside = {}, {}, {}
     for _, f in ipairs(eip.fences(lines)) do
         opens[f.first] = f.lang
@@ -113,8 +155,15 @@ function M.render(id, lines)
             put("<")
         elseif inside[i] then
             put("    " .. line)
-        else
-            put(link(line))
+        elseif table_at[i] then
+            for _, row in ipairs(layout(table_at[i])) do
+                put(row)
+            end
+        elseif not in_table[i] then
+            -- the rest of a table was laid out at its first line
+            local text = link(eip.plain(line))
+            -- a leading < would read as the end of a code block and vanish
+            put(text:match("^<") and (" " .. text) or text)
         end
     end
     if inside[#lines] and not closes[#lines] then

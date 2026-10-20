@@ -47,11 +47,22 @@ function M.has(cfg, name)
     return vim.fn.filereadable(M.doc_path(cfg, name)) == 1
 end
 
---- The doc directory exists and the root is on the runtimepath.
+--- The doc directory exists and the root is on the runtimepath. Documents
+--- of the retired erc source go, since the eip documents now define the
+--- alias tags they carried and two definitions of one tag make :help pick
+--- whichever sorts first.
 ---@param cfg rfc.Config
 function M.register(cfg)
     local root = M.root(cfg)
     vim.fn.mkdir(M.doc_dir(cfg), "p")
+    local stale = vim.fn.glob(M.doc_dir(cfg) .. "/erc[0-9]*.txt", false, true)
+    vim.list_extend(stale, vim.fn.glob(root .. "/erc[0-9]*.md", false, true))
+    if #stale > 0 then
+        for _, path in ipairs(stale) do
+            vim.fn.delete(path)
+        end
+        M.write_tags(cfg)
+    end
     if not registered[root] then
         vim.opt.runtimepath:append(root)
         registered[root] = true

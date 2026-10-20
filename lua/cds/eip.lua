@@ -20,6 +20,12 @@ local M = {}
 ---@field last integer
 ---@field id string
 
+---@class cds.eip.Table
+---@field first integer      -- the first line of the table in the text
+---@field last integer       -- the last
+---@field header boolean     -- whether the first row is a heading row
+---@field rows string[][]    -- each row's cells, as plain text
+
 ---@class cds.eip.Entry
 ---@field id string
 ---@field title string
@@ -157,6 +163,83 @@ local function unescape(s)
   return (s:gsub("&[%w#]+;", function(e)
     return ENTITIES[e] or e
   end))
+end
+
+--- Markdown inline markup and inline HTML as plain text: tags dropped (a
+--- <code> span becomes backticks), entities unescaped, **bold** and *em* as
+--- their text. A code span is kept as written, and so is an autolink
+--- (<https://...>), which is no tag.
+---@param s string
+---@return string
+function M.plain(s)
+  local spans = {}
+  s = s:gsub("`[^`]*`", function(span)
+    table.insert(spans, span)
+    return "\1" .. #spans .. "\1"
+  end)
+  s = s:gsub("<code>(.-)</code>", "`%1`")
+  s = s:gsub("</?%a[%w%-]*%s[^>]*>", ""):gsub("</?%a[%w%-]*/?>", "")
+  s = unescape(s)
+  s = s:gsub("%*%*([^*]-)%*%*", "%1")
+  s = s:gsub("%*([^%s*][^*]-)%*", "%1")
+  return (s:gsub("\1(%d+)\1", function(n)
+    return spans[tonumber(n)]
+  end))
+end
+
+--- A pipe table's cells: the text between the bars, trimmed.
+---@param line string
+---@return string[]
+local function pipe_cells(line)
+  local cells = {}
+  for cell in line:gsub("^%s*|", ""):gsub("|%s*$", ""):gmatch("[^|]+") do
+    table.insert(cells, trim(cell))
+  end
+  return cells
+end
+
+--- Every table in the text, HTML (<table>...</table>, as pandoc writes
+--- them) or markdown (a row of bars, then the |---|---| rule, then rows),
+--- as rows of plain-text cells.
+---@param lines string[]
+---@return cds.eip.Table[]
+function M.tables(lines)
+  local tables = {}
+  local i = 1
+  while i <= #lines do
+    if lines[i]:match("^%s*<table") then
+      local last = i
+      while last < #lines and not lines[last]:match("</table>") do
+        last = last + 1
+      end
+      local rows, header = {}, false
+      local block = table.concat(lines, "\n", i, last)
+      for row in block:gmatch("<tr.-</tr>") do
+        local cells = {}
+        for cell in row:gmatch("<t[dh][^>]*>(.-)</t[dh]>") do
+          table.insert(cells, trim(M.plain((cell:gsub("\n", " ")))))
+        end
+        if #rows == 0 and row:match("<th") then
+          header = true
+        end
+        table.insert(rows, cells)
+      end
+      table.insert(tables, { first = i, last = last, header = header, rows = rows })
+      i = last + 1
+    elseif lines[i]:match("^%s*|.*|%s*$") and lines[i + 1] and lines[i + 1]:match("^%s*|[%s:%-|]+|%s*$") then
+      local rows = { pipe_cells(lines[i]) }
+      local last = i + 1
+      while last < #lines and lines[last + 1]:match("^%s*|.*|%s*$") do
+        last = last + 1
+        table.insert(rows, pipe_cells(lines[last]))
+      end
+      table.insert(tables, { first = i, last = last, header = true, rows = rows })
+      i = last + 1
+    else
+      i = i + 1
+    end
+  end
+  return tables
 end
 
 --- The listing page as entries: each table row's number and title, under

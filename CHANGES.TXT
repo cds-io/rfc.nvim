@@ -1,3 +1,26 @@
+2026-10-20  Tables and inline markup in proposals
+
+  lua/rfc/help_eip.lua
+    A table, HTML as pandoc writes it or markdown, is laid out as aligned
+    columns two spaces apart with a rule under a heading row, so no bar
+    reads as a link. Every other body line goes through cds.eip.plain:
+    inline HTML dropped, a code tag as backticks, entities unescaped,
+    bold and emphasis as their text. A line that would start with <
+    gets a leading space, since help hides a leading < as the end of a
+    code block.
+
+  lua/rfc/store.lua
+    register retires the documents of the retired erc source (doc/erc*.txt
+    and erc*.md) and rewrites the tags file, since the eip documents now
+    define the alias tags those carried.
+
+  lua/cds/eip.lua
+    Vendored from ../cds: plain and tables.
+
+  spec/
+    Four render cases over ERC-1123's tables, emphasis, inline HTML and a
+    leading <; one store case: 43 pure and 31 editor cases.
+
 2026-10-20  :Eip, one command for EIPs and ERCs
 
   plugin/rfc.lua
