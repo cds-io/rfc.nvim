@@ -1,3 +1,17 @@
+2026-10-20  Result steps bind as Result steps
+
+  lua/rfc/init.lua
+    The store's write and write_index, which answer ok or nil and an
+    error, bind through Task:bind_result; the step reads as the
+    convention it is written in.
+
+  lua/rfc/fetch.lua
+    A transport failure is described through Task:map_err.
+
+  lua/cds/
+    task (of_result, bind_result, map_err), rfc (over fp.find_map) and
+    fp vendored from cds.
+
 2026-10-20  A stored stub is fetched past
 
   lua/rfc/sources.lua

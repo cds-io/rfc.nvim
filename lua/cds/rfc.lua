@@ -3,6 +3,8 @@
 -- and the RFC Editor's index. Plain lines in, plain tables out; nothing
 -- here names the editor, so it runs under plain busted and copies into any
 -- plugin that reads RFCs.
+local fp = require("cds.fp")
+
 local M = {}
 
 ---@class cds.rfc.Section
@@ -45,21 +47,6 @@ end
 ---@return string
 local function escape(s)
   return (s:gsub("%p", "%%%0"))
-end
-
---- The first non-nil `f(item)`, in order: a search that transforms as it
---- goes, so the parsers below read as "the first rule that fits".
----@generic T, R
----@param items T[]
----@param f fun(item: T): R|nil
----@return R|nil
-local function find_map(items, f)
-  for _, item in ipairs(items) do
-    local result = f(item)
-    if result ~= nil then
-      return result
-    end
-  end
 end
 
 -- The ToC header: "Contents" or "Table of Contents", in any case, alone on its line.
@@ -110,7 +97,7 @@ local ROWS = {
 ---@param line string
 ---@return { indent: integer, number: string, label: string, title: string }|nil
 local function parse_numbered_row(line)
-  return find_map(ROWS, function(row)
+  return fp.find_map(ROWS, function(row)
     local indent, label, rest = line:match(row.pattern)
     if not indent then
       return nil
@@ -255,7 +242,7 @@ local CITATION = "%[[%w/%.%-]+%]"
 ---@param sections cds.rfc.Section[]
 ---@return { line: integer|nil, entries: table<string, integer> }
 function M.references(lines, sections)
-  local from = find_map(sections, function(s)
+  local from = fp.find_map(sections, function(s)
     return s.title == "References" and s.line or nil
   end)
   local entries = {}

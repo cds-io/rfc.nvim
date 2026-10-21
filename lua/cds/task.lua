@@ -30,6 +30,18 @@ function Task.fail(err)
   end)
 end
 
+--- A Result (value, or nil and err) as a Task: the convention lifted.
+--- A refusal must carry its error, as Task.fail requires.
+---@param value any
+---@param err any
+---@return cds.Task
+function Task.of_result(value, err)
+  if value == nil then
+    return Task.fail(err)
+  end
+  return Task.of(value)
+end
+
 ---@param fn fun(value: any): cds.Task
 ---@return cds.Task
 function Task:bind(fn)
@@ -39,6 +51,16 @@ function Task:bind(fn)
       return nil, err
     end
     return fn(value).evaluate()
+  end)
+end
+
+--- Bind a step written in the Result convention: fn answers a value, or
+--- nil and its error, and the task fails with that error.
+---@param fn fun(value: any): any, any
+---@return cds.Task
+function Task:bind_result(fn)
+  return self:bind(function(value)
+    return Task.of_result(fn(value))
   end)
 end
 
@@ -74,6 +96,22 @@ function Task:ensure(pred, reason)
       return Task.of(value)
     end
     return Task.fail(type(reason) == "function" and reason(value) or reason)
+  end)
+end
+
+--- The error through fn; a value passes untouched. The step that describes
+--- a failure for the reader (what was being fetched, where it was met)
+--- without a recover that fails again. Exceptions are not yet errors here;
+--- recover is the combinator that catches them.
+---@param fn fun(err: any): any
+---@return cds.Task
+function Task:map_err(fn)
+  return Task.new(function()
+    local value, err = self.evaluate()
+    if err ~= nil then
+      return nil, fn(err)
+    end
+    return value
   end)
 end
 

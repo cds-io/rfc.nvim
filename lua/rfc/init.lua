@@ -80,12 +80,9 @@ function M.ensure(source, id)
         return { raw = lines, doc = source.render(id, lines) }
     end)
         :on_main()
-        :bind(function(r)
+        :bind_result(function(r)
             local ok, err = store.write(cfg, name, source.raw_ext, r.raw, r.doc)
-            if not ok then
-                return Task.fail(err)
-            end
-            return Task.of(name)
+            return ok and name or nil, err
         end)
 end
 
@@ -212,12 +209,9 @@ function M.index_lines(source)
         .index()
         :map(help.clean)
         :on_main()
-        :bind(function(lines)
+        :bind_result(function(lines)
             local ok, err = store.write_index(cfg, source.index_file, lines)
-            if not ok then
-                return Task.fail(err)
-            end
-            return Task.of(lines)
+            return ok and lines or nil, err
         end)
         :recover(function(err)
             if cached then

@@ -43,8 +43,8 @@ end
 ---@param what string
 ---@return cds.Task
 local function text(url, what)
-    return M.get(url):recover(function(err)
-        return Task.fail(describe(err, what))
+    return M.get(url):map_err(function(err)
+        return describe(err, what)
     end)
 end
 
