@@ -1,3 +1,21 @@
+2026-10-21  The proposal sources' editor cases are one story over a table
+
+  spec/rfc_nvim_spec.lua
+    Every proposal source is asked the same eight things (a number to
+    open, a section tag, leading zeros, a link to a proposal outside the
+    fixtures, the picker, a search, a completion, the message when it is
+    off); a table says what each answers, and a source's own cases (the
+    moved stub and the erc alias, a markdown BIP, the SIMD directory
+    read once) stand beside it.
+
+  spec/editor.lua
+    One answer helper behind every stubbed fetch function, recording
+    what was asked and answering the fixture or refusing as the network
+    would; the fixture saves and restores every function of rfc.fetch
+    by a loop, so a new source adds a stub and nothing else.
+
+    80 pure and 75 editor cases.
+
 2026-10-21  A source locates its file in the index the rim keeps
 
   lua/rfc/sources.lua

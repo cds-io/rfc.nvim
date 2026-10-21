@@ -311,47 +311,163 @@ describe("rfc", function()
         end)
     end)
 
-    describe(":Eip", function()
-        it("opens a proposal by number with its title, header and contents", function()
-            vim.cmd("Eip 1559")
-            assert.is_true(editor.wait_help("eip1559"))
-            assert.are.same({ "eip1559" }, case.fetched)
-            local lines = vim.api.nvim_buf_get_lines(0, 0, 8, false)
-            assert.is_truthy(lines[1]:match("^%*eip1559%.txt%*  Fee market change for ETH 1%.0 chain"))
-            assert.are.equal(
-                "EIP-1559  Status: Final  Type: Standards Track  Category: Core  Created: 2019-04-13",
-                lines[2]
-            )
-            assert.are.equal("Requires: |eip2718|, |eip2930|", lines[3])
-            assert.are.equal("CONTENTS", lines[6])
-            assert.are.equal("  |eip1559-simple-summary|  Simple Summary", lines[7])
-        end)
+    --- What every proposal source is asked, and what each answers: a number
+    --- to open, a section tag, a link to a proposal outside the fixtures, the
+    --- picker, a search and a completion.
+    local PROPOSALS = {
+        {
+            command = "Eip",
+            label = "EIP",
+            id = "1559",
+            title = "^%*eip1559%.txt%*  Fee market change for ETH 1%.0 chain",
+            fetched = { "eip1559" },
+            section = { "eip1559-specification", "^SPECIFICATION" },
+            missing = { id = "1559", tag = "|eip2718|", number = "2718" },
+            index = {
+                count = 5 + 3 - 1,
+                label = "eip20  Token Standard (Final)",
+                fetched = { "eips-index", "ercs-index" },
+            },
+            search = { "token", "eip20  Token Standard (Final)" },
+            complete = { "1559", "eip1559  " },
+        },
+        {
+            command = "Bip",
+            label = "BIP",
+            id = "32",
+            title = "^%*bip32%.txt%*  Hierarchical Deterministic Wallets",
+            fetched = { "bip32" },
+            section = { "bip32-conventions", "^CONVENTIONS" },
+            missing = { id = "341", tag = "|bip340|", number = "340" },
+            index = { count = 213, label = "bip1  BIP Purpose and Guidelines (Closed)", fetched = { "bip-index" } },
+            search = { "hierarchical", "bip32  Hierarchical Deterministic Wallets (Deployed)" },
+            complete = { "hierarch", "bip32  Hierarchical Deterministic Wallets" },
+        },
+        {
+            command = "Simd",
+            label = "SIMD",
+            id = "64",
+            title = "^%*simd64%.txt%*  Transaction Receipts",
+            fetched = { "simd-index", "simd64" },
+            section = { "simd64-summary", "^SUMMARY" },
+            missing = { id = "268", tag = "|simd219|", number = "219" },
+            index = { count = 133, label = "simd1  Simd Process", fetched = { "simd-index" } },
+            search = { "receipt", "simd64  Transaction Receipt" },
+            complete = { "transaction rec", "simd64  Transaction Receipt" },
+        },
+    }
 
-        it("lands on a section by its tag and follows a ToC row", function()
+    --- The picker captured: the items offered, and their labels.
+    local function picker()
+        local seen = {}
+        vim.ui.select = function(items, opts, on_choice)
+            seen.items = items
+            seen.labels = vim.tbl_map(opts.format_item, items)
+            seen.prompt = opts.prompt
+            on_choice(nil)
+        end
+        return seen
+    end
+
+    for _, p in ipairs(PROPOSALS) do
+        local prefix = p.command:lower()
+        describe(":" .. p.command, function()
+            it("fetches a proposal by number and opens it as help", function()
+                vim.cmd(p.command .. " " .. p.id)
+                assert.is_true(editor.wait_help(prefix .. p.id))
+                assert.are.same(p.fetched, case.fetched)
+                assert.is_truthy(vim.api.nvim_get_current_line():match(p.title))
+                assert.are.equal("fetching " .. p.label .. " " .. p.id, case.notices[1].msg)
+            end)
+
+            it("lands on a section by its tag", function()
+                vim.cmd(p.command .. " " .. p.id)
+                assert.is_true(editor.wait_help(prefix .. p.id))
+                vim.cmd("help " .. p.section[1])
+                assert.is_truthy(vim.api.nvim_get_current_line():match(p.section[2]))
+            end)
+
+            it("opens a number written with leading zeros as the same proposal", function()
+                vim.cmd(p.command .. " 00" .. p.id)
+                assert.is_true(editor.wait_help(prefix .. p.id))
+                assert.are.same(p.fetched, case.fetched)
+            end)
+
+            it("reports a link to a proposal that does not exist", function()
+                vim.cmd(p.command .. " " .. p.missing.id)
+                assert.is_true(editor.wait_help(prefix .. p.missing.id))
+                vim.cmd("1")
+                assert.is_true(vim.fn.search(p.missing.tag, "W") > 0)
+                feed("<C-]>")
+                vim.wait(500, function()
+                    return #case.notices == 3
+                end)
+                assert.are.equal("fetching " .. p.label .. " " .. p.missing.number, case.notices[2].msg)
+                assert.are.equal(p.label .. " " .. p.missing.number .. " does not exist", case.notices[3].msg)
+            end)
+
+            it("lists its index in the picker", function()
+                local seen = picker()
+                vim.cmd(p.command)
+                assert.is_true(vim.wait(500, function()
+                    return seen.items ~= nil
+                end))
+                assert.are.equal(p.index.count, #seen.items)
+                assert.is_true(vim.tbl_contains(seen.labels, p.index.label))
+                table.sort(case.fetched)
+                local expected = vim.deepcopy(p.index.fetched)
+                table.sort(expected)
+                assert.are.same(expected, case.fetched)
+            end)
+
+            it("offers the proposals whose title matches a search", function()
+                local seen = picker()
+                vim.cmd(p.command .. " " .. p.search[1])
+                assert.is_true(vim.wait(500, function()
+                    return seen.items ~= nil
+                end))
+                assert.are.equal("documents matching " .. p.search[1], seen.prompt)
+                assert.is_true(vim.tbl_contains(seen.labels, p.search[2]))
+            end)
+
+            it("completes a number or a title from the cached index", function()
+                local seen = picker()
+                vim.cmd(p.command)
+                -- the picker's turn comes on the loop; the case waits for it so
+                -- the stub, and the fixture that restores the real picker, meet it
+                assert.is_true(vim.wait(500, function()
+                    return seen.items ~= nil
+                end))
+                local found = false
+                for _, item in ipairs(vim.fn.getcompletion(p.command .. " " .. p.complete[1], "cmdline")) do
+                    found = found or vim.startswith(item, p.complete[2])
+                end
+                assert.is_true(found)
+            end)
+
+            it("says which source to enable when it is off", function()
+                case.setup({ rfc = true })
+                vim.cmd(p.command .. " " .. p.id)
+                assert.are.equal(
+                    ("%s%s is %s; enable sources.%s in setup()"):format(prefix, p.id, p.label, prefix),
+                    case.notices[1].msg
+                )
+                assert.are.equal(vim.log.levels.WARN, case.notices[1].level)
+                assert.are.same({}, case.fetched)
+            end)
+        end)
+    end
+
+    describe(":Eip, its own", function()
+        it("follows a ToC row on Enter", function()
             vim.cmd("Eip eip1559")
             assert.is_true(editor.wait_help("eip1559"))
-            vim.cmd("help eip1559-specification")
-            assert.is_truthy(vim.api.nvim_get_current_line():match("^SPECIFICATION%s+%*eip1559%-specification%*$"))
             vim.cmd("1")
             vim.fn.search("|eip1559-block-hash-changing|")
             feed("<CR>")
             assert.is_truthy(
                 vim.api.nvim_get_current_line():match("^Block Hash Changing%s+%*eip1559%-block%-hash%-changing%*$")
             )
-        end)
-
-        it("reports a link to a proposal that does not exist", function()
-            vim.cmd("Eip 1559")
-            assert.is_true(editor.wait_help("eip1559"))
-            vim.cmd("3")
-            vim.fn.search("|eip2718|")
-            vim.cmd("normal! l")
-            feed("<C-]>")
-            vim.wait(500, function()
-                return #case.notices == 3
-            end)
-            assert.are.equal("fetching EIP 2718", case.notices[2].msg)
-            assert.are.equal("EIP 2718 does not exist", case.notices[3].msg)
         end)
 
         it("follows a moved stub into the ERCs repository and tags the result by both names", function()
@@ -372,180 +488,27 @@ describe("rfc", function()
             assert.are.same({ "eip20", "erc20" }, case.fetched)
             assert.is_truthy(vim.api.nvim_get_current_line():match("%*eip20%* %*erc20%*$"))
         end)
-
-        it("lists both listings as one index, a number listed twice once", function()
-            local offered, opts
-            vim.ui.select = function(items, o, on_choice)
-                offered, opts = items, o
-                on_choice(nil)
-            end
-            vim.cmd("Eip")
-            vim.wait(500, function()
-                return offered ~= nil
-            end)
-            assert.are.equal(5 + 3 - 1, #offered)
-            assert.are.equal("eip1559  Fee market change for ETH 1.0 chain (Final)", opts.format_item(offered[5]))
-            assert.are.equal("eip20  Token Standard (Final)", opts.format_item(offered[6]))
-            table.sort(case.fetched)
-            assert.are.same({ "eips-index", "ercs-index" }, case.fetched)
-        end)
-
-        it("says which source to enable when eip is off", function()
-            case.setup({ rfc = true })
-            vim.cmd("Eip 1559")
-            assert.are.equal("eip1559 is EIP; enable sources.eip in setup()", case.notices[1].msg)
-            assert.are.equal(vim.log.levels.WARN, case.notices[1].level)
-            assert.are.same({}, case.fetched)
-        end)
     end)
 
-    describe(":Bip", function()
-        it("fetches the proposal and opens it as help", function()
-            vim.cmd("Bip 32")
-            assert.is_true(editor.wait_help("bip32"))
-            assert.are.same({ "bip32" }, case.fetched)
-            assert.is_truthy(
-                vim.api.nvim_get_current_line():match("^%*bip32%.txt%*  Hierarchical Deterministic Wallets")
-            )
-            assert.are.equal("fetching BIP 32", case.notices[1].msg)
-        end)
-
-        it("lands on a section by its tag", function()
-            vim.cmd("Bip 32")
-            assert.is_true(editor.wait_help("bip32"))
-            vim.cmd("help bip32-conventions")
-            assert.is_truthy(vim.api.nvim_get_current_line():match("^CONVENTIONS"))
-        end)
-
-        it("opens a number written with leading zeros as the same proposal", function()
-            vim.cmd("Bip 0032")
-            assert.is_true(editor.wait_help("bip32"))
-            assert.are.same({ "bip32" }, case.fetched)
-        end)
-
-        it("fetches a linked proposal on CTRL-] and reports one that does not exist", function()
-            vim.cmd("Bip 341")
-            assert.is_true(editor.wait_help("bip341"))
-            assert.is_true(vim.fn.search("|bip340|", "W") > 0)
-            feed("<C-]>")
-            vim.wait(500, function()
-                return #case.notices == 3
-            end)
-            assert.are.same({ "bip341", "bip340" }, case.fetched)
-            assert.are.equal("fetching BIP 340", case.notices[2].msg)
-            assert.are.equal("BIP 340 does not exist", case.notices[3].msg)
-        end)
-
+    describe(":Bip, its own", function()
         it("renders a proposal written in markdown", function()
             vim.cmd("Bip 3")
             assert.is_true(editor.wait_help("bip3"))
             assert.are.equal("BIP-3  Status: Deployed  Type: Process  Assigned: 2025-01-09", vim.fn.getline(2))
         end)
-
-        it("lists the repository's README as the index", function()
-            local offered, opts
-            vim.ui.select = function(items, o, on_choice)
-                offered, opts = items, o
-                on_choice(nil)
-            end
-            vim.cmd("Bip")
-            vim.wait(500, function()
-                return offered ~= nil
-            end)
-            assert.are.equal(213, #offered)
-            assert.are.equal("bip1  BIP Purpose and Guidelines (Closed)", opts.format_item(offered[1]))
-            assert.is_truthy(
-                vim.tbl_contains(
-                    vim.tbl_map(opts.format_item, offered),
-                    "bip32  Hierarchical Deterministic Wallets (Deployed)"
-                )
-            )
-            assert.are.same({ "bip-index" }, case.fetched)
-        end)
-
-        it("offers the proposals whose title matches a search", function()
-            local offered, opts
-            vim.ui.select = function(items, o, on_choice)
-                offered, opts = items, o
-                on_choice(nil)
-            end
-            vim.cmd("Bip hierarchical")
-            vim.wait(500, function()
-                return offered ~= nil
-            end)
-            assert.are.equal("documents matching hierarchical", opts.prompt)
-            local texts = vim.tbl_map(opts.format_item, offered)
-            assert.is_truthy(vim.tbl_contains(texts, "bip32  Hierarchical Deterministic Wallets (Deployed)"))
-        end)
-
-        it("completes a number or a title from the cached index", function()
-            local offered = false
-            vim.ui.select = function(_, _, on_choice)
-                offered = true
-                on_choice(nil)
-            end
-            vim.cmd("Bip")
-            -- the picker's turn comes on the loop; the case waits for it so
-            -- the stub, and the fixture that restores the real picker, meet it
-            assert.is_true(vim.wait(500, function()
-                return offered
-            end))
-            local function offers(arglead, prefix)
-                for _, item in ipairs(vim.fn.getcompletion("Bip " .. arglead, "cmdline")) do
-                    if vim.startswith(item, prefix) then
-                        return true
-                    end
-                end
-                return false
-            end
-            assert.is_true(offers("hierarch", "bip32  Hierarchical Deterministic Wallets"))
-            assert.is_true(offers("341", "bip341  "))
-        end)
-
-        it("says which source to enable when bip is off", function()
-            case.setup({ rfc = true })
-            vim.cmd("Bip 32")
-            assert.are.equal("bip32 is BIP; enable sources.bip in setup()", case.notices[1].msg)
-            assert.are.same({}, case.fetched)
-        end)
     end)
 
-    describe(":Simd", function()
-        it("finds the proposal's file through the directory, fetches it and opens it as help", function()
-            vim.cmd("Simd 64")
-            assert.is_true(editor.wait_help("simd64"))
-            assert.are.same({ "simd-index", "simd64" }, case.fetched)
-            assert.is_truthy(vim.api.nvim_get_current_line():match("^%*simd64%.txt%*  Transaction Receipts"))
-            assert.are.equal("fetching SIMD 64", case.notices[1].msg)
-        end)
-
-        it("lands on a section by its tag", function()
-            vim.cmd("Simd 64")
-            assert.is_true(editor.wait_help("simd64"))
-            vim.cmd("help simd64-summary")
-            assert.is_truthy(vim.api.nvim_get_current_line():match("^SUMMARY"))
-        end)
-
-        it("opens a number written with leading zeros as the same proposal", function()
-            vim.cmd("Simd 0064")
-            assert.is_true(editor.wait_help("simd64"))
-            assert.are.same({ "simd-index", "simd64" }, case.fetched)
-        end)
-
+    describe(":Simd, its own", function()
         it("reads the directory once: a second proposal, or the picker, asks for no listing again", function()
             vim.cmd("Simd 64")
             assert.is_true(editor.wait_help("simd64"))
             vim.cmd("Simd 1")
             assert.is_true(editor.wait_help("simd1"))
             assert.are.same({ "simd-index", "simd64", "simd1" }, case.fetched)
-            local offered
-            vim.ui.select = function(items, _, on_choice)
-                offered = items
-                on_choice(nil)
-            end
+            local seen = picker()
             vim.cmd("Simd")
             assert.is_true(vim.wait(500, function()
-                return offered ~= nil
+                return seen.items ~= nil
             end))
             assert.are.same({ "simd-index", "simd64", "simd1" }, case.fetched)
         end)
@@ -557,56 +520,6 @@ describe("rfc", function()
             end)
             assert.are.equal("SIMD 999 does not exist", case.notices[2].msg)
             assert.are.same({ "simd-index" }, case.fetched)
-        end)
-
-        it("follows the proposal another extends on CTRL-]", function()
-            vim.cmd("Simd 268")
-            assert.is_true(editor.wait_help("simd268"))
-            assert.is_true(vim.fn.search("|simd219|", "W") > 0)
-            feed("<C-]>")
-            vim.wait(500, function()
-                return #case.notices == 3
-            end)
-            assert.are.equal("SIMD 219 does not exist", case.notices[3].msg)
-        end)
-
-        it("lists the proposals directory as the index", function()
-            local offered, opts
-            vim.ui.select = function(items, o, on_choice)
-                offered, opts = items, o
-                on_choice(nil)
-            end
-            vim.cmd("Simd")
-            vim.wait(500, function()
-                return offered ~= nil
-            end)
-            assert.are.equal(133, #offered)
-            assert.are.equal("simd1  Simd Process", opts.format_item(offered[1]))
-            assert.are.same({ "simd-index" }, case.fetched)
-        end)
-
-        it("completes a number or a title from the cached index", function()
-            local offered = false
-            vim.ui.select = function(_, _, on_choice)
-                offered = true
-                on_choice(nil)
-            end
-            vim.cmd("Simd")
-            assert.is_true(vim.wait(500, function()
-                return offered
-            end))
-            local found = false
-            for _, item in ipairs(vim.fn.getcompletion("Simd transaction rec", "cmdline")) do
-                found = found or vim.startswith(item, "simd64  Transaction Receipt")
-            end
-            assert.is_true(found)
-        end)
-
-        it("says which source to enable when simd is off", function()
-            case.setup({ rfc = true })
-            vim.cmd("Simd 64")
-            assert.are.equal("simd64 is SIMD; enable sources.simd in setup()", case.notices[1].msg)
-            assert.are.same({}, case.fetched)
         end)
     end)
 

@@ -16,23 +16,26 @@ function M.load_plugin()
     vim.cmd("runtime plugin/rfc.lua")
 end
 
+--- A Task of a fixture's text, as the network answers it.
+---@param fixture string
+---@return cds.Task
+local function text_of(fixture)
+    return Task.of(table.concat(fixtures.read(fixture), "\n") .. "\n")
+end
+
 --- A fresh store in a temporary directory, every source enabled, the
 --- network replaced by the fixtures (a document outside them does not
 --- exist), vim.notify and vim.ui.select captured. Returns the case's record
---- and its restore; `case.setup(sources)` reconfigures the sources.
+--- and its restore; `case.setup(sources, extra)` reconfigures the sources, with any
+--- other settings merged over.
 function M.start()
     local fetch = require("rfc.fetch")
-    local saved = {
-        rfc = fetch.rfc,
-        index = fetch.index,
-        proposal = fetch.proposal,
-        listing = fetch.listing,
-        bip = fetch.bip,
-        simd = fetch.simd,
-        simd_listing = fetch.simd_listing,
-        select = vim.ui.select,
-        rtp = vim.o.runtimepath,
-    }
+    local saved = { select = vim.ui.select, rtp = vim.o.runtimepath, fetch = {} }
+    for name, fn in pairs(fetch) do
+        if type(fn) == "function" then
+            saved.fetch[name] = fn
+        end
+    end
     local case = { dir = vim.fn.tempname(), notices = {}, fetched = {} }
     function case.setup(sources, extra)
         require("rfc").setup(vim.tbl_extend("force", {
@@ -44,49 +47,49 @@ function M.start()
         }, extra or {}))
     end
     case.setup({ rfc = true, eip = true, bip = true, simd = true })
-    local bodies = {
+
+    --- What a stub does: records what was asked, answers the fixture, or
+    --- refuses as the network would for a document outside them.
+    ---@param asked string
+    ---@param fixture string|nil
+    ---@param missing? string
+    ---@return cds.Task
+    local function answer(asked, fixture, missing)
+        table.insert(case.fetched, asked)
+        if not fixture then
+            return Task.fail(missing)
+        end
+        return text_of(fixture)
+    end
+    local rfcs = {
         ["9110"] = fixtures.rfc9110,
         ["2616"] = fixtures.rfc2616,
         ["1945"] = fixtures.rfc1945,
         ["3986"] = fixtures.rfc3986,
         ["791"] = fixtures.rfc791,
     }
-    fetch.rfc = function(rfc_num)
-        table.insert(case.fetched, rfc_num)
-        if not bodies[rfc_num] then
-            return Task.fail("RFC " .. rfc_num .. " does not exist")
-        end
-        return Task.of(table.concat(fixtures.read(bodies[rfc_num]), "\n") .. "\n")
+    fetch.rfc = function(n)
+        return answer(n, rfcs[n], "RFC " .. n .. " does not exist")
     end
     fetch.index = function()
-        table.insert(case.fetched, "index")
-        return Task.of(table.concat(fixtures.read(fixtures.rfc_index), "\n") .. "\n")
+        return answer("index", fixtures.rfc_index)
     end
-    local proposals = {
-        eip1 = fixtures.eip1,
-        eip1559 = fixtures.eip1559,
-        eip20 = fixtures.eip20_moved,
-        erc20 = fixtures.erc20,
-    }
+    local proposals =
+        { eip1 = fixtures.eip1, eip1559 = fixtures.eip1559, eip20 = fixtures.eip20_moved, erc20 = fixtures.erc20 }
     fetch.proposal = function(_, _, prefix, id)
-        table.insert(case.fetched, prefix .. id)
-        if not proposals[prefix .. id] then
-            return Task.fail(prefix:upper() .. " " .. id .. " does not exist")
-        end
-        return Task.of(table.concat(fixtures.read(proposals[prefix .. id]), "\n") .. "\n")
+        return answer(prefix .. id, proposals[prefix .. id], prefix:upper() .. " " .. id .. " does not exist")
     end
+    local listings = {
+        bitcoin = { "bip-index", fixtures.bips_readme },
+        eips = { "eips-index", fixtures.eips_all },
+        ercs = { "ercs-index", fixtures.ercs_all },
+    }
     fetch.listing = function(url)
-        if url:match("bitcoin") then
-            table.insert(case.fetched, "bip-index")
-            return Task.of(table.concat(fixtures.read(fixtures.bips_readme), "\n") .. "\n")
-        end
-        local which = url:match("eips") and "eips" or "ercs"
-        table.insert(case.fetched, which .. "-index")
-        return Task.of(table.concat(fixtures.read(fixtures[which .. "_all"]), "\n") .. "\n")
+        local site = listings[url:match("bitcoin") or url:match("eips") or "ercs"]
+        return answer(site[1], site[2])
     end
     fetch.simd_listing = function()
-        table.insert(case.fetched, "simd-index")
-        return Task.of(table.concat(fixtures.read(fixtures.simd_listing), "\n") .. "\n")
+        return answer("simd-index", fixtures.simd_listing)
     end
     local simds = {
         ["0064-transaction-receipt.md"] = fixtures.simd64,
@@ -94,28 +97,16 @@ function M.start()
         ["0268-raise-cpi-nesting-limit.md"] = fixtures.simd_related,
     }
     fetch.simd = function(file, id)
-        table.insert(case.fetched, "simd" .. id)
-        if not simds[file] then
-            return Task.fail("SIMD " .. id .. " does not exist")
-        end
-        return Task.of(table.concat(fixtures.read(simds[file]), "\n") .. "\n")
+        return answer("simd" .. id, simds[file], "SIMD " .. id .. " does not exist")
     end
     local bips = { ["32"] = fixtures.bip32, ["22"] = fixtures.bip22, ["341"] = fixtures.bip341, ["3"] = fixtures.bip3 }
     fetch.bip = function(id)
-        table.insert(case.fetched, "bip" .. id)
-        if not bips[id] then
-            return Task.fail("BIP " .. id .. " does not exist")
-        end
-        return Task.of(table.concat(fixtures.read(bips[id]), "\n") .. "\n")
+        return answer("bip" .. id, bips[id], "BIP " .. id .. " does not exist")
     end
     local function restore()
-        fetch.rfc = saved.rfc
-        fetch.index = saved.index
-        fetch.proposal = saved.proposal
-        fetch.listing = saved.listing
-        fetch.bip = saved.bip
-        fetch.simd = saved.simd
-        fetch.simd_listing = saved.simd_listing
+        for name, fn in pairs(saved.fetch) do
+            fetch[name] = fn
+        end
         vim.ui.select = saved.select
         -- every sidebar, help window and document buffer goes, then the
         -- store's root leaves the runtimepath so the next case's root is the
