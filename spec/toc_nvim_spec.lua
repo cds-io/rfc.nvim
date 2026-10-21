@@ -131,6 +131,27 @@ describe("the contents sidebar", function()
         assert.is_nil(toc.window(doc_win))
     end)
 
+    it("counts a floating window as no window when the document was the last", function()
+        vim.cmd("only")
+        feed("gO")
+        local side = toc.window(doc_win)
+        -- a notifier's toast, say, open while the document closes
+        local float = vim.api.nvim_open_win(vim.api.nvim_create_buf(false, true), false, {
+            relative = "editor",
+            width = 12,
+            height = 2,
+            row = 1,
+            col = 1,
+        })
+        vim.api.nvim_set_current_win(doc_win)
+        vim.cmd("quit")
+        assert.is_true(vim.wait(500, function()
+            return vim.api.nvim_win_is_valid(side) and vim.bo[vim.api.nvim_win_get_buf(side)].filetype ~= "rfc-toc"
+        end))
+        assert.is_false(vim.wo[side].winfixwidth)
+        vim.api.nvim_win_close(float, true)
+    end)
+
     it("follows CTRL-] into another document", function()
         feed("gO")
         local side = toc.window(doc_win)

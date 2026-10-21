@@ -70,6 +70,20 @@ local function drop(doc_win)
     return s
 end
 
+--- Whether the tab has a window other than `win` that is no floating
+--- window; a floating one (a notifier's toast) cannot be the last window
+--- left, so it does not count.
+---@param win integer
+---@return boolean
+local function others(win)
+    for _, w in ipairs(vim.api.nvim_tabpage_list_wins(vim.api.nvim_win_get_tabpage(win))) do
+        if w ~= win and vim.api.nvim_win_get_config(w).relative == "" then
+            return true
+        end
+    end
+    return false
+end
+
 --- Closes the sidebar's window; the last window of its tab cannot close, so
 --- that one is given an empty buffer and its sidebar options taken back.
 ---@param s rfc.Sidebar
@@ -77,7 +91,7 @@ local function close_window(s)
     if not vim.api.nvim_win_is_valid(s.win) then
         return
     end
-    if #vim.api.nvim_tabpage_list_wins(vim.api.nvim_win_get_tabpage(s.win)) > 1 then
+    if others(s.win) then
         vim.api.nvim_win_close(s.win, true)
         return
     end

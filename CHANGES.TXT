@@ -1,3 +1,15 @@
+2026-10-21  A floating window is no window for the sidebar's last-window check
+
+  lua/rfc/toc.lua
+    When the document window closes and the sidebar is to follow, the
+    sidebar counts the tab's other windows without the floating ones (a
+    notifier's toast), since a floating window cannot be the last left;
+    with none, the sidebar takes an empty buffer rather than closing.
+
+  spec/
+    One sidebar case with a toast open at the document's close: 80
+    pure and 76 editor cases.
+
 2026-10-21  The proposal sources' editor cases are one story over a table
 
   spec/rfc_nvim_spec.lua
