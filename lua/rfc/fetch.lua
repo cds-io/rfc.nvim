@@ -1,7 +1,7 @@
 -- The network, as Tasks: the RFC Editor's text and index, the Ethereum
--- proposals' repositories and listing pages, and the Bitcoin proposals'
--- repository. A spec replaces the five functions below with Tasks of
--- fixture text.
+-- proposals' repositories and listing pages, the Bitcoin proposals'
+-- repository, and the Solana proposals' directory and files. A spec
+-- replaces the seven functions below with Tasks of fixture text.
 local Task = require("cds.task")
 local http = require("cds.http")
 
@@ -97,6 +97,24 @@ function M.bip(id)
         end
         return body
     end)
+end
+
+local SIMD_REPO = "solana-foundation/solana-improvement-documents"
+
+--- The Solana proposals directory as the GitHub contents API lists it,
+--- which is the index: the file names carry the slugs the numbers alone
+--- do not give.
+---@return cds.Task
+function M.simd_listing()
+    return text("https://api.github.com/repos/" .. SIMD_REPO .. "/contents/proposals", "the SIMD index")
+end
+
+--- A Solana proposal's markdown by its file name in the directory.
+---@param file string  -- 0064-transaction-receipt.md
+---@param id string    -- the number, for the message
+---@return cds.Task
+function M.simd(file, id)
+    return text(M.github_raw .. SIMD_REPO .. "/main/proposals/" .. file, "SIMD " .. id)
 end
 
 --- A listing page, every proposal under its status.

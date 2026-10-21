@@ -5,14 +5,14 @@ local M = {}
 ---@class rfc.Config
 ---@field cache_dir string|nil   -- where documents live; stdpath("cache")/rfc by default
 ---@field notify fun(msg: string, level: integer, opts: { title: string })|nil  -- where messages go; vim.notify by default
----@field sources table<string, boolean>  -- rfc (the RFC Editor, :Rfc), eip (Ethereum's EIPs and ERCs, :Eip), bip (Bitcoin's BIPs, :Bip)
+---@field sources table<string, boolean>  -- rfc (the RFC Editor, :Rfc), eip (Ethereum's EIPs and ERCs, :Eip), bip (Bitcoin's BIPs, :Bip), simd (Solana's SIMDs, :Simd)
 ---@field view "rich"|"plain"   -- how a document opens: with rules above its headings, or as written
 ---@field toc { width: integer } -- the contents sidebar
 
 M.defaults = {
     cache_dir = nil,
     notify = nil,
-    sources = { rfc = true, eip = false, bip = false },
+    sources = { rfc = true, eip = false, bip = false, simd = false },
     view = "rich",
     toc = { width = 44 },
 }

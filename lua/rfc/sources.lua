@@ -3,14 +3,16 @@
 -- how its index reads, and how its text renders. The RFC Editor is one;
 -- Ethereum's proposals are another, over two repositories that share one
 -- number space (ERC-20 is EIP-20), so the reader never has to say which;
--- Bitcoin's proposals are the third.
+-- Bitcoin's proposals are the third and Solana's the fourth.
 local fetch = require("rfc.fetch")
 local help = require("rfc.help")
 local help_eip = require("rfc.help_eip")
 local help_bip = require("rfc.help_bip")
+local help_simd = require("rfc.help_simd")
 local rfc = require("cds.rfc")
 local eip = require("cds.eip")
 local bip = require("cds.bip")
+local simd = require("cds.simd")
 local Task = require("cds.task")
 
 local M = {}
@@ -139,7 +141,40 @@ M.bip = {
     render = help_bip.render,
 }
 
-M.all = { M.rfc, M.eip, M.bip }
+--- Solana's proposals, from solana-foundation/solana-improvement-documents
+--- on GitHub. The proposals directory is the index, and a number finds its
+--- file there, since the file name carries a slug too.
+---@type rfc.Source
+M.simd = {
+    prefix = "simd",
+    aliases = {},
+    label = "SIMD",
+    raw_ext = "md",
+    index_file = "simd-index.json",
+    fetch = function(id)
+        return fetch.simd_listing():bind(function(listing)
+            for _, e in ipairs(simd.index(help.clean(listing))) do
+                if e.id == id then
+                    return fetch.simd(e.file, id)
+                end
+            end
+            return Task.fail("SIMD " .. id .. " does not exist")
+        end)
+    end,
+    index = function()
+        return fetch.simd_listing()
+    end,
+    entries = function(lines)
+        local entries = {}
+        for _, e in ipairs(simd.index(lines)) do
+            table.insert(entries, { id = e.id, label = e.title, text = true })
+        end
+        return entries
+    end,
+    render = help_simd.render,
+}
+
+M.all = { M.rfc, M.eip, M.bip, M.simd }
 
 --- The source a tag belongs to, by its prefix or one of the aliases, or nil.
 ---@param tag string

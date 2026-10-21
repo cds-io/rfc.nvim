@@ -1,3 +1,42 @@
+2026-10-21  :Simd, Solana's proposals as a source
+
+  plugin/rfc.lua
+    :Simd opens a Solana improvement document as help: a number, a tag,
+    words to search the index, or nothing for the picker, with
+    completion over what is cached, as the other commands do.
+
+  lua/rfc/sources.lua
+    The simd source: its index the repository's proposals directory as
+    the GitHub contents API lists it (the file names carry the slugs,
+    which give the picker its titles), its text the file that directory
+    names for the number, its render help_simd.
+
+  lua/rfc/fetch.lua
+    fetch.simd_listing asks the contents API for the directory;
+    fetch.simd asks for a proposal's file by name.
+
+  lua/rfc/help_simd.lua
+    A proposal as a help document: the frontmatter as the header
+    (category, type, status, created; the feature; supersedes,
+    superseded-by and extends as links; the authors as one line), then
+    the body through rfc.proposal over cds.eip, with every SIMD the
+    text names as a link, to its section when one is named.
+
+  lua/rfc/help.lua, lua/rfc/outline.lua
+    A tag's prefix may have four letters, so simd64 and its sections
+    are tags and headings like the rest.
+
+  lua/rfc/config.lua
+    sources.simd, off by default.
+
+  lua/cds/
+    simd vendored from ../cds; eip, bip and simd keep a bare mention's
+    position after a link on the same line.
+
+  spec/
+    help_simd_spec and the :Simd cases over SIMDs 64, 1 and 268 and the
+    directory listing: 80 pure and 69 editor cases.
+
 2026-10-21  :Bip, Bitcoin's proposals as a source
 
   plugin/rfc.lua

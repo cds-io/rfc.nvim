@@ -510,6 +510,88 @@ describe("rfc", function()
         end)
     end)
 
+    describe(":Simd", function()
+        it("finds the proposal's file through the directory, fetches it and opens it as help", function()
+            vim.cmd("Simd 64")
+            assert.is_true(editor.wait_help("simd64"))
+            assert.are.same({ "simd-index", "simd64" }, case.fetched)
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^%*simd64%.txt%*  Transaction Receipts"))
+            assert.are.equal("fetching SIMD 64", case.notices[1].msg)
+        end)
+
+        it("lands on a section by its tag", function()
+            vim.cmd("Simd 64")
+            assert.is_true(editor.wait_help("simd64"))
+            vim.cmd("help simd64-summary")
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^SUMMARY"))
+        end)
+
+        it("opens a number written with leading zeros as the same proposal", function()
+            vim.cmd("Simd 0064")
+            assert.is_true(editor.wait_help("simd64"))
+            assert.are.same({ "simd-index", "simd64" }, case.fetched)
+        end)
+
+        it("reports a proposal the directory does not list", function()
+            vim.cmd("Simd 999")
+            vim.wait(500, function()
+                return #case.notices == 2
+            end)
+            assert.are.equal("SIMD 999 does not exist", case.notices[2].msg)
+            assert.are.same({ "simd-index" }, case.fetched)
+        end)
+
+        it("follows the proposal another extends on CTRL-]", function()
+            vim.cmd("Simd 268")
+            assert.is_true(editor.wait_help("simd268"))
+            assert.is_true(vim.fn.search("|simd219|", "W") > 0)
+            feed("<C-]>")
+            vim.wait(500, function()
+                return #case.notices == 3
+            end)
+            assert.are.equal("SIMD 219 does not exist", case.notices[3].msg)
+        end)
+
+        it("lists the proposals directory as the index", function()
+            local offered, opts
+            vim.ui.select = function(items, o, on_choice)
+                offered, opts = items, o
+                on_choice(nil)
+            end
+            vim.cmd("Simd")
+            vim.wait(500, function()
+                return offered ~= nil
+            end)
+            assert.are.equal(133, #offered)
+            assert.are.equal("simd1  Simd Process", opts.format_item(offered[1]))
+            assert.are.same({ "simd-index" }, case.fetched)
+        end)
+
+        it("completes a number or a title from the cached index", function()
+            local offered = false
+            vim.ui.select = function(_, _, on_choice)
+                offered = true
+                on_choice(nil)
+            end
+            vim.cmd("Simd")
+            assert.is_true(vim.wait(500, function()
+                return offered
+            end))
+            local found = false
+            for _, item in ipairs(vim.fn.getcompletion("Simd transaction rec", "cmdline")) do
+                found = found or vim.startswith(item, "simd64  Transaction Receipt")
+            end
+            assert.is_true(found)
+        end)
+
+        it("says which source to enable when simd is off", function()
+            case.setup({ rfc = true })
+            vim.cmd("Simd 64")
+            assert.are.equal("simd64 is SIMD; enable sources.simd in setup()", case.notices[1].msg)
+            assert.are.same({}, case.fetched)
+        end)
+    end)
+
     describe("search", function()
         it("opens the one document whose number or title matches", function()
             vim.ui.select = function()

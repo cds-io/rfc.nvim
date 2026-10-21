@@ -28,6 +28,8 @@ function M.start()
         proposal = fetch.proposal,
         listing = fetch.listing,
         bip = fetch.bip,
+        simd = fetch.simd,
+        simd_listing = fetch.simd_listing,
         select = vim.ui.select,
         rtp = vim.o.runtimepath,
     }
@@ -41,7 +43,7 @@ function M.start()
             end,
         }, extra or {}))
     end
-    case.setup({ rfc = true, eip = true, bip = true })
+    case.setup({ rfc = true, eip = true, bip = true, simd = true })
     local bodies = {
         ["9110"] = fixtures.rfc9110,
         ["2616"] = fixtures.rfc2616,
@@ -82,6 +84,22 @@ function M.start()
         table.insert(case.fetched, which .. "-index")
         return Task.of(table.concat(fixtures.read(fixtures[which .. "_all"]), "\n") .. "\n")
     end
+    fetch.simd_listing = function()
+        table.insert(case.fetched, "simd-index")
+        return Task.of(table.concat(fixtures.read(fixtures.simd_listing), "\n") .. "\n")
+    end
+    local simds = {
+        ["0064-transaction-receipt.md"] = fixtures.simd64,
+        ["0001-simd-process.md"] = fixtures.simd1,
+        ["0268-raise-cpi-nesting-limit.md"] = fixtures.simd_related,
+    }
+    fetch.simd = function(file, id)
+        table.insert(case.fetched, "simd" .. id)
+        if not simds[file] then
+            return Task.fail("SIMD " .. id .. " does not exist")
+        end
+        return Task.of(table.concat(fixtures.read(simds[file]), "\n") .. "\n")
+    end
     local bips = { ["32"] = fixtures.bip32, ["22"] = fixtures.bip22, ["341"] = fixtures.bip341, ["3"] = fixtures.bip3 }
     fetch.bip = function(id)
         table.insert(case.fetched, "bip" .. id)
@@ -96,6 +114,8 @@ function M.start()
         fetch.proposal = saved.proposal
         fetch.listing = saved.listing
         fetch.bip = saved.bip
+        fetch.simd = saved.simd
+        fetch.simd_listing = saved.simd_listing
         vim.ui.select = saved.select
         -- every sidebar, help window and document buffer goes, then the
         -- store's root leaves the runtimepath so the next case's root is the

@@ -26,6 +26,10 @@ local M = {
     bip341 = "bip-0341.mediawiki",
     bip3 = "bip-0003.md",
     bips_readme = "bips-README.mediawiki",
+    simd64 = "simd-0064-transaction-receipt.md",
+    simd1 = "simd-0001-simd-process.md",
+    simd_related = "simd-0268-raise-cpi-nesting-limit.md",
+    simd_listing = "simd-proposals.json",
 }
 
 ---@param name string

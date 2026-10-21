@@ -439,6 +439,19 @@ local function number(id)
   return (id:gsub("^0+(%d)", "%1"))
 end
 
+--- The spans found so far blanked out of a line, so a scan for bare
+--- mentions never reads a link's text, and every position still counts
+--- from the line's start.
+---@param line string
+---@param found { first: integer, last: integer }[]
+---@return string
+local function without(line, found)
+  for _, m in ipairs(found) do
+    line = line:sub(1, m.first - 1) .. (" "):rep(m.last - m.first + 1) .. line:sub(m.last + 1)
+  end
+  return line
+end
+
 --- Every proposal a line names, in order of position: a wiki link
 --- ([[bip-0032.mediawiki|BIP 32]], with a section after #), a link into
 --- the document itself ([[#anchor|text]]), a markdown link
@@ -470,12 +483,7 @@ function M.mentions(line)
   for first, id, section, after in line:gmatch("()" .. MD .. "()") do
     add(first, after, id, section)
   end
-  local bare = line
-  for _, pat in ipairs({ WIKI, OWN, MD }) do
-    bare = bare:gsub(pat, function(m)
-      return (" "):rep(#m)
-    end)
-  end
+  local bare = without(line, found)
   for first, id, after in bare:gmatch("()BIP[%- ]?0*(%d+)()") do
     local before = bare:sub(first - 1, first - 1)
     local following = bare:sub(after, after)

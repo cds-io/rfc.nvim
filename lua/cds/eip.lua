@@ -140,7 +140,7 @@ end
 --- whose text names one ("[EIP-2718](./eip-2718.md)", the whole link) and a
 --- bare "EIP-155" or "ERC-20". The kind is the one the text uses. The links
 --- are blanked out of the line the bare scan reads, so a link's text is
---- found once.
+--- found once, and a bare mention after a link keeps its position.
 ---@param line string
 ---@return cds.eip.Mention[]
 function M.mentions(line)
@@ -149,9 +149,10 @@ function M.mentions(line)
   for first, kind, id, after in line:gmatch("()" .. LINK .. "()") do
     table.insert(found, { kind = kind:lower(), first = first, last = after - 1, id = id })
   end
-  local bare = line:gsub(LINK, function(m)
-    return (" "):rep(#m)
-  end)
+  local bare = line
+  for _, m in ipairs(found) do
+    bare = bare:sub(1, m.first - 1) .. (" "):rep(m.last - m.first + 1) .. bare:sub(m.last + 1)
+  end
   for first, kind, id, after in bare:gmatch("()(E[IR][PC])%-(%d+)()") do
     local before = bare:sub(first - 1, first - 1)
     local following = bare:sub(after, after)

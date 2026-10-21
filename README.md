@@ -1,10 +1,10 @@
 # rfc.nvim
 
-RFCs, Ethereum's EIPs and ERCs, and Bitcoin's BIPs, as Neovim help.
-`:Rfc 9110` fetches the RFC's text from the RFC Editor, `:Eip 1559` and
-`:Bip 32` fetch a proposal's from its repository; each is rendered as a
-help document and opened with `:help`, so from then on the editor's own
-help navigation is the whole interface:
+RFCs, Ethereum's EIPs and ERCs, Bitcoin's BIPs and Solana's SIMDs, as
+Neovim help. `:Rfc 9110` fetches the RFC's text from the RFC Editor;
+`:Eip 1559`, `:Bip 32` and `:Simd 64` fetch a proposal's from its
+repository; each is rendered as a help document and opened with `:help`,
+so from then on the editor's own help navigation is the whole interface:
 
 ```
 :help rfc9110            the RFC
@@ -55,6 +55,11 @@ Two commands, one per source, each with the same four forms:
 :Bip taproot             a search over it
 :Bip 32                  a BIP by number; `:Bip 0032` is the same one
 :Bip 3<Tab>              completion
+
+:Simd                    the SIMD index, the repository's proposals directory
+:Simd receipt            a search over it
+:Simd 64                 a SIMD by number
+:Simd tr<Tab>            completion
 ```
 
 A picked or completed item reads `eip20  Token Standard (Final)`: the tag
@@ -64,13 +69,14 @@ left in the cache; those fetch an index that is missing or a day old.
 
 ## Sources
 
-Three sources, chosen in `setup`; only the RFC Editor is on by default.
+Four sources, chosen in `setup`; only the RFC Editor is on by default.
 
 | Source | Command | Tags | Text | Index |
 |---|---|---|---|---|
 | `rfc` | `:Rfc` | `rfc9110`, `rfc9110-3.1` | rfc-editor.org | rfc-index.txt |
 | `eip` | `:Eip` | `eip1559`, `eip1559-specification`, `eip20` with `erc20` as its alias | github.com/ethereum/EIPs, then ethereum/ERCs | eips.ethereum.org/all and ercs.ethereum.org/all, as one |
 | `bip` | `:Bip` | `bip32`, `bip32-conventions`, `bip341-design` | github.com/bitcoin/bips | the repository's README |
+| `simd` | `:Simd` | `simd64`, `simd64-summary` | github.com/solana-foundation/solana-improvement-documents | the proposals directory, through the GitHub API |
 
 EIPs and ERCs share one number space, so the `eip` source covers both
 repositories: `:Eip 20` asks the EIPs repository, finds the stub that says
@@ -86,6 +92,12 @@ wikitables become aligned columns, footnotes (`<ref>`) become numbered
 notes where the references stand, and `[[bip-0340.mediawiki|BIP340]]`,
 `[[bip-0341.mediawiki#design|...]]` and a bare `BIP 32` become links, to
 the section when one is named.
+
+The SIMDs are markdown with a frontmatter, read as the EIPs are. The
+repository has no listing page, so the index is the `proposals` directory
+as the GitHub API lists it: the picker's titles come from the file names
+(`0064-transaction-receipt.md` reads "Transaction Receipt"), and a
+number finds its file there before the text is fetched.
 
 This is a personal plugin on the functional-core-with-editor-rims pattern
 the plugins in this directory share, developed with help from a coding
@@ -124,7 +136,7 @@ from the tags the render declared, since `:helptags` would read the `*/*`
 media ranges in an RFC's text as tags too.
 
 The cache is `stdpath("cache")/rfc/`: each text as fetched (`rfc9110.txt`,
-`eip1559.md`, `bip32.txt`), its document (`doc/rfc9110.txt`), the tags file and each
+`eip1559.md`, `bip32.txt`, `simd64.md`), its document (`doc/rfc9110.txt`), the tags file and each
 source's index, fetched again when it is more than a day old. Delete the
 directory to start over.
 
@@ -140,7 +152,7 @@ With lazy.nvim:
 
 ```lua
 require("rfc").setup({
-    sources = { rfc = true, eip = false, bip = false },
+    sources = { rfc = true, eip = false, bip = false, simd = false },
     cache_dir = nil, -- stdpath("cache") .. "/rfc"
     view = "rich", -- or "plain": a document as written
     toc = { width = 44 }, -- the contents sidebar
