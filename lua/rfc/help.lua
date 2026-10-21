@@ -246,15 +246,16 @@ function M.render(rfc_num, lines)
 end
 
 --- The tags a rendered document carries: every `*tag*` whose name is a
---- source prefix and a number (rfc9110, eip1559-abstract, erc20.txt), which
---- is the shape every render declares and no text contains by accident. The
---- store reads every document back through this to rebuild the tags file.
+--- source prefix (three or four letters) and a number (rfc9110,
+--- eip1559-abstract, erc20.txt, simd64-summary), which is the shape every
+--- render declares and no text contains by accident. The store reads every
+--- document back through this to rebuild the tags file.
 ---@param lines string[]
 ---@return rfc.HelpTag[]
 function M.tags_in(lines)
     local tags = {}
     for i, line in ipairs(lines) do
-        for name in line:gmatch("%*(%l%l%l%d[%w%.%-]*)%*") do
+        for name in line:gmatch("%*(%l%l%l%l?%d[%w%.%-]*)%*") do
             table.insert(tags, { name = name, line = i })
         end
     end

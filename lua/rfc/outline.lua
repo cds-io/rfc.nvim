@@ -30,13 +30,13 @@ local function depth(num)
     return parts
 end
 
---- A section tag ends the line: a source prefix, the number, a dash and
---- the section's name; the file tags and the reference entries' tags are
---- not sections.
+--- A section tag ends the line: a source prefix (three or four letters),
+--- the number, a dash and the section's name; the file tags and the
+--- reference entries' tags are not sections.
 ---@param line string
 ---@return string|nil
 local function section_tag(line)
-    local tag = line:match("%*(%l%l%l%d+%-[%w%.%-]*)%*$")
+    local tag = line:match("%*(%l%l%l%l?%d+%-[%w%.%-]*)%*$")
     if tag and not tag:match("^%l+%d+%-ref%-") then
         return tag
     end
@@ -52,7 +52,7 @@ end
 function M.of(lines)
     local row_indent, shallowest = {}, nil
     for _, line in ipairs(lines) do
-        local indent, tag = line:match("^(%s*)|(%l%l%l%d+%-[%w%.%-]*)|")
+        local indent, tag = line:match("^(%s*)|(%l%l%l%l?%d+%-[%w%.%-]*)|")
         if tag and not row_indent[tag] then
             row_indent[tag] = #indent
             shallowest = math.min(shallowest or #indent, #indent)

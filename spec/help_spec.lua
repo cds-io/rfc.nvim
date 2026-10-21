@@ -64,6 +64,17 @@ describe("clean", function()
     end)
 end)
 
+describe("tags_in", function()
+    it("reads a tag of a three- or four-letter prefix and a number, and nothing else", function()
+        local lines = { "*rfc9110.txt*  T  *rfc9110*", "SUMMARY   *simd64-summary*", "a */* range and *note* words" }
+        assert.are.same({
+            { name = "rfc9110.txt", line = 1 },
+            { name = "rfc9110", line = 1 },
+            { name = "simd64-summary", line = 2 },
+        }, help.tags_in(lines))
+    end)
+end)
+
 describe("render", function()
     describe("of RFC 9110", function()
         local doc, lines

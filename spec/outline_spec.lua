@@ -81,6 +81,17 @@ describe("outline.of", function()
         assert.are.equal(2, by_tag["eip1123-format"].level)
     end)
 
+    it("reads a heading tagged with a four-letter prefix", function()
+        local headings = outline.of({
+            "*simd64.txt*  T  *simd64*",
+            "CONTENTS",
+            "  |simd64-summary|  Summary",
+            "",
+            "SUMMARY   *simd64-summary*",
+        })
+        assert.are.same({ { tag = "simd64-summary", text = "SUMMARY", level = 1, line = 5 } }, headings)
+    end)
+
     it("answers no headings for a document without section tags", function()
         assert.are.same({}, outline.of({ "*rfc1.txt*  Nothing  *rfc1*", "", "text" }))
     end)
