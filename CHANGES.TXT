@@ -1,3 +1,36 @@
+2026-10-20  Sections, a rich view and a contents sidebar
+
+  lua/rfc/outline.lua
+    The headings of a rendered document: the lines carrying a section
+    tag, each with a level (a number's depth, or an unnumbered heading's
+    place in the document's own contents), and the questions asked of
+    them: the heading holding a line, the heading a count away, the
+    sidebar's rows.
+
+  lua/rfc/view.lua
+    The rich view: a rule above every heading (= at the top level, -
+    below it) and the heading's text highlighted, drawn as extmarks, so
+    the document on disk stays the text as written and ,tv switches the
+    view in place. view = "rich" in setup is the default; "plain" opens
+    a document as written. A heading put on the window's top line shows
+    its rule on the move or scroll that follows.
+
+  lua/rfc/toc.lua
+    The contents sidebar, gO: the headings in a window beside the
+    document, indented by level, the cursor on the section the reader is
+    in. Enter is :help on the row's tag in the document window, so
+    CTRL-T comes back; q or gO closes it; it closes with its window,
+    follows CTRL-] into another document, and gives way to any other
+    buffer the window turns to. toc.width in setup, 44 by default.
+
+  lua/rfc/init.lua
+    ]] and [[ move by section in a document's help buffer, count-aware,
+    on the jumplist.
+
+  spec/
+    outline_spec, toc_nvim_spec, the section keys and the rich view:
+    61 pure and 52 editor cases.
+
 2026-10-20  Result steps bind as Result steps
 
   lua/rfc/init.lua

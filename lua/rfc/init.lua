@@ -5,6 +5,9 @@ local config = require("rfc.config")
 local store = require("rfc.store")
 local help = require("rfc.help")
 local sources = require("rfc.sources")
+local outline = require("rfc.outline")
+local view = require("rfc.view")
+local toc = require("rfc.toc")
 local Task = require("cds.task")
 
 local M = {}
@@ -390,6 +393,20 @@ function M.owns(buf)
     return vim.startswith(name, dir)
 end
 
+--- The cursor to the heading `count` headings away (back for a negative
+--- count), on the jumplist; nothing when none lies that way.
+---@param count integer
+function M.step(count)
+    local buf = vim.api.nvim_get_current_buf()
+    local headings = view.headings(buf)
+    local i = outline.step(headings, vim.api.nvim_win_get_cursor(0)[1], count)
+    if not i then
+        return
+    end
+    vim.cmd("normal! m'")
+    vim.api.nvim_win_set_cursor(0, { headings[i].line, 0 })
+end
+
 --- The keys and highlights of a document's help buffer; a no-op for any other.
 ---@param buf integer
 function M.attach(buf)
@@ -399,6 +416,33 @@ function M.attach(buf)
     end
     vim.keymap.set("n", "<C-]>", M.follow, { buffer = buf, desc = "rfc: follow the tag under the cursor" })
     vim.keymap.set("n", "<CR>", M.follow_line, { buffer = buf, desc = "rfc: follow the first link on the line" })
+    vim.keymap.set("n", "]]", function()
+        M.step(vim.v.count1)
+    end, { buffer = buf, desc = "rfc: next section" })
+    vim.keymap.set("n", "[[", function()
+        M.step(-vim.v.count1)
+    end, { buffer = buf, desc = "rfc: previous section" })
+    vim.keymap.set("n", "gO", function()
+        toc.toggle(vim.api.nvim_get_current_win())
+    end, { buffer = buf, desc = "rfc: the contents beside the document" })
+    vim.keymap.set("n", "<leader>tv", function()
+        view.toggle(buf)
+    end, { buffer = buf, desc = "rfc: [T]oggle the rich [v]iew" })
+    if config.get().view == "rich" then
+        -- :help sets the filetype before it reads the file, so the view is
+        -- drawn now for a buffer that has its text and after the read otherwise
+        if vim.api.nvim_buf_line_count(buf) > 1 then
+            view.show(buf)
+        else
+            vim.api.nvim_create_autocmd("BufReadPost", {
+                buffer = buf,
+                once = true,
+                callback = function()
+                    view.show(buf)
+                end,
+            })
+        end
+    end
     local alternates = table.concat(REQUIREMENTS, "\\|"):gsub(" ", "\\\\_s\\\\+")
     vim.api.nvim_buf_call(buf, function()
         vim.cmd("syntax match rfcRequirement /\\<\\(" .. alternates .. "\\)\\>/")

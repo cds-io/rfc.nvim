@@ -13,6 +13,9 @@ interface:
 CTRL-]                   follow a link: a section, a cited RFC or EIP, a reference entry
 CTRL-T                   back through the tag stack, across documents
 <CR>                     follow the first link on the line: Enter on a ToC row
+]]  [[                   the next and the previous section, with a count
+gO                       the contents beside the document; Enter opens a section, q closes
+,tv                      the rich view on and off
 :helpgrep MUST NOT       search every cached document into the quickfix list
 ```
 
@@ -20,6 +23,14 @@ A link to a document that is not cached yet (`|rfc2616|` in RFC 9110's
 text, `|eip2718|` in EIP-1559's) fetches it on `CTRL-]` and then jumps.
 The requirement keywords of RFC 2119 (MUST, SHOULD NOT, MAY) are
 highlighted in bold.
+
+A document opens in the rich view: a rule above every heading and the
+heading highlighted, drawn over the text as extmarks, so `,tv` puts the
+text back as written in place and the file on disk is the RFC plus its
+tags and links either way. `gO` opens the contents beside the document,
+one row per heading indented by level, its cursor on the section yours is
+in; Enter there is `:help` on that section, so CTRL-T returns, and `q`
+closes it.
 
 ## Finding a document
 
@@ -117,6 +128,8 @@ With lazy.nvim:
 require("rfc").setup({
     sources = { rfc = true, eip = false },
     cache_dir = nil, -- stdpath("cache") .. "/rfc"
+    view = "rich", -- or "plain": a document as written
+    toc = { width = 44 }, -- the contents sidebar
     -- where messages go; vim.notify with an "rfc: " prefix by default
     notify = function(msg, level, opts) end,
 })

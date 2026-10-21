@@ -10,6 +10,8 @@ local root = vim.fn.getcwd()
 
 --- Loads the plugin once per Neovim.
 function M.load_plugin()
+    -- the reader's leader, which the ,tv key is spelled against
+    vim.g.mapleader = ","
     vim.opt.runtimepath:append(root)
     vim.cmd("runtime plugin/rfc.lua")
 end
@@ -29,14 +31,14 @@ function M.start()
         rtp = vim.o.runtimepath,
     }
     local case = { dir = vim.fn.tempname(), notices = {}, fetched = {} }
-    function case.setup(sources)
-        require("rfc").setup({
+    function case.setup(sources, extra)
+        require("rfc").setup(vim.tbl_extend("force", {
             cache_dir = case.dir,
             sources = sources,
             notify = function(msg, level, opts)
                 table.insert(case.notices, { msg = msg, level = level, title = opts.title })
             end,
-        })
+        }, extra or {}))
     end
     case.setup({ rfc = true, eip = true })
     local bodies = {
@@ -81,8 +83,10 @@ function M.start()
         fetch.proposal = saved.proposal
         fetch.listing = saved.listing
         vim.ui.select = saved.select
-        -- every help window and document buffer goes, then the store's root
-        -- leaves the runtimepath so the next case's root is the only one
+        -- every sidebar, help window and document buffer goes, then the
+        -- store's root leaves the runtimepath so the next case's root is the
+        -- only one
+        require("rfc.toc").close_all()
         pcall(vim.cmd, "helpclose")
         for _, buf in ipairs(vim.api.nvim_list_bufs()) do
             if vim.startswith(vim.api.nvim_buf_get_name(buf), vim.fn.resolve(case.dir)) then
