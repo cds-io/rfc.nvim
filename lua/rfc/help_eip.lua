@@ -2,9 +2,11 @@
 -- frontmatter becomes a header block, the headings get tags and a table of
 -- contents of links, fenced code becomes help code blocks, tables become
 -- aligned columns, inline HTML and emphasis become their text, and every
--- EIP or ERC the text names becomes a link. Nothing here touches the editor.
+-- EIP or ERC the text names becomes a link; the body fold is the one in
+-- rfc.proposal. Nothing here touches the editor.
 local eip = require("cds.eip")
 local help = require("rfc.help")
+local proposal = require("rfc.proposal")
 
 local M = {}
 
@@ -19,40 +21,6 @@ local function link(line)
     return line
 end
 
---- A table as aligned columns: cells padded to their column, two spaces
---- apart, indented by two, and a rule of dashes under a heading row. No bar
---- survives, since help would read |cell| as a link.
----@param t cds.eip.Table
----@return string[]
-local function layout(t)
-    local widths = {}
-    for _, row in ipairs(t.rows) do
-        for c, cell in ipairs(row) do
-            widths[c] = math.max(widths[c] or 0, #cell)
-        end
-    end
-    local function line(cells)
-        local padded = {}
-        for c, width in ipairs(widths) do
-            local cell = cells[c] or ""
-            padded[c] = cell .. string.rep(" ", width - #cell)
-        end
-        return ("  " .. table.concat(padded, "  ")):gsub("%s+$", "")
-    end
-    local out = {}
-    for r, row in ipairs(t.rows) do
-        table.insert(out, (line(row)))
-        if r == 1 and t.header then
-            local rule = {}
-            for c, width in ipairs(widths) do
-                rule[c] = string.rep("-", width)
-            end
-            table.insert(out, (line(rule)))
-        end
-    end
-    return out
-end
-
 --- The document for a proposal's text. Every proposal is tagged by its EIP
 --- number; one in the ERC category also carries its ERC name, since the
 --- texts of other proposals use both.
@@ -60,7 +28,7 @@ end
 ---@param lines string[]
 ---@return rfc.HelpDoc
 function M.render(id, lines)
-    local fields, body = eip.frontmatter(lines)
+    local fields, body_at = eip.frontmatter(lines)
     local label = fields.category == "ERC" and "ERC" or "EIP"
     local file_tag = "eip" .. id
     local out, tags = {}, {}
@@ -101,58 +69,15 @@ function M.render(id, lines)
     end
     put("")
 
-    -- the body as blocks whose text is already plain; the render is one fold
-    -- over them, a renderer per kind, so nothing below can skip that pass
-    local blocks = eip.blocks(lines, body)
-    local tag_of, used = {}, {}
-    for _, b in ipairs(blocks) do
-        if b.kind == "heading" then
-            local name = file_tag .. "-" .. help.slug(b.title)
-            if used[name] then
-                used[name] = used[name] + 1
-                name = name .. "-" .. used[name]
-            else
-                used[name] = 1
-            end
-            tag_of[b] = name
-        end
+    -- the body as blocks whose text is already plain; the fold over them is
+    -- the one every proposal render shares
+    local body, body_tags = proposal.body(eip.blocks(lines, body_at), file_tag, link)
+    local offset = #out
+    for _, line in ipairs(body) do
+        put(line)
     end
-    if next(tag_of) then
-        put("CONTENTS")
-        for _, b in ipairs(blocks) do
-            if b.kind == "heading" then
-                put(string.rep("  ", math.max(b.level - 1, 1)) .. "|" .. tag_of[b] .. "|  " .. b.title)
-            end
-        end
-        put("")
-    end
-
-    local render = {
-        heading = function(b)
-            return { help.with_tag(b.level <= 2 and b.title:upper() or b.title, tag_of[b]) }
-        end,
-        fence = function(b)
-            local block = { ">" .. b.lang }
-            for _, code in ipairs(b.code) do
-                table.insert(block, "    " .. code)
-            end
-            table.insert(block, "<")
-            return block
-        end,
-        table = layout,
-        line = function(b)
-            local text = link(b.text)
-            -- a leading < would read as the end of a code block and vanish
-            return { text:match("^<") and (" " .. text) or text }
-        end,
-    }
-    for _, b in ipairs(blocks) do
-        for _, line in ipairs(render[b.kind](b)) do
-            put(line)
-        end
-        if b.kind == "heading" then
-            tag(tag_of[b])
-        end
+    for _, t in ipairs(body_tags) do
+        table.insert(tags, { name = t.name, line = offset + t.line })
     end
     put("")
     put(help.MODELINE)
