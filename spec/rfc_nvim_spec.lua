@@ -532,6 +532,24 @@ describe("rfc", function()
             assert.are.same({ "simd-index", "simd64" }, case.fetched)
         end)
 
+        it("reads the directory once: a second proposal, or the picker, asks for no listing again", function()
+            vim.cmd("Simd 64")
+            assert.is_true(editor.wait_help("simd64"))
+            vim.cmd("Simd 1")
+            assert.is_true(editor.wait_help("simd1"))
+            assert.are.same({ "simd-index", "simd64", "simd1" }, case.fetched)
+            local offered
+            vim.ui.select = function(items, _, on_choice)
+                offered = items
+                on_choice(nil)
+            end
+            vim.cmd("Simd")
+            assert.is_true(vim.wait(500, function()
+                return offered ~= nil
+            end))
+            assert.are.same({ "simd-index", "simd64", "simd1" }, case.fetched)
+        end)
+
         it("reports a proposal the directory does not list", function()
             vim.cmd("Simd 999")
             vim.wait(500, function()

@@ -97,7 +97,8 @@ The SIMDs are markdown with a frontmatter, read as the EIPs are. The
 repository has no listing page, so the index is the `proposals` directory
 as the GitHub API lists it: the picker's titles come from the file names
 (`0064-transaction-receipt.md` reads "Transaction Receipt"), and a
-number finds its file there before the text is fetched.
+number finds its file there before the text is fetched; the directory is
+kept a day, as every index is.
 
 This is a personal plugin on the functional-core-with-editor-rims pattern
 the plugins in this directory share, developed with help from a coding

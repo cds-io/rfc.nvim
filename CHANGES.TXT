@@ -1,3 +1,20 @@
+2026-10-21  A source locates its file in the index the rim keeps
+
+  lua/rfc/sources.lua
+    A source whose files carry more than the number (the SIMDs, filed
+    as 0064-transaction-receipt.md) declares locate, the pure step from
+    a number to its file over the index's lines; its fetch takes the
+    file found.
+
+  lua/rfc/init.lua
+    ensure fetches such a text through index_lines, so the directory a
+    proposal is found in is the same cached copy the picker reads, kept
+    a day; one request per proposal after the first.
+
+  spec/
+    The second SIMD, and the picker after it, ask for no listing again:
+    80 pure and 70 editor cases.
+
 2026-10-21  One proposal render over a declaration
 
   lua/rfc/proposal.lua

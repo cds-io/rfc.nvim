@@ -63,6 +63,24 @@ local function enabled(source)
     return config.get().sources[source.prefix] == true
 end
 
+--- The text from the source: straight by number, or, for a source whose
+--- files the index names, through the index the rim keeps.
+---@param source rfc.Source
+---@param id string
+---@return cds.Task  -- of the text as one string
+local function fetch_text(source, id)
+    if not source.locate then
+        return source.fetch(id)
+    end
+    return M.index_lines(source):bind(function(index)
+        local file = source.locate(id, index)
+        if not file then
+            return Task.fail(("%s %s does not exist"):format(source.label, id))
+        end
+        return source.fetch(id, file)
+    end)
+end
+
 --- The document in the store: fetched, rendered and written when absent,
 --- rendered again from the stored text when an older render wrote it.
 ---@param source rfc.Source
@@ -78,7 +96,7 @@ function M.ensure(source, id)
     if raw and source.placeholder and source.placeholder(raw) then
         raw = nil
     end
-    local text = raw and Task.of(raw) or source.fetch(id):map(help.clean)
+    local text = raw and Task.of(raw) or fetch_text(source, id):map(help.clean)
     return text:map(function(lines)
         return { raw = lines, doc = source.render(id, lines) }
     end)

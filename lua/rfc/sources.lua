@@ -28,7 +28,8 @@ local M = {}
 ---@field label string      -- how a message names it: RFC, EIP
 ---@field raw_ext string    -- the extension the fetched text is stored under
 ---@field index_file string -- the cache file the index is stored as
----@field fetch fun(id: string): cds.Task          -- of the text as one string
+---@field fetch fun(id: string, file?: string): cds.Task  -- of the text as one string; `file` is what locate found
+---@field locate nil|fun(id: string, index: string[]): string|nil  -- pure: the file the index names for a number, for a source whose files carry more than the number
 ---@field index fun(): cds.Task                    -- of the index text as one string
 ---@field entries fun(lines: string[]): rfc.Entry[]  -- pure
 ---@field render fun(id: string, lines: string[]): rfc.HelpDoc  -- pure, total
@@ -143,7 +144,8 @@ M.bip = {
 
 --- Solana's proposals, from solana-foundation/solana-improvement-documents
 --- on GitHub. The proposals directory is the index, and a number finds its
---- file there, since the file name carries a slug too.
+--- file there, since the file name carries a slug too; the rim keeps the
+--- directory a day, as it keeps every index.
 ---@type rfc.Source
 M.simd = {
     prefix = "simd",
@@ -151,15 +153,16 @@ M.simd = {
     label = "SIMD",
     raw_ext = "md",
     index_file = "simd-index.json",
-    fetch = function(id)
-        return fetch.simd_listing():bind(function(listing)
-            for _, e in ipairs(simd.index(help.clean(listing))) do
-                if e.id == id then
-                    return fetch.simd(e.file, id)
-                end
+    locate = function(id, index)
+        for _, e in ipairs(simd.index(index)) do
+            if e.id == id then
+                return e.file
             end
-            return Task.fail("SIMD " .. id .. " does not exist")
-        end)
+        end
+        return nil
+    end,
+    fetch = function(id, file)
+        return fetch.simd(file, id)
     end,
     index = function()
         return fetch.simd_listing()
