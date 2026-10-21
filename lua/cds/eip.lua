@@ -2,6 +2,8 @@
 -- fenced code of the markdown body, the EIP and ERC mentions a line makes,
 -- and the listing page (eips.ethereum.org/all, ercs.ethereum.org/all) as
 -- entries. Plain lines in, plain tables out; nothing here names the editor.
+local mentions = require("cds.mentions")
+
 local M = {}
 
 ---@class cds.eip.Heading
@@ -136,34 +138,22 @@ function M.requires(fields)
   return ids
 end
 
+local LINK = "%[(E[IR][PC])%-(%d+)%]%(%./[%w%-/%.]+%)"
+
+---@param kind string
+---@param id string
+---@return table
+local function named(kind, id)
+  return { kind = kind:lower(), id = id }
+end
+
 --- Every EIP or ERC a line mentions, in order of position: a markdown link
 --- whose text names one ("[EIP-2718](./eip-2718.md)", the whole link) and a
---- bare "EIP-155" or "ERC-20". The kind is the one the text uses. The links
---- are blanked out of the line the bare scan reads, so a link's text is
---- found once, and a bare mention after a link keeps its position.
+--- bare "EIP-155" or "ERC-20". The kind is the one the text uses.
 ---@param line string
 ---@return cds.eip.Mention[]
 function M.mentions(line)
-  local found = {}
-  local LINK = "%[(E[IR][PC])%-(%d+)%]%(%./[%w%-/%.]+%)"
-  for first, kind, id, after in line:gmatch("()" .. LINK .. "()") do
-    table.insert(found, { kind = kind:lower(), first = first, last = after - 1, id = id })
-  end
-  local bare = line
-  for _, m in ipairs(found) do
-    bare = bare:sub(1, m.first - 1) .. (" "):rep(m.last - m.first + 1) .. bare:sub(m.last + 1)
-  end
-  for first, kind, id, after in bare:gmatch("()(E[IR][PC])%-(%d+)()") do
-    local before = bare:sub(first - 1, first - 1)
-    local following = bare:sub(after, after)
-    if not before:match("[%w%-]") and not following:match("%w") then
-      table.insert(found, { kind = kind:lower(), first = first, last = after - 1, id = id })
-    end
-  end
-  table.sort(found, function(a, b)
-    return a.first < b.first
-  end)
-  return found
+  return mentions.scan(line, { { LINK, named } }, { "(E[IR][PC])%-(%d+)", named })
 end
 
 local ENTITIES =

@@ -1,3 +1,24 @@
+2026-10-21  One proposal render over a declaration
+
+  lua/rfc/proposal.lua
+    render takes a declaration of a source's proposals (how the text
+    reads into fields and blocks, the header's fields, the rows after it
+    as text, links or a list, the file's other names, what the text
+    names) and writes the document every proposal source shares: the
+    title line with its tags, the header line, the rows, the body with
+    its contents block. The link pass is one too: a mention's kind and
+    number, or the document's own for what the mention leaves out, and
+    the section when one is named.
+
+  lua/rfc/help_eip.lua, lua/rfc/help_bip.lua, lua/rfc/help_simd.lua
+    Each is its declaration and a render over it; the documents they
+    write are the same, line for line.
+
+  lua/cds/
+    mentions vendored: the scan under the readers' mentions (links by
+    their forms, then the bare spellings outside them, each with its
+    byte range); eip, bip and simd give it their forms.
+
 2026-10-21  :Simd, Solana's proposals as a source
 
   plugin/rfc.lua

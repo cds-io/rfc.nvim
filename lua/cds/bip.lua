@@ -3,6 +3,8 @@
 -- names, and the repository's README as the index. A proposal written in
 -- markdown shares the preamble and the mentions and leaves its body to
 -- cds.eip. Plain lines in, plain tables out; nothing here names the editor.
+local mentions = require("cds.mentions")
+
 local M = {}
 
 ---@class cds.bip.Heading
@@ -439,17 +441,17 @@ local function number(id)
   return (id:gsub("^0+(%d)", "%1"))
 end
 
---- The spans found so far blanked out of a line, so a scan for bare
---- mentions never reads a link's text, and every position still counts
---- from the line's start.
----@param line string
----@param found { first: integer, last: integer }[]
----@return string
-local function without(line, found)
-  for _, m in ipairs(found) do
-    line = line:sub(1, m.first - 1) .. (" "):rep(m.last - m.first + 1) .. line:sub(m.last + 1)
-  end
-  return line
+---@param id string
+---@param section string|nil
+---@return table
+local function named(id, section)
+  return { kind = "bip", id = number(id), section = section }
+end
+
+---@param section string
+---@return table
+local function own(section)
+  return { kind = "bip", section = section }
 end
 
 --- Every proposal a line names, in order of position: a wiki link
@@ -460,41 +462,11 @@ end
 ---@param line string
 ---@return cds.bip.Mention[]
 function M.mentions(line)
-  local found = {}
-  local function add(first, after, id, section)
-    local m = { kind = "bip", first = first, last = after - 1 }
-    if id then
-      m.id = number(id)
-    end
-    if section and section ~= "" then
-      m.section = section
-    end
-    table.insert(found, m)
-  end
-  local WIKI = "%[%[bip%-(%d+)%.%a+#?([%w%-_]*)|[^%]]*%]%]"
-  local OWN = "%[%[#([%w%-_]+)|[^%]]*%]%]"
-  local MD = "%[[^%]]*%]%(bip%-(%d+)%.%a+#?([%w%-_]*)%)"
-  for first, id, section, after in line:gmatch("()" .. WIKI .. "()") do
-    add(first, after, id, section)
-  end
-  for first, section, after in line:gmatch("()" .. OWN .. "()") do
-    add(first, after, nil, section)
-  end
-  for first, id, section, after in line:gmatch("()" .. MD .. "()") do
-    add(first, after, id, section)
-  end
-  local bare = without(line, found)
-  for first, id, after in bare:gmatch("()BIP[%- ]?0*(%d+)()") do
-    local before = bare:sub(first - 1, first - 1)
-    local following = bare:sub(after, after)
-    if not before:match("[%w%-]") and not following:match("%w") then
-      add(first, after, id, nil)
-    end
-  end
-  table.sort(found, function(a, b)
-    return a.first < b.first
-  end)
-  return found
+  return mentions.scan(line, {
+    { "%[%[bip%-(%d+)%.%a+#?([%w%-_]*)|[^%]]*%]%]", named },
+    { "%[%[#([%w%-_]+)|[^%]]*%]%]", own },
+    { "%[[^%]]*%]%(bip%-(%d+)%.%a+#?([%w%-_]*)%)", named },
+  }, { "BIP[%- ]?0*(%d+)", named })
 end
 
 --- The body as blocks, every piece of text already plain: a heading, a

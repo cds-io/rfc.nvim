@@ -3,6 +3,8 @@
 -- and the list and number values a frontmatter carries. The body is
 -- markdown with a YAML frontmatter, which cds.eip reads. Plain lines in,
 -- plain tables out; nothing here names the editor.
+local mentions = require("cds.mentions")
+
 local M = {}
 
 ---@class cds.simd.Mention
@@ -23,17 +25,11 @@ local function number(id)
   return (id:gsub("^0+(%d)", "%1"))
 end
 
---- The spans found so far blanked out of a line, so a scan for bare
---- mentions never reads a link's text, and every position still counts
---- from the line's start.
----@param line string
----@param found { first: integer, last: integer }[]
----@return string
-local function without(line, found)
-  for _, m in ipairs(found) do
-    line = line:sub(1, m.first - 1) .. (" "):rep(m.last - m.first + 1) .. line:sub(m.last + 1)
-  end
-  return line
+---@param id string
+---@param section string|nil
+---@return table
+local function named(id, section)
+  return { kind = "simd", id = number(id), section = section }
 end
 
 --- Every proposal a line names, in order of position: a markdown link to
@@ -44,30 +40,11 @@ end
 ---@param line string
 ---@return cds.simd.Mention[]
 function M.mentions(line)
-  local found = {}
-  local function add(first, after, id, section)
-    local m = { kind = "simd", id = number(id), first = first, last = after - 1 }
-    if section and section ~= "" then
-      m.section = section
-    end
-    table.insert(found, m)
-  end
-  local LINK = "%[[^%]]*%]%([^%)%s]-(%d%d%d%d)%-[%w%-%._]-%.md#?([%w%-_]*)%)"
-  for first, id, section, after in line:gmatch("()" .. LINK .. "()") do
-    add(first, after, id, section)
-  end
-  local bare = without(line, found)
-  for first, id, after in bare:gmatch("()SIMD[%- ]?0*(%d+)()") do
-    local before = bare:sub(first - 1, first - 1)
-    local following = bare:sub(after, after)
-    if not before:match("[%w%-]") and not following:match("%w") then
-      add(first, after, id, nil)
-    end
-  end
-  table.sort(found, function(a, b)
-    return a.first < b.first
-  end)
-  return found
+  return mentions.scan(
+    line,
+    { { "%[[^%]]*%]%([^%)%s]-(%d%d%d%d)%-[%w%-%._]-%.md#?([%w%-_]*)%)", named } },
+    { "SIMD[%- ]?0*(%d+)", named }
+  )
 end
 
 --- The proposals directory as entries: every `"name": "NNNN-slug.md"` in
