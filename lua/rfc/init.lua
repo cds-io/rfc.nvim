@@ -118,7 +118,7 @@ end
 function M.jump(tag)
     ensure_setup()
     local source = sources.of(tag)
-    local id = source and tag:match("^%l+(%d+)")
+    local id = source and tag:match("^%l+0*(%d+)")
     if source and id and enabled(source) and not store.has(config.get(), source.prefix .. id) then
         M.open(source, id, tag)
         return
@@ -362,7 +362,8 @@ function M.command(source)
         if arg == "" then
             M.pick(nil, from)
         elseif first:match("^%d+$") then
-            M.jump(source.prefix .. first)
+            -- the BIPs are filed as bip-0032; the tag is bip32
+            M.jump(source.prefix .. (first:gsub("^0+(%d)", "%1")))
         elseif sources.of(first) == source then
             M.jump(first)
         else

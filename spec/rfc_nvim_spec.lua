@@ -399,6 +399,117 @@ describe("rfc", function()
         end)
     end)
 
+    describe(":Bip", function()
+        it("fetches the proposal and opens it as help", function()
+            vim.cmd("Bip 32")
+            assert.is_true(editor.wait_help("bip32"))
+            assert.are.same({ "bip32" }, case.fetched)
+            assert.is_truthy(
+                vim.api.nvim_get_current_line():match("^%*bip32%.txt%*  Hierarchical Deterministic Wallets")
+            )
+            assert.are.equal("fetching BIP 32", case.notices[1].msg)
+        end)
+
+        it("lands on a section by its tag", function()
+            vim.cmd("Bip 32")
+            assert.is_true(editor.wait_help("bip32"))
+            vim.cmd("help bip32-conventions")
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^CONVENTIONS"))
+        end)
+
+        it("opens a number written with leading zeros as the same proposal", function()
+            vim.cmd("Bip 0032")
+            assert.is_true(editor.wait_help("bip32"))
+            assert.are.same({ "bip32" }, case.fetched)
+        end)
+
+        it("fetches a linked proposal on CTRL-] and reports one that does not exist", function()
+            vim.cmd("Bip 341")
+            assert.is_true(editor.wait_help("bip341"))
+            assert.is_true(vim.fn.search("|bip340|", "W") > 0)
+            feed("<C-]>")
+            vim.wait(500, function()
+                return #case.notices == 3
+            end)
+            assert.are.same({ "bip341", "bip340" }, case.fetched)
+            assert.are.equal("fetching BIP 340", case.notices[2].msg)
+            assert.are.equal("BIP 340 does not exist", case.notices[3].msg)
+        end)
+
+        it("renders a proposal written in markdown", function()
+            vim.cmd("Bip 3")
+            assert.is_true(editor.wait_help("bip3"))
+            assert.are.equal("BIP-3  Status: Deployed  Type: Process  Assigned: 2025-01-09", vim.fn.getline(2))
+        end)
+
+        it("lists the repository's README as the index", function()
+            local offered, opts
+            vim.ui.select = function(items, o, on_choice)
+                offered, opts = items, o
+                on_choice(nil)
+            end
+            vim.cmd("Bip")
+            vim.wait(500, function()
+                return offered ~= nil
+            end)
+            assert.are.equal(213, #offered)
+            assert.are.equal("bip1  BIP Purpose and Guidelines (Closed)", opts.format_item(offered[1]))
+            assert.is_truthy(
+                vim.tbl_contains(
+                    vim.tbl_map(opts.format_item, offered),
+                    "bip32  Hierarchical Deterministic Wallets (Deployed)"
+                )
+            )
+            assert.are.same({ "bip-index" }, case.fetched)
+        end)
+
+        it("offers the proposals whose title matches a search", function()
+            local offered, opts
+            vim.ui.select = function(items, o, on_choice)
+                offered, opts = items, o
+                on_choice(nil)
+            end
+            vim.cmd("Bip hierarchical")
+            vim.wait(500, function()
+                return offered ~= nil
+            end)
+            assert.are.equal("documents matching hierarchical", opts.prompt)
+            local texts = vim.tbl_map(opts.format_item, offered)
+            assert.is_truthy(vim.tbl_contains(texts, "bip32  Hierarchical Deterministic Wallets (Deployed)"))
+        end)
+
+        it("completes a number or a title from the cached index", function()
+            local offered = false
+            vim.ui.select = function(_, _, on_choice)
+                offered = true
+                on_choice(nil)
+            end
+            vim.cmd("Bip")
+            -- the picker's turn comes on the loop; the case waits for it so
+            -- the stub, and the fixture that restores the real picker, meet it
+            assert.is_true(vim.wait(500, function()
+                return offered
+            end))
+            local function offers(arglead, prefix)
+                for _, item in ipairs(vim.fn.getcompletion("Bip " .. arglead, "cmdline")) do
+                    if vim.startswith(item, prefix) then
+                        return true
+                    end
+                end
+                return false
+            end
+            assert.is_true(offers("hierarch", "bip32  Hierarchical Deterministic Wallets"))
+            assert.is_true(offers("341", "bip341  "))
+        end)
+
+        it("says which source to enable when bip is off", function()
+            case.setup({ rfc = true })
+            vim.cmd("Bip 32")
+            assert.are.equal("bip32 is BIP; enable sources.bip in setup()", case.notices[1].msg)
+            assert.are.same({}, case.fetched)
+        end)
+    end)
+
     describe("search", function()
         it("opens the one document whose number or title matches", function()
             vim.ui.select = function()

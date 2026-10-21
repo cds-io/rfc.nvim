@@ -1,3 +1,44 @@
+2026-10-21  :Bip, Bitcoin's proposals as a source
+
+  plugin/rfc.lua
+    :Bip opens a Bitcoin improvement proposal as help: a number, a tag,
+    words to search the index, or nothing for the picker, with completion
+    over what is cached, as :Rfc and :Eip do.
+
+  lua/rfc/sources.lua
+    The bip source: its text from bitcoin/bips on GitHub (the MediaWiki
+    file, or the markdown one when that is how the proposal is written),
+    its index the repository's README, its render help_bip.
+
+  lua/rfc/fetch.lua
+    fetch.bip asks for bip-NNNN.mediawiki and, on a 404, bip-NNNN.md.
+
+  lua/rfc/help_bip.lua
+    A proposal as a help document: the preamble as the header (layer,
+    status, type, assigned; Requires and Replaces as links; the authors),
+    then the body through rfc.proposal, over cds.bip for MediaWiki and
+    cds.eip for markdown. A link to a section of a proposal, or into the
+    document itself, is a link to that section's tag.
+
+  lua/rfc/proposal.lua
+    The body fold the proposal renders share: the contents block indented
+    from the shallowest heading, a table's caption on its own line, the
+    notes block as a numbered list.
+
+  lua/rfc/init.lua
+    A number loses its leading zeros, typed after a command or inside a
+    tag, so `:Bip 0032` and |bip0032| are bip32.
+
+  lua/rfc/config.lua
+    sources.bip, off by default.
+
+  lua/cds/
+    bip vendored from ../cds.
+
+  spec/
+    help_bip_spec and the :Bip cases over BIPs 32, 22, 341, 3 and the
+    README: 72 pure and 61 editor cases.
+
 2026-10-20  Sections, a rich view and a contents sidebar
 
   lua/rfc/outline.lua

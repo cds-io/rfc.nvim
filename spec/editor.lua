@@ -27,6 +27,7 @@ function M.start()
         index = fetch.index,
         proposal = fetch.proposal,
         listing = fetch.listing,
+        bip = fetch.bip,
         select = vim.ui.select,
         rtp = vim.o.runtimepath,
     }
@@ -40,7 +41,7 @@ function M.start()
             end,
         }, extra or {}))
     end
-    case.setup({ rfc = true, eip = true })
+    case.setup({ rfc = true, eip = true, bip = true })
     local bodies = {
         ["9110"] = fixtures.rfc9110,
         ["2616"] = fixtures.rfc2616,
@@ -73,15 +74,28 @@ function M.start()
         return Task.of(table.concat(fixtures.read(proposals[prefix .. id]), "\n") .. "\n")
     end
     fetch.listing = function(url)
+        if url:match("bitcoin") then
+            table.insert(case.fetched, "bip-index")
+            return Task.of(table.concat(fixtures.read(fixtures.bips_readme), "\n") .. "\n")
+        end
         local which = url:match("eips") and "eips" or "ercs"
         table.insert(case.fetched, which .. "-index")
         return Task.of(table.concat(fixtures.read(fixtures[which .. "_all"]), "\n") .. "\n")
+    end
+    local bips = { ["32"] = fixtures.bip32, ["22"] = fixtures.bip22, ["341"] = fixtures.bip341, ["3"] = fixtures.bip3 }
+    fetch.bip = function(id)
+        table.insert(case.fetched, "bip" .. id)
+        if not bips[id] then
+            return Task.fail("BIP " .. id .. " does not exist")
+        end
+        return Task.of(table.concat(fixtures.read(bips[id]), "\n") .. "\n")
     end
     local function restore()
         fetch.rfc = saved.rfc
         fetch.index = saved.index
         fetch.proposal = saved.proposal
         fetch.listing = saved.listing
+        fetch.bip = saved.bip
         vim.ui.select = saved.select
         -- every sidebar, help window and document buffer goes, then the
         -- store's root leaves the runtimepath so the next case's root is the

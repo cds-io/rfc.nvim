@@ -1,13 +1,16 @@
 -- The sources a document can come from. Each is one record the rims read
 -- without knowing which they hold: where its text and its index come from,
 -- how its index reads, and how its text renders. The RFC Editor is one;
--- Ethereum's proposals are the other, over two repositories that share one
--- number space (ERC-20 is EIP-20), so the reader never has to say which.
+-- Ethereum's proposals are another, over two repositories that share one
+-- number space (ERC-20 is EIP-20), so the reader never has to say which;
+-- Bitcoin's proposals are the third.
 local fetch = require("rfc.fetch")
 local help = require("rfc.help")
 local help_eip = require("rfc.help_eip")
+local help_bip = require("rfc.help_bip")
 local rfc = require("cds.rfc")
 local eip = require("cds.eip")
+local bip = require("cds.bip")
 local Task = require("cds.task")
 
 local M = {}
@@ -110,7 +113,33 @@ M.eip = {
 }
 
 --- Every source, in the order the pickers list them.
-M.all = { M.rfc, M.eip }
+--- Bitcoin's proposals, from bitcoin/bips on GitHub: most written in
+--- MediaWiki, a few in markdown, the render telling them apart; the
+--- repository's README is the index.
+---@type rfc.Source
+M.bip = {
+    prefix = "bip",
+    aliases = {},
+    label = "BIP",
+    raw_ext = "txt",
+    index_file = "bip-index.mediawiki",
+    fetch = function(id)
+        return fetch.bip(id)
+    end,
+    index = function()
+        return fetch.listing(fetch.github_raw .. "bitcoin/bips/master/README.mediawiki", "the BIP index")
+    end,
+    entries = function(lines)
+        local entries = {}
+        for _, e in ipairs(bip.index(lines)) do
+            table.insert(entries, { id = e.id, label = e.title .. " (" .. e.status .. ")", text = true })
+        end
+        return entries
+    end,
+    render = help_bip.render,
+}
+
+M.all = { M.rfc, M.eip, M.bip }
 
 --- The source a tag belongs to, by its prefix or one of the aliases, or nil.
 ---@param tag string

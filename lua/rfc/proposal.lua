@@ -8,10 +8,11 @@ local help = require("rfc.help")
 
 local M = {}
 
---- A table as aligned columns: cells padded to their column, two spaces
---- apart, indented by two, and a rule of dashes under a heading row. No bar
---- survives, since help would read |cell| as a link.
----@param t { header: boolean, rows: string[][] }
+--- A table as aligned columns: its caption on a line of its own, cells
+--- padded to their column, two spaces apart, indented by two, and a rule
+--- of dashes under a heading row. No bar survives, since help would read
+--- |cell| as a link.
+---@param t { caption: string|nil, header: boolean, rows: string[][] }
 ---@return string[]
 function M.layout(t)
     local widths = {}
@@ -29,6 +30,9 @@ function M.layout(t)
         return ("  " .. table.concat(padded, "  ")):gsub("%s+$", "")
     end
     local out = {}
+    if t.caption then
+        table.insert(out, "  " .. t.caption)
+    end
     for r, row in ipairs(t.rows) do
         table.insert(out, (line(row)))
         if r == 1 and t.header then
@@ -53,10 +57,10 @@ end
 ---@field notes { n: integer, text: string }[]|nil
 ---@field text string|nil
 
---- The body: a CONTENTS block of the headings as links, indented by level,
---- then every block rendered. Level one and two headings are written in
---- capitals. Answers the lines and the tags they carry, each tag's line
---- counted from 1 within the lines answered.
+--- The body: a CONTENTS block of the headings as links, indented by level
+--- from the shallowest heading, then every block rendered. Level one and
+--- two headings are written in capitals. Answers the lines and the tags
+--- they carry, each tag's line counted from 1 within the lines answered.
 ---@param blocks rfc.ProposalBlock[]
 ---@param file_tag string
 ---@param link fun(text: string): string   -- the render's link pass over a line
@@ -67,9 +71,10 @@ function M.body(blocks, file_tag, link)
     local function put(line)
         table.insert(out, line)
     end
-    local tag_of, used = {}, {}
+    local tag_of, used, top = {}, {}, nil
     for _, b in ipairs(blocks) do
         if b.kind == "heading" then
+            top = math.min(top or b.level, b.level)
             local name = file_tag .. "-" .. help.slug(b.title)
             if used[name] then
                 used[name] = used[name] + 1
@@ -84,7 +89,7 @@ function M.body(blocks, file_tag, link)
         put("CONTENTS")
         for _, b in ipairs(blocks) do
             if b.kind == "heading" then
-                put(string.rep("  ", math.max(b.level - 1, 1)) .. "|" .. tag_of[b] .. "|  " .. b.title)
+                put(string.rep("  ", b.level - top + 1) .. "|" .. tag_of[b] .. "|  " .. b.title)
             end
         end
         put("")

@@ -21,6 +21,11 @@ local M = {
     erc1123 = "erc-1123.md",
     eips_all = "eips-all.html",
     ercs_all = "ercs-all.html",
+    bip32 = "bip-0032.mediawiki",
+    bip22 = "bip-0022.mediawiki",
+    bip341 = "bip-0341.mediawiki",
+    bip3 = "bip-0003.md",
+    bips_readme = "bips-README.mediawiki",
 }
 
 ---@param name string

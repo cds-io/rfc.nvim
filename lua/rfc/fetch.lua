@@ -1,6 +1,7 @@
--- The network, as Tasks: the RFC Editor's text and index, and the Ethereum
--- proposals' repositories and listing pages. A spec replaces the four
--- functions below with Tasks of fixture text.
+-- The network, as Tasks: the RFC Editor's text and index, the Ethereum
+-- proposals' repositories and listing pages, and the Bitcoin proposals'
+-- repository. A spec replaces the five functions below with Tasks of
+-- fixture text.
 local Task = require("cds.task")
 local http = require("cds.http")
 
@@ -9,20 +10,28 @@ local M = {}
 M.rfc_editor = "https://www.rfc-editor.org/"
 M.github_raw = "https://raw.githubusercontent.com/"
 
---- A GET as a Task of the body. A transport failure refuses with its
---- message; any status but 200 refuses with the status.
+--- A GET, run now: the body, or nil and a transport failure's message or
+--- a status but 200 as `{ status }`.
+---@param url string
+---@return string|nil body
+---@return any err
+local function get(url)
+    local res, err = http.request({ method = "GET", url = url, timeout = 30 })
+    if not res then
+        return nil, err.message
+    end
+    if res.status ~= 200 then
+        return nil, { status = res.status }
+    end
+    return res.body
+end
+
+--- A GET as a Task of the body.
 ---@param url string
 ---@return cds.Task
 function M.get(url)
     return Task.new(function()
-        local res, err = http.request({ method = "GET", url = url, timeout = 30 })
-        if not res then
-            return nil, err.message
-        end
-        if res.status ~= 200 then
-            return nil, { status = res.status }
-        end
-        return res.body
+        return get(url)
     end)
 end
 
@@ -69,6 +78,25 @@ end
 function M.proposal(repo, dir, prefix, id)
     local url = ("%s%s/master/%s/%s-%s.md"):format(M.github_raw, repo, dir, prefix, id)
     return text(url, prefix:upper() .. " " .. id)
+end
+
+--- A Bitcoin proposal's text from bitcoin/bips, filed as bip-0032.mediawiki
+--- or, for the few written in markdown, bip-0032.md; the second is asked
+--- for when the first is not there.
+---@param id string
+---@return cds.Task
+function M.bip(id)
+    local base = ("%sbitcoin/bips/master/bip-%04d."):format(M.github_raw, tonumber(id))
+    return Task.new(function()
+        local body, err = get(base .. "mediawiki")
+        if not body and type(err) == "table" and err.status == 404 then
+            body, err = get(base .. "md")
+        end
+        if not body then
+            return nil, describe(err, "BIP " .. id)
+        end
+        return body
+    end)
 end
 
 --- A listing page, every proposal under its status.
