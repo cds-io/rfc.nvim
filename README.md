@@ -32,6 +32,10 @@ one row per heading indented by level, its cursor on the section yours is
 in; Enter there is `:help` on that section, so CTRL-T returns, and `q`
 closes it.
 
+A short explainer:
+
+[![RFC viewer: rfc.nvim in use](https://img.youtube.com/vi/ivWq0YfZ8Dk/maxresdefault.jpg)](https://www.youtube.com/watch?v=ivWq0YfZ8Dk)
+
 ## Finding a document
 
 Two commands, one per source, each with the same four forms:
