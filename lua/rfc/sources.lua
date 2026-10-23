@@ -286,7 +286,8 @@ M.w3c = {
         end)
     end,
     render = help_w3c.render,
-    -- three roots: the maturity, the tags, the working groups
+    -- three roots: the maturity, the tags, the groups by their short names
+    -- (WG, IG), since 133 of 135 end in Working Group or Interest Group
     subjects = {
         index_file = "w3c-index.html",
         index = function()
@@ -304,7 +305,7 @@ M.w3c = {
                 vim.list_extend(
                     paths,
                     fp.map(e.groups, function(group)
-                        return { "Deliverers", group }
+                        return { "Deliverers", w3c.short_group(group) }
                     end)
                 )
                 return subjects.entry(e.id, report_label(e), paths)

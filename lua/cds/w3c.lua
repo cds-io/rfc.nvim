@@ -124,6 +124,29 @@ local function utc_time(t)
   return guess + (os.time(t) - os.time(back))
 end
 
+-- The kinds of group the W3C charters, and the shorthand it writes them with.
+local GROUP_KINDS = {
+  { " Working Group$", " WG" },
+  { " Interest Group$", " IG" },
+  { " Community Group$", " CG" },
+  { " Business Group$", " BG" },
+}
+
+--- A group's name with its kind as the W3C's own shorthand (Cascading
+--- Style Sheets (CSS) WG); a name of another shape (Advisory Board,
+--- Technical Architecture Group) as written.
+---@param name string
+---@return string
+function M.short_group(name)
+  for _, kind in ipairs(GROUP_KINDS) do
+    local short, n = name:gsub(kind[1], kind[2])
+    if n > 0 then
+      return short
+    end
+  end
+  return name
+end
+
 --- Seconds since the epoch at noon UTC of an index date.
 ---@param date string   -- YYYY-MM-DD
 ---@return integer

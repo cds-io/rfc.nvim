@@ -7,7 +7,8 @@
     fetched at the URL the page spells, since 89 shortnames carry
     uppercase letters and the lowercased URL only redirects, and asked
     for again, conditionally, when the index dates it after the copy.
-    The subjects have three roots: Maturity, Tags and Deliverers.
+    The subjects have three roots: Maturity, Tags and Deliverers, a
+    group under its short name (Web of Things WG, Digital Publishing IG).
 
   lua/cds/html/, lua/cds/w3c.lua
     A report's HTML (ReSpec or Bikeshed) read as blocks: headings with
