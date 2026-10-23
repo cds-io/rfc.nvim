@@ -245,9 +245,44 @@ function M.tables(lines)
   return tables
 end
 
+--- Ordered lists numbered as markdown means them: a run of items at one
+--- indent (`1. a`, blank lines between items allowed) counts up from the
+--- first item's number, whatever the author wrote on the rest, so a list
+--- written as `1. 1. 1.` reads 1, 2, 3. A nested list counts on its own
+--- by its indent; an item at a shallower indent ends the deeper runs. Any
+--- other line, or any block that is no line, ends every run: a
+--- continuation paragraph indented under an item ends it too, which only
+--- leaves such a list as the author wrote it.
+---@param blocks cds.eip.Block[]
+---@return cds.eip.Block[]
+local function number_lists(blocks)
+  local runs = {} -- indent -> the next number
+  for _, b in ipairs(blocks) do
+    local indent, tail = nil, nil
+    if b.kind == "line" then
+      indent, tail = b.text:match("^(%s*)%d+(%.%s.*)$")
+    end
+    if indent then
+      local width = #indent
+      for deeper in pairs(runs) do
+        if deeper > width then
+          runs[deeper] = nil
+        end
+      end
+      local n = runs[width] or tonumber(b.text:match("^%s*(%d+)"))
+      b.text = indent .. n .. tail
+      runs[width] = n + 1
+    elseif b.kind ~= "line" or b.text ~= "" then
+      runs = {}
+    end
+  end
+  return blocks
+end
+
 --- The body as blocks, every piece of text already plain: a heading, a
---- fenced code block, a table, or one line. This is the view a renderer
---- folds over, so no kind of text can miss the plain-text pass.
+--- fenced code block, a table, or one line, with ordered lists numbered.
+--- This is the view a renderer folds over, so no kind of text can miss
+--- the plain-text pass.
 ---@param lines string[]
 ---@param from? integer   -- the first body line; 1 unless given
 ---@return cds.eip.Block[]
@@ -289,7 +324,7 @@ function M.blocks(lines, from)
       table.insert(blocks, { kind = "line", line = i, text = M.plain(lines[i]) })
     end
   end
-  return blocks
+  return number_lists(blocks)
 end
 
 --- The listing page as entries: each table row's number and title, under

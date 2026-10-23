@@ -166,7 +166,8 @@ A proposal's markdown is parsed by `cds.eip` (frontmatter, headings,
 fenced code, the EIPs and ERCs a line names, the listing page) and rendered
 by `lua/rfc/help_eip.lua`: the frontmatter becomes a header block, the
 headings get tags and a table of contents of links, fenced code becomes
-help code blocks, and every `[EIP-2718](./eip-2718.md)` or bare `EIP-155`
+help code blocks, an ordered list written `1. 1. 1.` is numbered as
+markdown means it, and every `[EIP-2718](./eip-2718.md)` or bare `EIP-155`
 becomes a link.
 
 The rendered document is written under the cache directory's `doc/`, and

@@ -1,3 +1,19 @@
+2026-10-23  Ordered lists in a proposal are numbered as markdown means them
+
+  lua/cds/eip.lua
+    A run of list items at one indent counts up from the first item's
+    number, so a list the author wrote as 1. 1. 1. (EIP-2535's 26-item
+    one) reads 1 to 26, as the site shows it; a nested list counts on its
+    own by its indent, and any other line or block ends the run. The
+    fetched text keeps the author's numbers; the document is the render.
+
+  lua/rfc/help.lua
+    Render 6, so a cached proposal is rendered again on its next open.
+
+  spec/
+    The runs, the nesting, the author's own start and sequence, a fence,
+    and a number that is no item, under cds; 95 pure and 116 editor cases.
+
 2026-10-23  The cache as declared entries
 
   lua/rfc/cache.lua

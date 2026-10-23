@@ -24,7 +24,7 @@ local MODELINE = " vim:tw=78:ts=8:ft=help:norl:"
 -- The render's version, written as the document's last line. A cached
 -- document whose line names an older version is rendered again from the
 -- stored text, so a better render reaches what is already on disk.
-M.RENDER = 5
+M.RENDER = 6
 M.FOOTER = " rfc.nvim render " .. M.RENDER
 
 --- The render version a document's last line names, 0 when it names none.

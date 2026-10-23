@@ -634,7 +634,7 @@ describe("rfc", function()
             assert.are.same({}, case.notices)
             local fresh = vim.fn.readfile(path)
             assert.are.equal("  |eip1559-simple-summary|  Simple Summary", fresh[7])
-            assert.are.equal(" rfc.nvim render 5", fresh[#fresh])
+            assert.are.equal(" rfc.nvim render 6", fresh[#fresh])
         end)
 
         it("fetches again when the stored text is a moved stub, whatever render wrote the document", function()
