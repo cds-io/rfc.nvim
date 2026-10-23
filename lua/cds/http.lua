@@ -55,6 +55,10 @@ function M.config(req)
   local lines = {
     "silent",
     "show-error",
+    -- a moved document is still the document: follow a redirect, a few
+    -- at most; the status and headers are the final response's
+    "location",
+    "max-redirs = 5",
     "dump-header = " .. M.quote("-"),
     "max-time = " .. tostring(req.timeout or 30),
     "write-out = " .. M.quote(MARK .. "%{http_code}"),
