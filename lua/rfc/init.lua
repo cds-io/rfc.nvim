@@ -10,6 +10,8 @@ local view = require("rfc.view")
 local toc = require("rfc.toc")
 local subjects = require("rfc.subjects")
 local cds_subjects = require("cds.subjects")
+local cache = require("rfc.cache")
+local fp = require("cds.fp")
 local Task = require("cds.task")
 
 local M = {}
@@ -86,30 +88,95 @@ local function fetch_text(source, id)
     end)
 end
 
+local DAY = 24 * 60 * 60
+
+--- A source's index as a cache entry: kept a day, the stale copy with a
+--- warning when the fetch fails.
+---@param source rfc.Source
+---@return rfc.Fetched
+local function index_of(source)
+    return cache.fetched(config.get(), {
+        file = source.index_file,
+        produce = source.index,
+        max_age = DAY,
+        label = "the " .. source.label .. " index",
+        notify = M.notify,
+    })
+end
+
+--- A source's subjects index as a cache entry, kept like its index.
+---@param source rfc.Source
+---@return rfc.Fetched
+local function subjects_index_of(source)
+    local s = source.subjects
+    return cache.fetched(config.get(), {
+        file = s.index_file,
+        produce = s.index,
+        max_age = DAY,
+        label = "the " .. source.label .. " subjects index",
+        notify = M.notify,
+    })
+end
+
+--- A document's text as a cache entry: it never ages, and a placeholder
+--- (the stub a moved proposal leaves) is fetched again.
+---@param source rfc.Source
+---@param id string
+---@return rfc.Fetched
+local function raw_of(source, id)
+    return cache.fetched(config.get(), {
+        file = source.prefix .. id .. "." .. source.raw_ext,
+        produce = function()
+            return fetch_text(source, id)
+        end,
+        label = source.label .. " " .. id,
+        placeholder = source.placeholder,
+    })
+end
+
+--- A document as a cache entry over its text: rendered when missing, when
+--- an older render wrote it, or when the text is newer.
+---@param source rfc.Source
+---@param id string
+---@return rfc.Derived
+local function document_of(source, id)
+    return cache.derived(config.get(), {
+        name = source.prefix .. id,
+        from = { raw_of(source, id) },
+        version = help.RENDER,
+        produce = function(lines)
+            return source.render(id, lines)
+        end,
+    })
+end
+
+--- A source's subjects document as a cache entry over its subjects index.
+---@param source rfc.Source
+---@return rfc.Derived
+local function subjects_of(source)
+    local s = source.subjects
+    return cache.derived(config.get(), {
+        name = source.prefix .. "-subjects",
+        from = { subjects_index_of(source) },
+        version = help.RENDER,
+        produce = function(lines)
+            local entries, err = s.entries(lines)
+            if not entries then
+                return nil, err
+            end
+            local doc = { prefix = source.prefix, title = s.title, about = s.about }
+            return subjects.render(doc, cds_subjects.tree(entries))
+        end,
+    })
+end
+
 --- The document in the store: fetched, rendered and written when absent,
---- rendered again from the stored text when an older render wrote it.
+--- rendered again when an older render wrote it or its text is newer.
 ---@param source rfc.Source
 ---@param id string
 ---@return cds.Task  -- of the document's name
 function M.ensure(source, id)
-    local cfg = config.get()
-    local name = source.prefix .. id
-    if store.has(cfg, name) then
-        return Task.of(name)
-    end
-    local raw = store.raw(cfg, name, source.raw_ext)
-    if raw and source.placeholder and source.placeholder(raw) then
-        raw = nil
-    end
-    local text = raw and Task.of(raw) or fetch_text(source, id):map(help.clean)
-    return text:map(function(lines)
-        return { raw = lines, doc = source.render(id, lines) }
-    end)
-        :on_main()
-        :bind_result(function(r)
-            local ok, err = store.write(cfg, name, source.raw_ext, r.raw, r.doc)
-            return ok and name or nil, err
-        end)
+    return document_of(source, id):ensure()
 end
 
 --- Runs a Task on the main loop, tracked in the activity segment, and hands
@@ -135,30 +202,13 @@ local function vim_error(err)
     return err:match("E%d+:.*") or err
 end
 
---- The subjects document in the store: the subjects index through
---- index_lines (the cached copy while it is a day old), then the document
---- rendered and written unless it is already there by the current render
---- and no older than the index.
+--- The subjects document in the store: rendered from the subjects index
+--- (the cached copy while it is a day old) unless it is already there by
+--- the current render and no older than the index.
 ---@param source rfc.Source
 ---@return cds.Task  -- of the document's name
 function M.ensure_subjects(source)
-    local s = source.subjects
-    local cfg = config.get()
-    local name = source.prefix .. "-subjects"
-    local index = { index_file = s.index_file, index = s.index, label = source.label .. " subjects" }
-    return M.index_lines(index):on_main():bind_result(function(lines)
-        if store.has_since(cfg, name, s.index_file) then
-            return name
-        end
-        local entries, err = s.entries(lines)
-        if not entries then
-            return nil, err
-        end
-        local doc =
-            subjects.render({ prefix = source.prefix, title = s.title, about = s.about }, cds_subjects.tree(entries))
-        local ok, werr = store.write_doc(cfg, name, doc)
-        return ok and name or nil, werr
-    end)
+    return subjects_of(source):ensure()
 end
 
 --- Runs `done` once the source's subjects document is in the store: a
@@ -177,8 +227,7 @@ with_subjects = function(source, done)
         )
         return
     end
-    local _, fresh = store.read_index(cfg, source.subjects.index_file)
-    if not fresh then
+    if not subjects_index_of(source):fresh() then
         M.notify("fetching the " .. source.label .. " subjects")
     end
     run(M.ensure_subjects(source), source.label .. " subjects", function(_, err)
@@ -225,13 +274,12 @@ function M.jump(tag)
     ensure_setup()
     local source = sources.of(tag)
     local id = source and tag:match("^%l+0*(%d+)")
-    if source and id and enabled(source) and not store.has(config.get(), source.prefix .. id) then
+    if source and id and enabled(source) and not document_of(source, id):current() then
         M.open(source, id, tag)
         return
     end
     if source and not id and source.subjects and enabled(source) then
-        local name = source.prefix .. "-subjects"
-        if not store.has_since(config.get(), name, source.subjects.index_file) then
+        if not subjects_of(source):current() then
             -- straight to :help afterwards: the document was just written,
             -- and asking jump again would ask the store again
             with_subjects(source, function()
@@ -251,12 +299,11 @@ end
 function M.open(source, id, tag)
     ensure_setup()
     tag = tag or (source.prefix .. id)
-    if store.has(config.get(), source.prefix .. id) then
+    if document_of(source, id):current() then
         M.jump(tag)
         return
     end
-    local raw = store.raw(config.get(), source.prefix .. id, source.raw_ext)
-    if not raw or (source.placeholder and source.placeholder(raw)) then
+    if not raw_of(source, id):cached() then
         M.notify("fetching " .. source.label .. " " .. id)
     end
     run(M.ensure(source, id), source.label .. " " .. id, function(name, err)
@@ -308,32 +355,7 @@ end
 ---@param source rfc.Source
 ---@return cds.Task
 function M.index_lines(source)
-    local cfg = config.get()
-    local cached, fresh = store.read_index(cfg, source.index_file)
-    if cached and fresh then
-        return Task.of(cached)
-    end
-    return source
-        .index()
-        :map(help.clean)
-        :on_main()
-        :bind_result(function(lines)
-            local ok, err = store.write_index(cfg, source.index_file, lines)
-            return ok and lines or nil, err
-        end)
-        :recover(function(err)
-            if cached then
-                M.notify(
-                    ("the %s index could not be refreshed (%s); using the stale copy"):format(
-                        source.label,
-                        tostring(err)
-                    ),
-                    vim.log.levels.WARN
-                )
-                return Task.of(cached)
-            end
-            return Task.fail(err)
-        end)
+    return index_of(source):lines()
 end
 
 --- Picks a document from the given sources' indices (the enabled ones,
@@ -344,38 +366,32 @@ end
 ---@param from? rfc.Source[]
 function M.pick(query, from)
     ensure_setup()
-    local tasks, doors = {}, {}
-    for _, source in ipairs(from or sources.all) do
-        if enabled(source) and source.subjects then
-            -- the door into the source's subjects: first in the list, as
-            -- `tag  title` like every other item
-            table.insert(
-                doors,
-                { source = source, door = true, text = source.prefix .. "-subjects  " .. source.subjects.title }
-            )
+    local on = fp.filter(from or sources.all, enabled)
+    -- the door into a source's subjects: first in the list, as `tag  title`
+    -- like every other item
+    local doors = fp.map(
+        fp.filter(on, function(source)
+            return source.subjects ~= nil
+        end),
+        function(source)
+            return { source = source, door = true, text = source.prefix .. "-subjects  " .. source.subjects.title }
         end
-        if enabled(source) then
-            table.insert(
-                tasks,
-                M.index_lines(source):map(function(lines)
-                    local items = {}
-                    for _, entry in ipairs(source.entries(lines)) do
-                        table.insert(items, { source = source, entry = entry, text = label(source, entry) })
-                    end
-                    return items
-                end)
-            )
-        end
-    end
+    )
+    local tasks = fp.map(on, function(source)
+        return M.index_lines(source):map(function(lines)
+            return fp.map(source.entries(lines), function(entry)
+                return { source = source, entry = entry, text = label(source, entry) }
+            end)
+        end)
+    end)
     run(Task.all(tasks), "index", function(lists, err)
         if err then
             M.notify(err, vim.log.levels.ERROR)
             return
         end
-        local items = {}
-        for _, list in ipairs(lists) do
-            vim.list_extend(items, list)
-        end
+        local items = fp.reduce(lists, {}, function(all, list)
+            return vim.list_extend(all, list)
+        end)
         if query and query ~= "" then
             items = vim.fn.matchfuzzy(items, query, { key = "text" })
             if #items == 0 then
@@ -419,12 +435,10 @@ end
 ---@field path string    -- web / HTTP
 ---@field count integer  -- the documents filed there directly
 
--- The nodes of each cached subjects index, parsed once per version of the file.
-local forests = {}
-
 --- The nodes of a source's subjects, from the cached subjects index (fresh
---- or stale; completion cannot wait on the network); none when nothing is
---- cached or the index does not read.
+--- or stale; completion cannot wait on the network), parsed once per
+--- version of the file; none when nothing is cached or the index does not
+--- read.
 ---@param source rfc.Source
 ---@return rfc.SubjectNode[]
 function M.nodes(source)
@@ -433,28 +447,18 @@ function M.nodes(source)
     if not s then
         return {}
     end
-    local path = store.index_path(config.get(), s.index_file)
-    local stat = vim.uv.fs_stat(path)
-    if not stat then
-        return {}
-    end
-    local memo = forests[path]
-    if not memo or memo.mtime ~= stat.mtime.sec then
-        memo = { mtime = stat.mtime.sec, nodes = {} }
-        local entries = s.entries(vim.fn.readfile(path))
+    return subjects_index_of(source):memo("nodes", function(lines)
         local file_tag = source.prefix .. "-subjects-"
-        for _, n in ipairs(subjects.nodes(source.prefix, cds_subjects.tree(entries or {}))) do
-            table.insert(memo.nodes, {
+        return fp.map(subjects.nodes(source.prefix, cds_subjects.tree(s.entries(lines) or {})), function(n)
+            return {
                 tag = n.tag,
                 slug = n.tag:sub(#file_tag + 1),
                 leaf = help.slug(n.node.name),
                 path = table.concat(n.node.path, " / "),
                 count = #n.node.entries,
-            })
-        end
-        forests[path] = memo
-    end
-    return memo.nodes
+            }
+        end)
+    end) or {}
 end
 
 --- Opens the source's subjects document: at its top for an empty query;
@@ -471,15 +475,12 @@ function M.subjects(source, query)
             return
         end
         local nodes = M.nodes(source)
-        local exact, by_leaf = nil, {}
-        for _, n in ipairs(nodes) do
-            if n.slug == query then
-                exact = n
-            end
-            if n.leaf == query then
-                table.insert(by_leaf, n)
-            end
-        end
+        local exact = fp.find(nodes, function(n)
+            return n.slug == query
+        end)
+        local by_leaf = fp.filter(nodes, function(n)
+            return n.leaf == query
+        end)
         local hit = exact or (#by_leaf == 1 and by_leaf[1]) or nil
         if hit then
             help_tag(hit.tag, source)
@@ -508,51 +509,47 @@ function M.subjects(source, query)
     end)
 end
 
--- The entries of each cached index, parsed once per version of the file.
-local parsed = {}
-
 --- What a command can complete to, from what is on disk: every entry of
 --- each given source's cached index (fresh or stale; completion cannot wait
---- on the network), the word `subjects` for a source that has them, and
---- every tag of those sources' cached documents.
+--- on the network), parsed once per version of the file, the word
+--- `subjects` for a source that has them, and every tag of those sources'
+--- cached documents.
 ---@param from rfc.Source[]
 ---@return string[]
 function M.candidates(from)
     ensure_setup()
     local cfg = config.get()
-    local out = {}
-    for _, source in ipairs(from) do
-        if enabled(source) then
-            local path = store.index_path(cfg, source.index_file)
-            local stat = vim.uv.fs_stat(path)
-            if stat then
-                local memo = parsed[path]
-                if not memo or memo.mtime ~= stat.mtime.sec then
-                    memo = { mtime = stat.mtime.sec, labels = {} }
-                    for _, entry in ipairs(source.entries(vim.fn.readfile(path))) do
-                        table.insert(memo.labels, label(source, entry))
-                    end
-                    parsed[path] = memo
-                end
-                vim.list_extend(out, memo.labels)
-            end
-        end
-    end
-    for _, source in ipairs(from) do
-        if enabled(source) and source.subjects then
-            table.insert(out, "subjects")
-        end
+    local out = fp.reduce(fp.filter(from, enabled), {}, function(all, source)
+        local labels = index_of(source):memo("labels", function(lines)
+            return fp.map(source.entries(lines), function(entry)
+                return label(source, entry)
+            end)
+        end)
+        return vim.list_extend(all, labels or {})
+    end)
+    local any_subjects = fp.any(from, function(source)
+        return enabled(source) and source.subjects ~= nil
+    end)
+    if any_subjects then
+        table.insert(out, "subjects")
     end
     local tags = store.doc_dir(cfg) .. "/tags"
     if vim.fn.filereadable(tags) == 1 then
-        for _, line in ipairs(vim.fn.readfile(tags)) do
-            -- a document's file tag is its file's name; a node named
-            -- robots.txt ends the same way and is a tag to offer
+        local entries = fp.map(vim.fn.readfile(tags), function(line)
             local name, file = line:match("^([^\t]+)\t([^\t]+)")
-            if name and name ~= file and vim.tbl_contains(from, sources.of(name)) then
-                table.insert(out, name)
-            end
-        end
+            return { name = name, file = file }
+        end)
+        -- a document's file tag is its file's name; a node named robots.txt
+        -- ends the same way and is a tag to offer
+        local offered = fp.filter(entries, function(t)
+            return t.name ~= nil and t.name ~= t.file and vim.tbl_contains(from, sources.of(t.name))
+        end)
+        vim.list_extend(
+            out,
+            fp.map(offered, function(t)
+                return t.name
+            end)
+        )
     end
     return out
 end
@@ -598,10 +595,9 @@ function M.command(source)
     return run_command,
         function(arglead, cmdline)
             if source.subjects and cmdline:match("^%S+%s+subjects%s") then
-                local slugs = {}
-                for _, n in ipairs(M.nodes(source)) do
-                    table.insert(slugs, n.slug)
-                end
+                local slugs = fp.map(M.nodes(source), function(n)
+                    return n.slug
+                end)
                 return arglead == "" and slugs or vim.fn.matchfuzzy(slugs, arglead)
             end
             return M.complete(from, arglead)

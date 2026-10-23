@@ -15,6 +15,7 @@ local bip = require("cds.bip")
 local simd = require("cds.simd")
 local subjects = require("cds.subjects")
 local Task = require("cds.task")
+local fp = require("cds.fp")
 
 local M = {}
 
@@ -58,15 +59,12 @@ M.rfc = {
         return fetch.index()
     end,
     entries = function(lines)
-        local entries = {}
-        for _, e in ipairs(rfc.index(lines)) do
-            local text = false
-            for _, f in ipairs(e.formats) do
-                text = text or f == "TXT"
-            end
-            table.insert(entries, { id = e.number, label = e.label, text = text })
-        end
-        return entries
+        return fp.map(rfc.index(lines), function(e)
+            local text = fp.any(e.formats, function(f)
+                return f == "TXT"
+            end)
+            return { id = e.number, label = e.label, text = text }
+        end)
     end,
     render = help.render,
     -- the RFC Editor's subject tags: a tree of 19 roots, four levels at
@@ -94,23 +92,17 @@ local EIP_CATEGORIES = { "core", "networking", "interface", "erc", "meta", "info
 ---@param lines string[]
 ---@return cds.eip.Entry[]
 local function eip_entries(lines)
-    local entries, seen = {}, {}
-    for _, e in ipairs(eip.listing(lines)) do
-        if not seen[e.id] then
-            seen[e.id] = true
-            table.insert(entries, e)
-        end
-    end
-    return entries
+    return fp.unique(eip.listing(lines), function(e)
+        return e.id
+    end)
 end
 
 --- The six category pages, one after the other, as one text.
 ---@return cds.Task
 local function eip_index()
-    local pages = {}
-    for _, c in ipairs(EIP_CATEGORIES) do
-        table.insert(pages, fetch.listing(EIP_SITE .. c, "the " .. c .. " EIP listing"))
-    end
+    local pages = fp.map(EIP_CATEGORIES, function(c)
+        return fetch.listing(EIP_SITE .. c, "the " .. c .. " EIP listing")
+    end)
     return Task.all(pages):map(function(texts)
         return table.concat(texts, "\n")
     end)
@@ -145,11 +137,9 @@ M.eip = {
     placeholder = moved,
     index = eip_index,
     entries = function(lines)
-        local entries = {}
-        for _, e in ipairs(eip_entries(lines)) do
-            table.insert(entries, { id = e.id, label = e.title .. " (" .. e.status .. ")", text = true })
-        end
-        return entries
+        return fp.map(eip_entries(lines), function(e)
+            return { id = e.id, label = e.title .. " (" .. e.status .. ")", text = true }
+        end)
     end,
     render = help_eip.render,
     -- the categories, one level: the page a row came from
@@ -157,11 +147,9 @@ M.eip = {
         index_file = "eip-categories.html",
         index = eip_index,
         entries = function(lines)
-            local entries = {}
-            for _, e in ipairs(eip_entries(lines)) do
-                table.insert(entries, subjects.entry(e.id, e.title .. " (" .. e.status .. ")", { { e.category } }))
-            end
-            return entries
+            return fp.map(eip_entries(lines), function(e)
+                return subjects.entry(e.id, e.title .. " (" .. e.status .. ")", { { e.category } })
+            end)
         end,
         title = "EIPs by subject",
         about = "From eips.ethereum.org, the site's categories.",
@@ -186,11 +174,9 @@ M.bip = {
         return fetch.listing(fetch.github_raw .. "bitcoin/bips/master/README.mediawiki", "the BIP index")
     end,
     entries = function(lines)
-        local entries = {}
-        for _, e in ipairs(bip.index(lines)) do
-            table.insert(entries, { id = e.id, label = e.title .. " (" .. e.status .. ")", text = true })
-        end
-        return entries
+        return fp.map(bip.index(lines), function(e)
+            return { id = e.id, label = e.title .. " (" .. e.status .. ")", text = true }
+        end)
     end,
     render = help_bip.render,
     -- the README's Layer and Type columns, each a root; a Process BIP has
@@ -201,18 +187,12 @@ M.bip = {
             return fetch.listing(fetch.github_raw .. "bitcoin/bips/master/README.mediawiki", "the BIP index")
         end,
         entries = function(lines)
-            local entries = {}
-            for _, e in ipairs(bip.index(lines)) do
-                local paths = {}
-                if e.layer ~= "" then
-                    table.insert(paths, { "Layer", e.layer })
-                end
-                if e.type ~= "" then
-                    table.insert(paths, { "Type", e.type })
-                end
-                table.insert(entries, subjects.entry(e.id, e.title .. " (" .. e.status .. ")", paths))
-            end
-            return entries
+            return fp.map(bip.index(lines), function(e)
+                local paths = fp.filter({ { "Layer", e.layer }, { "Type", e.type } }, function(facet)
+                    return facet[2] ~= ""
+                end)
+                return subjects.entry(e.id, e.title .. " (" .. e.status .. ")", paths)
+            end)
         end,
         title = "BIPs by subject",
         about = "From github.com/bitcoin/bips, the README's Layer and Type columns.",
@@ -231,12 +211,10 @@ M.simd = {
     raw_ext = "md",
     index_file = "simd-index.json",
     locate = function(id, index)
-        for _, e in ipairs(simd.index(index)) do
-            if e.id == id then
-                return e.file
-            end
-        end
-        return nil
+        local found = fp.find(simd.index(index), function(e)
+            return e.id == id
+        end)
+        return found and found.file or nil
     end,
     fetch = function(id, file)
         return fetch.simd(file, id)
@@ -245,11 +223,9 @@ M.simd = {
         return fetch.simd_listing()
     end,
     entries = function(lines)
-        local entries = {}
-        for _, e in ipairs(simd.index(lines)) do
-            table.insert(entries, { id = e.id, label = e.title, text = true })
-        end
-        return entries
+        return fp.map(simd.index(lines), function(e)
+            return { id = e.id, label = e.title, text = true }
+        end)
     end,
     render = help_simd.render,
 }
@@ -266,11 +242,11 @@ function M.of(tag)
     if not prefix then
         return nil
     end
-    for _, source in ipairs(M.all) do
-        if source.prefix == prefix or vim.tbl_contains(source.aliases, prefix) then
-            return source
-        end
-    end
+    return (
+        fp.find(M.all, function(source)
+            return source.prefix == prefix or vim.tbl_contains(source.aliases, prefix)
+        end)
+    )
 end
 
 return M

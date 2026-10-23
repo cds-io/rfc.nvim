@@ -5,6 +5,7 @@
 -- and its body the documents filed there as links. render is pure and
 -- total; the store writes the document and `:help` does the rest.
 local help = require("rfc.help")
+local fp = require("cds.fp")
 
 local M = {}
 
@@ -18,10 +19,8 @@ local M = {}
 ---@param path string[]
 ---@return string
 function M.tag(prefix, path)
-    local parts = { prefix .. "-subjects" }
-    for _, name in ipairs(path) do
-        table.insert(parts, help.slug(name))
-    end
+    local parts = fp.map(path, help.slug)
+    table.insert(parts, 1, prefix .. "-subjects")
     return table.concat(parts, "-")
 end
 

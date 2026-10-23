@@ -1,3 +1,31 @@
+2026-10-23  The cache as declared entries
+
+  lua/rfc/cache.lua
+    Everything under the cache root is one of three entries. A fetched
+    file (an index, a subjects index, a document's text) is served from
+    disk while young enough and produced otherwise, the stale copy with a
+    warning when producing fails, a placeholder produced again. A derived
+    document (a document, a source's subjects) is rebuilt when its render
+    is older than the current one or an input is newer. A memo is a parse
+    of a file, redone when the file changes. An entry answers Tasks, so a
+    derived document composes over its inputs. The two rules, fresh and
+    current, are pure.
+
+  lua/rfc/init.lua
+    Five builders declare the rim's entries (a source's index and its
+    subjects index, a document's text, a document, a subjects document);
+    index_lines, ensure and ensure_subjects are those entries' lines and
+    ensure, and completion's memos are the entries' memos.
+
+  lua/rfc/store.lua
+    The paths, the tags file, write_doc and the retirements.
+
+  spec/
+    The rules under plain busted and the entries over a temporary root
+    (producing, serving, ageing, the placeholder, the stale copy, the
+    thrown error, the memo; the derived document's three reasons to
+    rebuild): 95 pure and 112 editor cases.
+
 2026-10-23  A source's subjects as a help document
 
   lua/rfc/subjects.lua

@@ -182,6 +182,15 @@ the tags file, each source's index and the RFC subject tags
 source's subjects document (`doc/rfc-subjects.txt`), rendered again when
 its index is newer. Delete the directory to start over.
 
+Everything in it is one of three cache entries (`lua/rfc/cache.lua`): a
+fetched file, served from disk while young enough and fetched otherwise
+(the stale copy stands in, with a warning, when the fetch fails); a
+derived document, rebuilt when the render that wrote it is older than
+the current one or an input is newer; and a memo, a parse of a file that
+completion redoes only when the file changes. A new source or a new
+derived document declares its entry in a few lines and reimplements none
+of this.
+
 ## Installation
 
 With lazy.nvim:
