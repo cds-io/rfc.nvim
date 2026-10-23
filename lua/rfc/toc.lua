@@ -6,6 +6,7 @@
 -- stack grows and CTRL-T comes back.
 local config = require("rfc.config")
 local outline = require("rfc.outline")
+local fp = require("cds.fp")
 local view = require("rfc.view")
 
 local M = {}
@@ -76,12 +77,9 @@ end
 ---@param win integer
 ---@return boolean
 local function others(win)
-    for _, w in ipairs(vim.api.nvim_tabpage_list_wins(vim.api.nvim_win_get_tabpage(win))) do
-        if w ~= win and vim.api.nvim_win_get_config(w).relative == "" then
-            return true
-        end
-    end
-    return false
+    return fp.any(vim.api.nvim_tabpage_list_wins(vim.api.nvim_win_get_tabpage(win)), function(w)
+        return w ~= win and vim.api.nvim_win_get_config(w).relative == ""
+    end)
 end
 
 --- Closes the sidebar's window; the last window of its tab cannot close, so

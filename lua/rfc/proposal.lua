@@ -9,6 +9,7 @@
 -- the notes a numbered list, and a line goes through the link pass.
 -- Nothing here touches the editor.
 local help = require("rfc.help")
+local fp = require("cds.fp")
 
 local M = {}
 
@@ -113,12 +114,13 @@ function M.render(spec, id, lines)
         out[1] = out[1] .. " *" .. name .. "*"
         tag(name)
     end
-    local header = { spec.number(fields, id) }
-    for _, key in ipairs(spec.header) do
-        if fields[key] and fields[key] ~= "" then
-            table.insert(header, label(key) .. ": " .. fields[key])
-        end
-    end
+    local set = fp.filter(spec.header, function(key)
+        return fields[key] ~= nil and fields[key] ~= ""
+    end)
+    local header = fp.map(set, function(key)
+        return label(key) .. ": " .. fields[key]
+    end)
+    table.insert(header, 1, spec.number(fields, id))
     put(table.concat(header, "  "))
     for _, row in ipairs(spec.rows) do
         local line
@@ -161,26 +163,23 @@ function M.layout(t)
         end
     end
     local function line(cells)
-        local padded = {}
-        for c, width in ipairs(widths) do
+        local padded = fp.map(widths, function(width, c)
             local cell = cells[c] or ""
-            padded[c] = cell .. string.rep(" ", width - #cell)
-        end
+            return cell .. string.rep(" ", width - #cell)
+        end)
         return ("  " .. table.concat(padded, "  ")):gsub("%s+$", "")
     end
-    local out = {}
-    if t.caption then
-        table.insert(out, "  " .. t.caption)
+    local out = fp.map(t.rows, function(row)
+        return (line(row))
+    end)
+    if t.header and #out > 0 then
+        local rule = fp.map(widths, function(width)
+            return string.rep("-", width)
+        end)
+        table.insert(out, 2, (line(rule)))
     end
-    for r, row in ipairs(t.rows) do
-        table.insert(out, (line(row)))
-        if r == 1 and t.header then
-            local rule = {}
-            for c, width in ipairs(widths) do
-                rule[c] = string.rep("-", width)
-            end
-            table.insert(out, (line(rule)))
-        end
+    if t.caption then
+        table.insert(out, 1, "  " .. t.caption)
     end
     return out
 end
@@ -239,20 +238,18 @@ function M.body(blocks, file_tag, link)
             return { help.with_tag(b.level <= 2 and b.title:upper() or b.title, tag_of[b]) }
         end,
         fence = function(b)
-            local block = { ">" .. b.lang }
-            for _, code in ipairs(b.code) do
-                table.insert(block, "    " .. code)
-            end
+            local block = fp.map(b.code, function(code)
+                return "    " .. code
+            end)
+            table.insert(block, 1, ">" .. b.lang)
             table.insert(block, "<")
             return block
         end,
         table = M.layout,
         notes = function(b)
-            local block = {}
-            for _, note in ipairs(b.notes) do
-                table.insert(block, "[" .. note.n .. "] " .. link(note.text))
-            end
-            return block
+            return fp.map(b.notes, function(note)
+                return "[" .. note.n .. "] " .. link(note.text)
+            end)
         end,
         line = function(b)
             local text = link(b.text)

@@ -4,6 +4,7 @@
 -- Nothing here touches the editor; the store writes the document and the
 -- tags file, and `:help` does the rest.
 local rfc = require("cds.rfc")
+local fp = require("cds.fp")
 
 local M = {}
 
@@ -291,12 +292,12 @@ end
 ---@param line string
 ---@return string|nil
 function M.section_tag(line)
-    for _, pattern in ipairs(M.SECTION) do
+    return fp.find_map(M.SECTION, function(pattern)
         local tag = line:match("%*(" .. pattern .. ")%*$")
         if tag and not tag:match("^%l+%d+%-ref%-") then
             return tag
         end
-    end
+    end)
 end
 
 --- A contents row's indent and the section tag it links, or nil for any
@@ -305,11 +306,12 @@ end
 ---@return string|nil indent
 ---@return string|nil tag
 function M.row_tag(line)
-    for _, pattern in ipairs(M.SECTION) do
+    local found = fp.find_map(M.SECTION, function(pattern)
         local indent, tag = line:match("^(%s*)|(" .. pattern .. ")|")
-        if tag then
-            return indent, tag
-        end
+        return tag and { indent, tag } or nil
+    end)
+    if found then
+        return found[1], found[2]
     end
 end
 
