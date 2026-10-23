@@ -245,7 +245,7 @@ With lazy.nvim:
 
 ```lua
 require("rfc").setup({
-    sources = { rfc = true, eip = false, bip = false, simd = false },
+    sources = { rfc = true, eip = false, bip = false, simd = false, w3c = false },
     cache_dir = nil, -- stdpath("cache") .. "/rfc"
     view = "rich", -- or "plain": a document as written
     toc = { width = 44 }, -- the contents sidebar
