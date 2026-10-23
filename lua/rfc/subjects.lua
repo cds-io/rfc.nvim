@@ -80,7 +80,7 @@ function M.read_nodes(lines)
         end
         table.insert(nodes, {
             tag = tag,
-            slug = (tag:gsub("^%l+%-subjects%-", "")),
+            slug = (tag:gsub("^%l[%l%d]-%l%-subjects%-", "")),
             leaf = help.slug(name),
             path = table.concat(names, " / ", 1, depth),
             count = tonumber(count),

@@ -248,17 +248,18 @@ end
 
 -- What a tag looks like: a source prefix (three or four letters) and a
 -- number (rfc9110, eip1559-abstract, erc20.txt, simd64-summary), the
--- prefix and -subjects (rfc-subjects.txt, rfc-subjects-web-http), or w3c
--- and a report's shortname, with # before a section (w3c-css-grid-2,
--- w3c-css-grid-2#5.3). These are the shapes every render declares and no
--- text contains by accident.
-M.TAG = { "%l%l%l%l?%d[%w%.%-]*", "%l%l%l%l?%-subjects[%w%.%-]*", "w3c%-[%l%d%-%.]+#?[%w%.%-]*" }
+-- prefix and -subjects (rfc-subjects.txt, rfc-subjects-web-http,
+-- w3c-subjects-tags-wot: a prefix is three or four characters, a letter
+-- at each end), or w3c and a report's shortname, with # before a section
+-- (w3c-css-grid-2, w3c-css-grid-2#5.3). These are the shapes every render
+-- declares and no text contains by accident.
+M.TAG = { "%l%l%l%l?%d[%w%.%-]*", "%l[%l%d][%l%d]?%l%-subjects[%w%.%-]*", "w3c%-[%l%d%-%.]+#?[%w%.%-]*" }
 
 -- A section tag: a tag with a dash and a name after its number
 -- (rfc9110-3.1, eip1559-abstract), after -subjects (rfc-subjects-web),
 -- or after a shortname's # (w3c-css-grid-2#5.3). The file tags and the
 -- reference entries' tags are not sections.
-M.SECTION = { "%l%l%l%l?%d+%-[%w%.%-]*", "%l%l%l%l?%-subjects%-[%w%.%-]*", "w3c%-[%l%d%-%.]+#[%w%.%-]+" }
+M.SECTION = { "%l%l%l%l?%d+%-[%w%.%-]*", "%l[%l%d][%l%d]?%l%-subjects%-[%w%.%-]*", "w3c%-[%l%d%-%.]+#[%w%.%-]+" }
 
 --- The tags a rendered document carries: every `*tag*` of a shape in TAG,
 --- in line order. The store reads every document back through this to

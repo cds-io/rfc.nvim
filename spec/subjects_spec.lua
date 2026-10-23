@@ -141,6 +141,15 @@ describe("render", function()
             {},
             subjects.read_nodes({ "*x-subjects.txt*  x  *x-subjects*", "about", "", "", help.MODELINE, help.FOOTER })
         )
+        assert.are.equal(
+            "tags-wot",
+            subjects.read_nodes({
+                "*w3c-subjects.txt*  x  *w3c-subjects*",
+                "about",
+                "",
+                "|w3c-subjects-tags-wot|  WoT (11)",
+            })[1].slug
+        )
     end)
     it("renders an empty forest as the title, the about line and the footer", function()
         local d = subjects.render(DOC, {})

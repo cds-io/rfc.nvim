@@ -115,6 +115,22 @@ describe("outline.of over a subjects document", function()
             { tag = "rfc-subjects-iot-6lowpan", text = "IoT / 6LoWPAN  (2)", level = 2, line = 8 },
         }, headings)
     end)
+    it("reads the headings of a subjects document whose prefix carries a digit", function()
+        local headings = outline.of({
+            "*w3c-subjects.txt*  W3C reports by subject  *w3c-subjects*",
+            "",
+            "|w3c-subjects-tags|  Tags (0)",
+            "  |w3c-subjects-tags-wot|  WoT (11)",
+            "",
+            "Tags  (0)  *w3c-subjects-tags*",
+            "",
+            "Tags / WoT  (11)  *w3c-subjects-tags-wot*",
+        })
+        assert.are.same({
+            { tag = "w3c-subjects-tags", text = "Tags  (0)", level = 1, line = 6 },
+            { tag = "w3c-subjects-tags-wot", text = "Tags / WoT  (11)", level = 2, line = 8 },
+        }, headings)
+    end)
 end)
 
 describe("outline.at", function()

@@ -80,6 +80,7 @@ describe("tags_in", function()
             "web / HTTP  (3)   *rfc-subjects-web-http*",
             "IoT / 6LoWPAN  (2)  *rfc-subjects-iot-6lowpan*",
             "X.509  *rfc-subjects-security-pki-x.509*",
+            "Tags / WoT  (11)  *w3c-subjects-tags-wot*",
         }
         assert.are.same({
             { name = "rfc-subjects.txt", line = 1 },
@@ -87,6 +88,7 @@ describe("tags_in", function()
             { name = "rfc-subjects-web-http", line = 2 },
             { name = "rfc-subjects-iot-6lowpan", line = 3 },
             { name = "rfc-subjects-security-pki-x.509", line = 4 },
+            { name = "w3c-subjects-tags-wot", line = 5 },
         }, help.tags_in(lines))
     end)
 end)
