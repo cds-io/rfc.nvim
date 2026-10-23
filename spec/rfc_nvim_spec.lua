@@ -360,7 +360,8 @@ describe("rfc", function()
             fetched = { "simd-index", "simd64" },
             section = { "simd64-summary", "^SUMMARY" },
             missing = { id = "268", tag = "|simd219|", number = "219" },
-            index = { count = 133, label = "simd1  Simd Process", fetched = { "simd-index" } },
+            index = { count = 133 + 1, label = "simd1  Simd Process", fetched = { "simd-index" } },
+            door = "simd-subjects  SIMDs by subject",
             search = { "receipt", "simd64  Transaction Receipt" },
             complete = { "transaction rec", "simd64  Transaction Receipt" },
         },
@@ -578,7 +579,7 @@ describe("rfc", function()
         it("offers the subjects word alone before any index or document is cached", function()
             assert.are.same({ "subjects" }, vim.fn.getcompletion("Rfc ", "cmdline"))
             assert.are.same({ "subjects" }, vim.fn.getcompletion("Eip ", "cmdline"))
-            assert.are.same({}, vim.fn.getcompletion("Simd ", "cmdline"))
+            assert.are.same({ "subjects" }, vim.fn.getcompletion("Simd ", "cmdline"))
         end)
 
         it("completes a number or a title from the command's cached index", function()
@@ -865,6 +866,32 @@ describe("rfc", function()
             assert.is_truthy(vim.api.nvim_get_current_line():match("^Living  %(3%)"))
         end)
 
+        it(":Simd subjects files each proposal under its status, fetching every proposal once", function()
+            local cfg = config.get()
+            -- a fresh listing of the three fixture proposals, so the directory is not asked for
+            vim.fn.writefile({
+                '[{"name":"0001-simd-process.md"},{"name":"0064-transaction-receipt.md"},{"name":"0268-raise-cpi-nesting-limit.md"}]',
+            }, store.index_path(cfg, "simd-index.json"))
+            vim.cmd("Simd subjects")
+            assert.is_true(editor.wait_help("simd-subjects"))
+            table.sort(case.fetched)
+            assert.are.same({ "simd1", "simd268", "simd64" }, case.fetched)
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^%*simd%-subjects%.txt%*  SIMDs by subject"))
+            assert.are.equal("fetching the SIMD subjects", case.notices[1].msg)
+            vim.cmd("help simd-subjects-status-accepted")
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^Accepted  %(1%)"))
+            assert.is_true(vim.fn.search("|simd268|  Raise CPI Nesting Limit (Accepted)", "nw") > 0)
+            vim.cmd("help simd-subjects-status")
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^Status  %(3%)"))
+            -- the texts fetched for the document are the documents' own: opening one asks for nothing
+            vim.cmd("Simd 64")
+            assert.is_true(editor.wait_help("simd64"))
+            table.sort(case.fetched)
+            assert.are.same({ "simd1", "simd268", "simd64" }, case.fetched)
+            -- the nodes complete, read from the document
+            assert.is_true(vim.tbl_contains(vim.fn.getcompletion("Simd subjects ", "cmdline"), "status-living"))
+        end)
+
         it(":Bip subjects has Layer and Type as roots", function()
             vim.cmd("Bip subjects layer-applications")
             assert.is_true(editor.wait_help("bip-subjects"))
@@ -971,7 +998,7 @@ describe("rfc", function()
             assert.is_true(editor.wait_help("rfc-subjects"))
             assert.is_true(vim.tbl_contains(vim.fn.getcompletion("Rfc subjects ", "cmdline"), "web-http"))
             assert.are.equal("web-http", vim.fn.getcompletion("Rfc subjects webht", "cmdline")[1])
-            assert.are.same({}, vim.fn.getcompletion("Simd sub", "cmdline"))
+            assert.is_true(vim.tbl_contains(vim.fn.getcompletion("Simd sub", "cmdline"), "subjects"))
         end)
     end)
 

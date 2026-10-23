@@ -51,6 +51,43 @@ function M.nodes(prefix, forest)
     return out
 end
 
+---@class rfc.SubjectNode
+---@field tag string     -- rfc-subjects-web-http
+---@field slug string    -- web-http: the tag without the file tag
+---@field leaf string    -- http: the last level's slug
+---@field path string    -- web / HTTP
+---@field count integer  -- the documents under it
+
+--- The nodes a rendered document declares, read back from its contents
+--- block (the rows after the title, the about line and a blank, up to
+--- the next blank): the path from the indent, the count from the row.
+--- What completion and a node search work from, so they see exactly the
+--- tags the document carries.
+---@param lines string[]
+---@return rfc.SubjectNode[]
+function M.read_nodes(lines)
+    local nodes, names = {}, {}
+    for i = 4, #lines do
+        local indent, tag, name, count = lines[i]:match("^(%s*)|([^|]+)|  (.*) %((%d+)%)$")
+        if not tag then
+            break
+        end
+        local depth = #indent / 2 + 1
+        names[depth] = name
+        for d = depth + 1, #names do
+            names[d] = nil
+        end
+        table.insert(nodes, {
+            tag = tag,
+            slug = (tag:gsub("^%l+%-subjects%-", "")),
+            leaf = help.slug(name),
+            path = table.concat(names, " / ", 1, depth),
+            count = tonumber(count),
+        })
+    end
+    return nodes
+end
+
 --- The documents under a node, its own and its descendants', each
 --- counted once however many of its paths lie there: what a heading's
 --- count means to a reader.

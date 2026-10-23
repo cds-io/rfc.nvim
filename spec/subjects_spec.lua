@@ -112,6 +112,36 @@ describe("render", function()
         assert.are.equal(2, subjects.total(forest[1].children[1]))
         assert.are.equal("|rfc-subjects-web|  web (2)", subjects.render(DOC, forest).lines[4])
     end)
+    it("reads the contents block back into nodes: tag, slug, leaf, path and count", function()
+        local nodes = subjects.read_nodes(doc.lines)
+        assert.are.equal(13, #nodes)
+        assert.are.same(
+            { tag = "rfc-subjects-arpanet", slug = "arpanet", leaf = "arpanet", path = "ARPANET", count = 3 },
+            nodes[1]
+        )
+        assert.are.same({
+            tag = "rfc-subjects-data-formats-internationalization-character-sets-ascii",
+            slug = "data-formats-internationalization-character-sets-ascii",
+            leaf = "ascii",
+            path = "data formats / internationalization / character sets / ASCII",
+            count = 1,
+        }, nodes[5])
+    end)
+    it("reads a name with its own parentheses, and nothing from a document with no contents", function()
+        local forest = cds.tree({ cds.entry("341", "Taproot (Deployed)", { { "Layer", "Consensus (soft fork)" } }) })
+        local nodes = subjects.read_nodes(subjects.render({ prefix = "bip", title = "t", about = "a" }, forest).lines)
+        assert.are.same({
+            tag = "bip-subjects-layer-consensus-soft-fork",
+            slug = "layer-consensus-soft-fork",
+            leaf = "consensus-soft-fork",
+            path = "Layer / Consensus (soft fork)",
+            count = 1,
+        }, nodes[2])
+        assert.are.same(
+            {},
+            subjects.read_nodes({ "*x-subjects.txt*  x  *x-subjects*", "about", "", "", help.MODELINE, help.FOOTER })
+        )
+    end)
     it("renders an empty forest as the title, the about line and the footer", function()
         local d = subjects.render(DOC, {})
         assert.are.equal(6, #d.lines)

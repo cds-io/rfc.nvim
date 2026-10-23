@@ -106,8 +106,11 @@ EIPs filed under `Meta / Hardforks` since their titles say so, and the
 status, so `Status / Last Call` is the list of what is about to be final
 across the categories (`:Eip subjects hardforks` and `:Eip subjects
 last-call` land on those); `:Bip subjects` is the README's two columns,
-Layer and Type, each a root. The SIMDs have no subjects yet: their
-category and type live in each file's frontmatter alone.
+Layer and Type, each a root. `:Simd subjects` is each proposal's
+status, read from its frontmatter: the first open fetches every
+proposal once (eight at a time) and keeps the texts, so a SIMD opened
+afterwards is already in the store, and the document rebuilds only when
+the directory gains one.
 
 ## Sources
 
@@ -118,7 +121,7 @@ Four sources, chosen in `setup`; only the RFC Editor is on by default.
 | `rfc` | `:Rfc` | `rfc9110`, `rfc9110-3.1` | rfc-editor.org | rfc-index.txt | the RFC Editor's subject tags, `rfc-tags.csv` |
 | `eip` | `:Eip` | `eip1559`, `eip1559-specification`, `eip20` with `erc20` as its alias | github.com/ethereum/EIPs, then ethereum/ERCs | the six category pages of eips.ethereum.org, as one | the categories |
 | `bip` | `:Bip` | `bip32`, `bip32-conventions`, `bip341-design` | github.com/bitcoin/bips | the repository's README | the README's Layer and Type |
-| `simd` | `:Simd` | `simd64`, `simd64-summary` | github.com/solana-foundation/solana-improvement-documents | the proposals directory, through the GitHub API | none |
+| `simd` | `:Simd` | `simd64`, `simd64-summary` | github.com/solana-foundation/solana-improvement-documents | the proposals directory, through the GitHub API | each proposal's status, from its text |
 
 EIPs and ERCs share one number space, so the `eip` source covers both
 repositories: `:Eip 20` asks the EIPs repository, finds the stub that says

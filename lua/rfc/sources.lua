@@ -25,11 +25,13 @@ local M = {}
 ---@field text boolean      -- whether the source has a text to render (an RFC published as PDF only has none)
 
 ---@class rfc.Subjects
----@field index_file string   -- the cache file the subjects index is stored as; the source's own index file when the index carries the subjects
----@field index fun(): cds.Task   -- of the index text as one string
----@field entries fun(lines: string[]): cds.subjects.Entry[]|nil, string|nil  -- pure
----@field title string        -- the document's title: RFCs by subject
----@field about string        -- the line naming the data
+---@field index_file string|nil   -- the cache file the subjects index is stored as; the source's own index file when the index carries the subjects
+---@field index nil|fun(): cds.Task   -- of the index text as one string
+---@field entries nil|fun(lines: string[]): cds.subjects.Entry[]|nil, string|nil  -- pure: the subjects from the index
+---@field texts boolean|nil       -- the subjects come from the documents' own texts, every one the index names
+---@field entry nil|fun(id: string, lines: string[]): cds.subjects.Entry  -- pure: a document's subjects from its text
+---@field title string            -- the document's title: RFCs by subject
+---@field about string            -- the line naming the data
 
 ---@class rfc.Source
 ---@field prefix string     -- the tag prefix: rfc, eip
@@ -235,6 +237,20 @@ M.simd = {
         end)
     end,
     render = help_simd.render,
+    -- each proposal's status, from its frontmatter, so the subjects' inputs
+    -- are the proposals' own texts; the category and the type are one
+    -- value for near every proposal, so they say nothing
+    subjects = {
+        texts = true,
+        entry = function(id, lines)
+            local fields = eip.frontmatter(lines)
+            local status = fields.status or ""
+            local title = fields.title or ("SIMD " .. id)
+            return subjects.entry(id, title .. " (" .. status .. ")", { { "Status", status } })
+        end,
+        title = "SIMDs by subject",
+        about = "From the proposals' frontmatters, each one's status.",
+    },
 }
 
 M.all = { M.rfc, M.eip, M.bip, M.simd }

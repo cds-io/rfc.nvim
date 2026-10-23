@@ -72,6 +72,26 @@ end
 -- Memos, one per file and name: the mtime parsed and the parse's answer.
 local memos = {}
 
+--- `parse` over the file's lines, once per mtime of the file under
+--- `name`; nil when there is no file.
+---@param path string
+---@param name string
+---@param parse fun(lines: string[]): any
+---@return any|nil
+local function memo_of(path, name, parse)
+    local mtime = mtime_of(path)
+    if not mtime then
+        return nil
+    end
+    local key = path .. "\0" .. name
+    local memo = memos[key]
+    if not memo or memo.mtime ~= mtime then
+        memo = { mtime = mtime, value = parse(vim.fn.readfile(path)) }
+        memos[key] = memo
+    end
+    return memo.value
+end
+
 ---@class rfc.Fetched
 ---@field cfg rfc.Config
 ---@field file string                 -- under the root: rfc-subjects.csv, rfc9110.txt
@@ -152,18 +172,7 @@ end
 ---@param parse fun(lines: string[]): any
 ---@return any|nil
 function Fetched:memo(name, parse)
-    local path = self:path()
-    local mtime = mtime_of(path)
-    if not mtime then
-        return nil
-    end
-    local key = path .. "\0" .. name
-    local memo = memos[key]
-    if not memo or memo.mtime ~= mtime then
-        memo = { mtime = mtime, value = parse(vim.fn.readfile(path)) }
-        memos[key] = memo
-    end
-    return memo.value
+    return memo_of(self:path(), name, parse)
 end
 
 ---@param cfg rfc.Config
@@ -187,6 +196,7 @@ end
 ---@field from rfc.Fetched[]      -- the inputs, in the order produce receives them
 ---@field version integer         -- the render the document must carry
 ---@field produce fun(...: string[]): rfc.HelpDoc|nil, string|nil
+---@field limit integer|nil       -- how many inputs are produced at once; all without
 local Derived = {}
 Derived.__index = Derived
 
@@ -218,6 +228,14 @@ function Derived:ensure()
     local tasks = fp.map(self.from, function(input)
         return input:lines()
     end)
+    if self.limit then
+        -- a semaphore shared across the batch: the inputs may be a
+        -- hundred proposals, and the network is asked `limit` at a time
+        local permits = require("cds.async").semaphore(self.limit)
+        tasks = fp.map(tasks, function(t)
+            return t:limited(permits)
+        end)
+    end
     return task().all(tasks):on_main():bind_result(function(inputs)
         local doc, err = self.produce(unpack(inputs, 1, inputs.n or #inputs))
         if not doc then
@@ -228,14 +246,27 @@ function Derived:ensure()
     end)
 end
 
+--- `parse` over the document's lines, once per mtime of the document
+--- under `name`; nil before it exists.
+---@param name string
+---@param parse fun(lines: string[]): any
+---@return any|nil
+function Derived:memo(name, parse)
+    return memo_of(self:path(), name, parse)
+end
+
 ---@param cfg rfc.Config
----@param spec { name: string, from: rfc.Fetched[], version: integer, produce: fun(...: string[]): rfc.HelpDoc|nil, string|nil }
+---@param spec { name: string, from: rfc.Fetched[], version: integer, produce: fun(...: string[]): rfc.HelpDoc|nil, string|nil, limit?: integer }
 ---@return rfc.Derived
 function M.derived(cfg, spec)
-    return setmetatable(
-        { cfg = cfg, name = spec.name, from = spec.from, version = spec.version, produce = spec.produce },
-        Derived
-    )
+    return setmetatable({
+        cfg = cfg,
+        name = spec.name,
+        from = spec.from,
+        version = spec.version,
+        produce = spec.produce,
+        limit = spec.limit,
+    }, Derived)
 end
 
 return M

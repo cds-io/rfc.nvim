@@ -1,3 +1,28 @@
+2026-10-23  The SIMDs by subject: each proposal under its status
+
+  lua/rfc/sources.lua
+    The simd source's subjects are in the proposals' own texts (a
+    frontmatter's status; its category and type are one value for near
+    every proposal and say nothing), so the subjects document is derived
+    from the text of every proposal the directory names, fetched once
+    each, eight at a time, and kept as the documents' texts: a proposal
+    opened afterwards is already in the store, and a new proposal in the
+    directory is the one fetch its day brings.
+
+  lua/rfc/cache.lua
+    A derived entry takes a limit on how many inputs are produced at
+    once, and memoises a parse of its document per mtime.
+
+  lua/rfc/subjects.lua
+    read_nodes reads a document's contents block back into its nodes,
+    which is where completion and a node search take them from, so they
+    see exactly the tags the document carries.
+
+  spec/
+    One editor case over a three-proposal listing; the contents reader
+    over the render and over a name with its own parentheses; the
+    derived memo: 98 pure and 119 editor cases.
+
 2026-10-23  A subject's heading is its name, and its count is everything under it
 
   lua/rfc/subjects.lua

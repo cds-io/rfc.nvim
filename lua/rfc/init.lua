@@ -150,13 +150,36 @@ local function document_of(source, id)
     })
 end
 
---- A source's subjects document as a cache entry over its subjects index.
+--- A source's subjects document as a cache entry: over its subjects
+--- index, or, for a source whose subjects are in its documents' texts,
+--- over the text of every document the cached index names (none cached:
+--- no inputs, and the document is not current until the index is).
 ---@param source rfc.Source
 ---@return rfc.Derived
 local function subjects_of(source)
     local s = source.subjects
+    local doc = { prefix = source.prefix, title = s.title, about = s.about }
+    local name = source.prefix .. "-subjects"
+    if s.texts then
+        local listed = index_of(source):memo("entries", source.entries) or {}
+        return cache.derived(config.get(), {
+            name = name,
+            from = fp.map(listed, function(e)
+                return raw_of(source, e.id)
+            end),
+            version = help.RENDER,
+            limit = 8,
+            produce = function(...)
+                local texts = { ... }
+                local entries = fp.map(listed, function(e, i)
+                    return s.entry(e.id, texts[i])
+                end)
+                return subjects.render(doc, cds_subjects.tree(entries))
+            end,
+        })
+    end
     return cache.derived(config.get(), {
-        name = source.prefix .. "-subjects",
+        name = name,
         from = { subjects_index_of(source) },
         version = help.RENDER,
         produce = function(lines)
@@ -164,10 +187,24 @@ local function subjects_of(source)
             if not entries then
                 return nil, err
             end
-            local doc = { prefix = source.prefix, title = s.title, about = s.about }
             return subjects.render(doc, cds_subjects.tree(entries))
         end,
     })
+end
+
+--- Whether a source's subjects need no fetch: its subjects index is
+--- fresh, or, for subjects in the texts, its index is fresh and every
+--- text it names is on disk.
+---@param source rfc.Source
+---@return boolean
+local function subjects_fresh(source)
+    if not source.subjects.texts then
+        return subjects_index_of(source):fresh()
+    end
+    return index_of(source):fresh()
+        and fp.all(subjects_of(source).from, function(input)
+            return input:mtime() ~= nil
+        end)
 end
 
 --- The document in the store: fetched, rendered and written when absent,
@@ -208,6 +245,12 @@ end
 ---@param source rfc.Source
 ---@return cds.Task  -- of the document's name
 function M.ensure_subjects(source)
+    if source.subjects.texts then
+        -- the index first, since the document's inputs are what it names
+        return index_of(source):lines():bind(function()
+            return subjects_of(source):ensure()
+        end)
+    end
     return subjects_of(source):ensure()
 end
 
@@ -227,7 +270,7 @@ with_subjects = function(source, done)
         )
         return
     end
-    if not subjects_index_of(source):fresh() then
+    if not subjects_fresh(source) then
         M.notify("fetching the " .. source.label .. " subjects")
     end
     run(M.ensure_subjects(source), source.label .. " subjects", function(_, err)
@@ -428,37 +471,17 @@ function M.pick(query, from)
     end)
 end
 
----@class rfc.SubjectNode
----@field tag string     -- rfc-subjects-web-http
----@field slug string    -- web-http: the tag without the file tag
----@field leaf string    -- http: the last level's slug
----@field path string    -- web / HTTP
----@field count integer  -- the documents under it
-
---- The nodes of a source's subjects, from the cached subjects index (fresh
---- or stale; completion cannot wait on the network), parsed once per
---- version of the file; none when nothing is cached or the index does not
---- read.
+--- The nodes of a source's subjects, read from the subjects document in
+--- the store (completion cannot wait on the network), once per version
+--- of the file; none before the document exists.
 ---@param source rfc.Source
 ---@return rfc.SubjectNode[]
 function M.nodes(source)
     ensure_setup()
-    local s = source.subjects
-    if not s then
+    if not source.subjects then
         return {}
     end
-    return subjects_index_of(source):memo("nodes", function(lines)
-        local file_tag = source.prefix .. "-subjects-"
-        return fp.map(subjects.nodes(source.prefix, cds_subjects.tree(s.entries(lines) or {})), function(n)
-            return {
-                tag = n.tag,
-                slug = n.tag:sub(#file_tag + 1),
-                leaf = help.slug(n.node.name),
-                path = table.concat(n.node.path, " / "),
-                count = subjects.total(n.node),
-            }
-        end)
-    end) or {}
+    return subjects_of(source):memo("nodes", subjects.read_nodes) or {}
 end
 
 --- Opens the source's subjects document: at its top for an empty query;

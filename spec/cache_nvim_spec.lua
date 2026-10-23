@@ -232,6 +232,19 @@ describe("cache", function()
             wait(d:ensure())
             assert.are.equal(before - 100, vim.uv.fs_stat(d:path()).mtime.sec)
         end)
+        it("memoises a parse of the document per mtime, nil before it exists", function()
+            local d = derived(fetched({}))
+            local parses = 0
+            local function count(lines)
+                parses = parses + 1
+                return #lines
+            end
+            assert.is_nil(d:memo("n", count))
+            wait(d:ensure())
+            assert.are.equal(5, d:memo("n", count))
+            assert.are.equal(5, d:memo("n", count))
+            assert.are.equal(1, parses)
+        end)
         it("passes a produce refusal through as the error", function()
             local d = cache.derived(cfg, {
                 name = "rfc7",
