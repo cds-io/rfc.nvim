@@ -186,7 +186,8 @@ Everything in it is one of three cache entries (`lua/rfc/cache.lua`): a
 fetched file, served from disk while young enough and fetched otherwise
 (the stale copy stands in, with a warning, when the fetch fails); a
 derived document, rebuilt when the render that wrote it is older than
-the current one or an input is newer; and a memo, a parse of a file that
+the current one or an input is newer, missing or no longer fresh; and a
+memo, a parse of a file that
 completion redoes only when the file changes. A new source or a new
 derived document declares its entry in a few lines and reimplements none
 of this.

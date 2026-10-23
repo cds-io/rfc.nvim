@@ -795,6 +795,18 @@ describe("rfc", function()
             assert.are.same({ "subjects" }, case.fetched)
         end)
 
+        it("fetches the subjects again when the index is a day old, though the document is newer", function()
+            vim.cmd("Rfc subjects")
+            assert.is_true(editor.wait_help("rfc-subjects"))
+            vim.cmd("helpclose")
+            local cfg = config.get()
+            local old = os.time() - 2 * 24 * 60 * 60
+            vim.uv.fs_utime(store.index_path(cfg, "rfc-subjects.csv"), old, old)
+            vim.cmd("Rfc subjects")
+            assert.is_true(editor.wait_help("rfc-subjects"))
+            assert.are.same({ "subjects", "subjects" }, case.fetched)
+        end)
+
         it("warns and renders from the stale copy when the fetch fails", function()
             local cfg = config.get()
             local index = store.index_path(cfg, "rfc-subjects.csv")

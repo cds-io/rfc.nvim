@@ -6,7 +6,11 @@
     disk while young enough and produced otherwise, the stale copy with a
     warning when producing fails, a placeholder produced again. A derived
     document (a document, a source's subjects) is rebuilt when its render
-    is older than the current one or an input is newer. A memo is a parse
+    is older than the current one or an input is newer, missing, or no
+    longer fresh (a day-old subjects index rebuilds its document, from the
+    command and from a jump to one of its tags alike); a write makes its
+    directory, so the cache may be deleted while the editor runs. A memo
+    is a parse
     of a file, redone when the file changes. An entry answers Tasks, so a
     derived document composes over its inputs. The two rules, fresh and
     current, are pure.

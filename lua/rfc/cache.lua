@@ -12,8 +12,9 @@ local help = require("rfc.help")
 local fp = require("cds.fp")
 
 -- cds.task reaches for vim.async when it loads, so the plain tier, which
--- runs the two rules below, gets it on first use instead
-local function Task()
+-- runs the two rules below, gets it on first use instead; task() answers
+-- the module
+local function task()
     return require("cds.task")
 end
 
@@ -33,10 +34,11 @@ function M.fresh(mtime, now, max_age)
 end
 
 --- Whether a derived document is current: it exists by the current
---- version, and is no older than each input, every one of which exists.
+--- version, and is no older than each input, every one of which is still
+--- good (on disk, and fresh when it ages).
 ---@param mtime integer|nil        -- the document's, nil when there is none
 ---@param version_ok boolean       -- whether its footer names the current render
----@param inputs (integer|false)[] -- each input's mtime, false for a missing one
+---@param inputs (integer|false)[] -- each input's mtime, false for one missing or no longer fresh
 ---@return boolean
 function M.current(mtime, version_ok, inputs)
     if mtime == nil or not version_ok then
@@ -47,10 +49,13 @@ function M.current(mtime, version_ok, inputs)
     end)
 end
 
+--- Writes the lines, making the directory first: the reader may delete
+--- the cache to start over while the editor runs.
 ---@param path string
 ---@param lines string[]
 ---@return true|nil, string|nil
 local function write(path, lines)
+    vim.fn.mkdir(vim.fs.dirname(path), "p")
     if vim.fn.writefile(lines, path) == -1 then
         return nil, "could not write " .. path
     end
@@ -112,14 +117,13 @@ end
 
 --- The lines: the copy while fresh; else produced, cleaned, written and
 --- answered, and when producing fails with a copy on disk, that copy with
---- a warning.
+--- a warning. The copy is read before producing: a failure may be met in
+--- a fast event, where a file cannot be read.
 ---@return cds.Task
 function Fetched:lines()
-    if self:fresh() then
-        local cached = self:cached()
-        if cached then
-            return Task().of(cached)
-        end
+    local cached = self:cached()
+    if cached and self:fresh() then
+        return task().of(cached)
     end
     return self.produce()
         :map(help.clean)
@@ -129,9 +133,8 @@ function Fetched:lines()
             return ok and lines or nil, err
         end)
         :recover(function(err)
-            local cached = self:cached()
             if not cached then
-                return Task().fail(err)
+                return task().fail(err)
             end
             if self.notify then
                 self.notify(
@@ -139,7 +142,7 @@ function Fetched:lines()
                     vim.log.levels.WARN
                 )
             end
-            return Task().of(cached)
+            return task().of(cached)
         end)
 end
 
@@ -192,14 +195,15 @@ function Derived:path()
     return store.doc_path(self.cfg, self.name)
 end
 
---- Stats and the document's last line.
+--- Stats and the document's last line; an input that is no longer fresh
+--- counts as missing, so a day-old index rebuilds its document.
 ---@return boolean
 function Derived:current()
     local path = self:path()
     local mtime = mtime_of(path)
     local version_ok = mtime ~= nil and help.render_of(vim.fn.readfile(path, "", -1)) == self.version
     local inputs = fp.map(self.from, function(input)
-        return input:mtime() or false
+        return input:fresh() and input:mtime() or false
     end)
     return M.current(mtime, version_ok, inputs)
 end
@@ -209,12 +213,12 @@ end
 ---@return cds.Task
 function Derived:ensure()
     if self:current() then
-        return Task().of(self.name)
+        return task().of(self.name)
     end
     local tasks = fp.map(self.from, function(input)
         return input:lines()
     end)
-    return Task().all(tasks):on_main():bind_result(function(inputs)
+    return task().all(tasks):on_main():bind_result(function(inputs)
         local doc, err = self.produce(unpack(inputs, 1, inputs.n or #inputs))
         if not doc then
             return nil, err
