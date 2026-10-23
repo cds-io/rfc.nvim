@@ -14,6 +14,21 @@ local M = {}
 -- Roots already appended to the runtimepath, so a second setup() adds nothing.
 local registered = {}
 
+--- A fingerprint of the lua tree under `root`: the first twelve hex digits
+--- of a SHA-256 over every .lua file's relative path and content, in path
+--- order. Any change to the code that renders changes it, so a cached
+--- document's render is compared against the code and not a number.
+---@param root string   -- the plugin's directory
+---@return string
+function M.render_version(root)
+    local files = vim.fn.glob(root .. "/lua/**/*.lua", true, true)
+    table.sort(files)
+    local parts = fp.map(files, function(path)
+        return path:sub(#root + 2) .. "\n" .. table.concat(vim.fn.readfile(path, "b"), "\n")
+    end)
+    return vim.fn.sha256(table.concat(parts, "\0")):sub(1, 12)
+end
+
 ---@param cfg rfc.Config
 ---@return string
 function M.root(cfg)

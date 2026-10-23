@@ -36,6 +36,7 @@ local M = {}
 ---@field entry nil|fun(id: string, lines: string[]): cds.subjects.Entry  -- pure: a document's subjects from its text
 ---@field title string            -- the document's title: RFCs by subject
 ---@field about string            -- the line naming the data
+---@field roots string[]|nil      -- the roots first, in this order; the rest follow by name
 
 ---@class rfc.Source
 ---@field prefix string     -- the tag prefix: rfc, eip
@@ -313,6 +314,7 @@ M.w3c = {
         end,
         title = "W3C reports by subject",
         about = "From www.w3.org/TR, each report's maturity, tags and working group.",
+        roots = { "Maturity", "Tags", "Deliverers" },
     },
 }
 

@@ -136,10 +136,12 @@ local function by_number(a, b)
 end
 
 --- The forest of every path prefix the entries name, each entry listed
---- under its direct paths, children and entries sorted.
+--- under its direct paths, children and entries sorted; the roots named
+--- in `order` come first, in that order, the rest after by name.
 ---@param entries cds.subjects.Entry[]
+---@param order? string[]
 ---@return cds.subjects.Node[]
-function M.tree(entries)
+function M.tree(entries, order)
   local nodes, roots = {}, {}
   local function node_at(path)
     local k = key(path)
@@ -167,7 +169,19 @@ function M.tree(entries)
     table.sort(node.children, by_name)
     table.sort(node.entries, by_number)
   end
-  table.sort(roots, by_name)
+  local rank = {}
+  for i, name in ipairs(order or {}) do
+    rank[name] = i
+  end
+  table.sort(roots, function(a, b)
+    local ra, rb = rank[a.name], rank[b.name]
+    if ra and rb then
+      return ra < rb
+    elseif ra or rb then
+      return ra ~= nil
+    end
+    return by_name(a, b)
+  end)
   return roots
 end
 

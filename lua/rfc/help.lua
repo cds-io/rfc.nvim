@@ -22,17 +22,26 @@ local WIDTH = 78
 local MODELINE = " vim:tw=78:ts=8:ft=help:norl:"
 
 -- The render's version, written as the document's last line. A cached
--- document whose line names an older version is rendered again from the
--- stored text, so a better render reaches what is already on disk.
-M.RENDER = 8
+-- document whose line names another version is rendered again from the
+-- stored text, so a changed render reaches what is already on disk. The
+-- rim sets it to a fingerprint of the plugin's code (store.render_version)
+-- at setup, so no hand keeps count; alone, the core writes "dev".
+M.RENDER = "dev"
 M.FOOTER = " rfc.nvim render " .. M.RENDER
 
---- The render version a document's last line names, 0 when it names none.
+--- Sets the render version and the footer that writes it.
+---@param version string
+function M.set_render(version)
+    M.RENDER = version
+    M.FOOTER = " rfc.nvim render " .. version
+end
+
+--- The render version a document's last line names, "" when it names none.
 ---@param lines string[]
----@return integer
+---@return string
 function M.render_of(lines)
     local last = lines[#lines] or ""
-    return tonumber(last:match("^ rfc%.nvim render (%d+)$")) or 0
+    return last:match("^ rfc%.nvim render (%S+)$") or ""
 end
 
 --- Lowercase, with every run of characters outside [%w.-] collapsed to one

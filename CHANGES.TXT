@@ -1,3 +1,20 @@
+2026-10-23  The render version is a fingerprint of the code
+
+  lua/rfc/store.lua, lua/rfc/help.lua, lua/rfc/init.lua
+    store.render_version(root) is the first twelve hex digits of a
+    SHA-256 over every .lua file under the plugin's lua/, path and
+    content, in path order; setup() hands it to help.set_render, and
+    every document's footer names it (rfc.nvim render 3f9a1c0b2d4e).
+    A cached document whose footer names any other version is rendered
+    again on its next open, so a change to a render, a source or the
+    house library reaches what is on disk without a number kept by hand.
+    Alone, the core writes "dev".
+
+  lua/cds/subjects.lua, lua/rfc/sources.lua
+    A source's subjects declare their roots' order; the W3C's are
+    Maturity, Tags, Deliverers, so the two short lists lead the sidebar.
+    Roots not declared follow by name.
+
 2026-10-23  The W3C's technical reports as a source
 
   lua/rfc/sources.lua

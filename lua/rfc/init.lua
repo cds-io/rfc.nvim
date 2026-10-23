@@ -51,7 +51,14 @@ end
 local configured = false
 
 ---@param opts? rfc.Config
+--- The checkout this module was loaded from.
+---@return string
+local function plugin_root()
+    return vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":h:h:h")
+end
+
 function M.setup(opts)
+    help.set_render(store.render_version(plugin_root()))
     local ok, err = store.register(config.set(opts))
     configured = true
     if not ok then
@@ -223,7 +230,7 @@ local function subjects_of(source)
                 local entries = fp.map(listed, function(e, i)
                     return s.entry(e.id, texts[i])
                 end)
-                return subjects.render(doc, cds_subjects.tree(entries))
+                return subjects.render(doc, cds_subjects.tree(entries, s.roots))
             end,
         })
     end
@@ -236,7 +243,7 @@ local function subjects_of(source)
             if not entries then
                 return nil, err
             end
-            return subjects.render(doc, cds_subjects.tree(entries))
+            return subjects.render(doc, cds_subjects.tree(entries, s.roots))
         end,
     })
 end

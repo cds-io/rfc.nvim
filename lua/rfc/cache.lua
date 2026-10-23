@@ -226,7 +226,7 @@ end
 ---@field cfg rfc.Config
 ---@field name string             -- the document's name: rfc9110, rfc-subjects
 ---@field from rfc.Fetched[]      -- the inputs, in the order produce receives them
----@field version integer         -- the render the document must carry
+---@field version string          -- the render the document must carry
 ---@field produce fun(...: string[]): rfc.HelpDoc|nil, string|nil
 ---@field limit integer|nil       -- how many inputs are produced at once; all without
 local Derived = {}
@@ -288,7 +288,7 @@ function Derived:memo(name, parse)
 end
 
 ---@param cfg rfc.Config
----@param spec { name: string, from: rfc.Fetched[], version: integer, produce: fun(...: string[]): rfc.HelpDoc|nil, string|nil, limit?: integer }
+---@param spec { name: string, from: rfc.Fetched[], version: string, produce: fun(...: string[]): rfc.HelpDoc|nil, string|nil, limit?: integer }
 ---@return rfc.Derived
 function M.derived(cfg, spec)
     return setmetatable({
