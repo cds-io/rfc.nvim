@@ -247,15 +247,18 @@ function M.render(rfc_num, lines)
 end
 
 -- What a tag looks like: a source prefix (three or four letters) and a
--- number (rfc9110, eip1559-abstract, erc20.txt, simd64-summary), or the
--- prefix and -subjects (rfc-subjects.txt, rfc-subjects-web-http). These
--- are the shapes every render declares and no text contains by accident.
-M.TAG = { "%l%l%l%l?%d[%w%.%-]*", "%l%l%l%l?%-subjects[%w%.%-]*" }
+-- number (rfc9110, eip1559-abstract, erc20.txt, simd64-summary), the
+-- prefix and -subjects (rfc-subjects.txt, rfc-subjects-web-http), or w3c
+-- and a report's shortname, with # before a section (w3c-css-grid-2,
+-- w3c-css-grid-2#5.3). These are the shapes every render declares and no
+-- text contains by accident.
+M.TAG = { "%l%l%l%l?%d[%w%.%-]*", "%l%l%l%l?%-subjects[%w%.%-]*", "w3c%-[%l%d%-%.]+#?[%w%.%-]*" }
 
 -- A section tag: a tag with a dash and a name after its number
--- (rfc9110-3.1, eip1559-abstract) or after -subjects (rfc-subjects-web).
--- The file tags and the reference entries' tags are not sections.
-M.SECTION = { "%l%l%l%l?%d+%-[%w%.%-]*", "%l%l%l%l?%-subjects%-[%w%.%-]*" }
+-- (rfc9110-3.1, eip1559-abstract), after -subjects (rfc-subjects-web),
+-- or after a shortname's # (w3c-css-grid-2#5.3). The file tags and the
+-- reference entries' tags are not sections.
+M.SECTION = { "%l%l%l%l?%d+%-[%w%.%-]*", "%l%l%l%l?%-subjects%-[%w%.%-]*", "w3c%-[%l%d%-%.]+#[%w%.%-]+" }
 
 --- The tags a rendered document carries: every `*tag*` of a shape in TAG,
 --- in line order. The store reads every document back through this to
@@ -280,8 +283,14 @@ function M.tags_in(lines)
         table.sort(found, function(x, y)
             return x.at < y.at
         end)
+        -- a tag two shapes read (w3c-subjects fits the subjects shape and
+        -- the w3c shape) is one tag
+        local last_at
         for _, f in ipairs(found) do
-            table.insert(tags, { name = f.name, line = i })
+            if f.at ~= last_at then
+                table.insert(tags, { name = f.name, line = i })
+            end
+            last_at = f.at
         end
     end
     return tags
@@ -294,7 +303,7 @@ end
 function M.section_tag(line)
     return fp.find_map(M.SECTION, function(pattern)
         local tag = line:match("%*(" .. pattern .. ")%*$")
-        if tag and not tag:match("^%l+%d+%-ref%-") then
+        if tag and not tag:match("^%l+%d+%-ref%-") and not tag:match("#ref%-") then
             return tag
         end
     end)

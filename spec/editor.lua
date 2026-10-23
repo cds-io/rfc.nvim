@@ -36,7 +36,7 @@ function M.start()
             saved.fetch[name] = fn
         end
     end
-    local case = { dir = vim.fn.tempname(), notices = {}, fetched = {} }
+    local case = { dir = vim.fn.tempname(), notices = {}, fetched = {}, urls = {} }
     function case.setup(sources, extra)
         require("rfc").setup(vim.tbl_extend("force", {
             cache_dir = case.dir,
@@ -46,7 +46,7 @@ function M.start()
             end,
         }, extra or {}))
     end
-    case.setup({ rfc = true, eip = true, bip = true, simd = true })
+    case.setup({ rfc = true, eip = true, bip = true, simd = true, w3c = true })
 
     --- What a stub does: records what was asked, answers the fixture, or
     --- refuses as the network would for a document outside them.
@@ -91,6 +91,9 @@ function M.start()
         if url:match("bitcoin") then
             return answer("bip-index", fixtures.bips_readme)
         end
+        if url == "https://www.w3.org/TR/" then
+            return answer("w3c-index", fixtures.w3c_tr)
+        end
         local category = url:match("eips%.ethereum%.org/(%a+)")
         table.insert(case.fetched, "eips-" .. category)
         if categories[category] then
@@ -101,6 +104,26 @@ function M.start()
     end
     fetch.subjects = function()
         return answer("subjects", fixtures.rfc_tags)
+    end
+    -- W3C reports by the URL asked for (the index's spelling), with a
+    -- modification time; `case.w3c_modified = false` makes the stub answer
+    -- "unchanged", as a 304 would
+    local reports = {
+        ["wot-thing-description11"] = fixtures.w3c_td,
+        ["css-grid-2"] = fixtures.w3c_grid,
+        WCAG22 = fixtures.w3c_grid,
+    }
+    fetch.w3c = function(url, shortname)
+        table.insert(case.urls, url)
+        table.insert(case.fetched, "w3c-" .. shortname)
+        if case.w3c_modified == false then
+            return Task.of(false)
+        end
+        local fixture = reports[url:match("/TR/([^/]+)")]
+        if not fixture then
+            return Task.fail("W3C " .. shortname .. " does not exist")
+        end
+        return Task.of({ body = table.concat(fixtures.read(fixture), "\n") .. "\n", modified = 1701666464 })
     end
     fetch.simd_listing = function()
         return answer("simd-index", fixtures.simd_listing)

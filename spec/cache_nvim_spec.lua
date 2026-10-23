@@ -139,6 +139,50 @@ describe("cache", function()
             assert.are.equal(3, e:memo("n", count))
             assert.are.equal(3, parses)
         end)
+        it("is not fresh when the index says the thing changed after the copy, and produces conditionally", function()
+            local asked_since
+            local e = fetched({ modified = os.time() + 100 })
+            e.produce = function(since)
+                asked_since = since
+                produced = produced + 1
+                return Task.of(false)
+            end
+            vim.fn.writefile({ "old" }, e:path())
+            assert.is_false(e:fresh())
+            assert.are.same({ "old" }, wait(e:lines()))
+            assert.are.equal(1, produced)
+            -- unchanged: the copy now carries the index's date, and is fresh
+            assert.are.equal(e.modified, vim.uv.fs_stat(e:path()).mtime.sec)
+            assert.is_true(e:fresh())
+            assert.is_not_nil(asked_since)
+        end)
+        it("sets the file's mtime to the modification time a produce reports", function()
+            local e = fetched({})
+            e.produce = function()
+                return Task.of({ body = "new\n", modified = 1700000000 })
+            end
+            assert.are.same({ "new" }, wait(e:lines()))
+            assert.are.equal(1700000000, vim.uv.fs_stat(e:path()).mtime.sec)
+        end)
+        it("stamps a produced copy with the index's date when that is later than the server's time", function()
+            local e = fetched({ modified = 1700100000 })
+            e.produce = function()
+                return Task.of({ body = "new\n", modified = 1700000000 })
+            end
+            assert.are.same({ "new" }, wait(e:lines()))
+            assert.are.equal(1700100000, vim.uv.fs_stat(e:path()).mtime.sec)
+            assert.is_true(e:fresh())
+        end)
+        it("passes no since when there is no copy", function()
+            local asked = "unset"
+            local e = fetched({})
+            e.produce = function(since)
+                asked = since
+                return Task.of("a\n")
+            end
+            wait(e:lines())
+            assert.is_nil(asked)
+        end)
         it("produces into a cache directory deleted since", function()
             local e = fetched({ max_age = 60 })
             wait(e:lines())

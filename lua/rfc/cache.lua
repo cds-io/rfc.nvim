@@ -20,14 +20,19 @@ end
 
 local M = {}
 
---- Whether a fetched file is fresh: it exists and, with a max_age, is
---- younger than it.
----@param mtime integer|nil   -- the file's, nil when there is none
+--- Whether a fetched file is fresh: it exists, with a max_age it is
+--- younger than it, and with a modification time the index knows it is
+--- no older than that.
+---@param mtime integer|nil    -- the file's, nil when there is none
 ---@param now integer
----@param max_age integer|nil -- seconds; nil never ages
+---@param max_age integer|nil  -- seconds; nil never ages
+---@param modified integer|nil -- when the index says the thing changed; nil when it does not say
 ---@return boolean
-function M.fresh(mtime, now, max_age)
+function M.fresh(mtime, now, max_age, modified)
     if mtime == nil then
+        return false
+    end
+    if modified ~= nil and modified > mtime then
         return false
     end
     return max_age == nil or (now - mtime) < max_age
@@ -95,8 +100,9 @@ end
 ---@class rfc.Fetched
 ---@field cfg rfc.Config
 ---@field file string                 -- under the root: rfc-subjects.csv, rfc9110.txt
----@field produce fun(): cds.Task     -- of the body as one string
+---@field produce fun(since: integer|nil): cds.Task  -- of the body as one string, of { body, modified } to stamp the file with a time, or of false when a copy since `since` is unchanged
 ---@field max_age integer|nil         -- seconds; nil never ages
+---@field modified integer|nil        -- when the index says the thing changed; a copy older than that is produced again
 ---@field label string                -- the subject of messages: "the RFC index", "RFC 9110"
 ---@field notify nil|fun(msg: string, level: integer)  -- where the stale warning goes; silent without
 ---@field placeholder nil|fun(lines: string[]): boolean  -- a copy that stands in for the thing is produced again
@@ -117,7 +123,7 @@ end
 ---@param now? integer
 ---@return boolean
 function Fetched:fresh(now)
-    return M.fresh(self:mtime(), now or os.time(), self.max_age)
+    return M.fresh(self:mtime(), now or os.time(), self.max_age, self.modified)
 end
 
 --- The copy on disk, fresh or stale; nil when there is none or it is a
@@ -138,18 +144,43 @@ end
 --- The lines: the copy while fresh; else produced, cleaned, written and
 --- answered, and when producing fails with a copy on disk, that copy with
 --- a warning. The copy is read before producing: a failure may be met in
---- a fast event, where a file cannot be read.
+--- a fast event, where a file cannot be read. Producing is told the copy's
+--- time, and may answer false (unchanged: the copy, nothing written) or a
+--- record with the body and the time to stamp the file with.
 ---@return cds.Task
 function Fetched:lines()
     local cached = self:cached()
     if cached and self:fresh() then
         return task().of(cached)
     end
-    return self.produce()
-        :map(help.clean)
+    local since = cached and self:mtime() or nil
+    return self.produce(since)
         :on_main()
-        :bind_result(function(lines)
+        :bind_result(function(answer)
+            if answer == false then
+                if cached then
+                    -- unchanged as of the index's date: the copy is stamped
+                    -- with it, so it is fresh until the index moves again
+                    if self.modified then
+                        vim.uv.fs_utime(self:path(), self.modified, self.modified)
+                    end
+                    return cached
+                end
+                return nil, "nothing to produce " .. self.file .. " from"
+            end
+            local body, modified = answer, nil
+            if type(answer) == "table" then
+                body, modified = answer.body, answer.modified
+            end
+            local lines = help.clean(body)
             local ok, err = write(self:path(), lines)
+            if ok and modified then
+                -- the copy is as new as the server says and as the index
+                -- dates it (a publication date runs past the Last-Modified),
+                -- so it is fresh until the index moves again
+                local stamp = math.max(modified, self.modified or 0)
+                vim.uv.fs_utime(self:path(), stamp, stamp)
+            end
             return ok and lines or nil, err
         end)
         :recover(function(err)
@@ -176,7 +207,7 @@ function Fetched:memo(name, parse)
 end
 
 ---@param cfg rfc.Config
----@param spec { file: string, produce: fun(): cds.Task, max_age?: integer, label: string, notify?: fun(msg: string, level: integer), placeholder?: fun(lines: string[]): boolean }
+---@param spec { file: string, produce: fun(since: integer|nil): cds.Task, max_age?: integer, modified?: integer, label: string, notify?: fun(msg: string, level: integer), placeholder?: fun(lines: string[]): boolean }
 ---@return rfc.Fetched
 function M.fetched(cfg, spec)
     return setmetatable({
@@ -184,6 +215,7 @@ function M.fetched(cfg, spec)
         file = spec.file,
         produce = spec.produce,
         max_age = spec.max_age,
+        modified = spec.modified,
         label = spec.label,
         notify = spec.notify,
         placeholder = spec.placeholder,

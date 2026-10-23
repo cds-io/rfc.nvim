@@ -1,3 +1,64 @@
+2026-10-23  The W3C's technical reports as a source
+
+  lua/rfc/sources.lua
+    The w3c source: the TR page (www.w3.org/TR) is the index, each report
+    listed with its title, date, maturity, tags and working group; a
+    report goes by its shortname (:W3c wot-thing-description11), is
+    fetched at the URL the page spells, since 89 shortnames carry
+    uppercase letters and the lowercased URL only redirects, and asked
+    for again, conditionally, when the index dates it after the copy.
+    The subjects have three roots: Maturity, Tags and Deliverers.
+
+  lua/cds/html/, lua/cds/w3c.lua
+    A report's HTML (ReSpec or Bikeshed) read as blocks: headings with
+    their numbers, their ids and their sections' ids (ReSpec gives both
+    and links the section's), paragraphs, code, tables (a cell one line),
+    lists, definition
+    lists, figures, callouts (notes, examples, issues, details, tabbed
+    examples) and quotes, every text plain with its section, report and
+    reference mentions; the end tags Bikeshed omits are supplied. The
+    index page read into entries, and the HTTP date as a time.
+
+  lua/rfc/help_w3c.lua
+    The document: the head (title, subtitle, metadata), a contents block,
+    then the body, prose wrapped at 78, code fenced at the margin, tables
+    aligned under a caption line, lists and definition lists indented,
+    figures as caption, alt text and absolute image URL, callouts as a
+    labelled block. A heading's tag is the shortname, then # and the
+    section's number, slugged when it is words (w3c-css-grid-2#5.3,
+    w3c-wcag22#success-criterion-1.1.1); a reference entry's is #ref-KEY;
+    sections, other reports and references link.
+
+  lua/rfc/help.lua, lua/rfc/init.lua, lua/rfc/cache.lua
+    A tag has a third shape, w3c and a shortname. A source's key says
+    whether its documents go by number or by shortname, and the command
+    takes a shortname where the others take a number, the index asked
+    first. An index entry carries the document's file as the index spells
+    it (a report's URL, a proposal's path) for a located source, and the
+    index is parsed once per copy. A fetched cache entry takes modified,
+    the time the index says
+    the thing changed, is not fresh when the copy is older, and asks
+    conditionally (If-Modified-Since) when it has a copy; a 304 keeps
+    it; the copy is stamped with the later of the server's time and the
+    index's date.
+
+  lua/cds/images.lua, lua/rfc/view.lua, lua/rfc/tables.lua
+    cds.images is the one module that names an image plugin (image.nvim
+    first), as cds.async names vim.async. The rich view of a report draws
+    each figure below its URL line through it where a backend can, capped
+    at a share of the window, and
+    folds a table wider than the page under its caption with the entry
+    form (each row's first cell, then Label: text lines) as virtual
+    lines; the file keeps the aligned table, zo shows it, ,tv puts
+    everything back.
+
+  spec/
+    The tokenizer, the blocks (one case per rule) and the head over two
+    report excerpts, the index over a dozen entries, the render line by
+    line, the tag shapes, the conditional cache, the command's forms, the
+    adapter through a stub, the view's figures and folds: 119 pure and
+    138 editor cases.
+
 2026-10-23  The SIMDs by subject: each proposal under its status
 
   lua/rfc/sources.lua

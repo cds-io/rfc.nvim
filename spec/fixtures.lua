@@ -37,6 +37,11 @@ local M = {
     -- the RFC subject tags: the same eleven rows of the RFC Editor's
     -- published build the cds.subjects spec reads in ../cds
     rfc_tags = "rfc-tags.csv",
+    -- W3C technical reports (W3C Document License): the same excerpts the
+    -- cds.html and cds.w3c specs read in ../cds
+    w3c_td = "w3c-wot-thing-description11.html",
+    w3c_grid = "w3c-css-grid-2.html",
+    w3c_tr = "w3c-tr.html",
 }
 
 ---@param name string

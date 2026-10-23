@@ -13,6 +13,7 @@ local M = {}
 ---@field prefix string   -- rfc
 ---@field title string    -- RFCs by subject
 ---@field about string    -- the line naming the data
+---@field key "number"|"shortname"|nil  -- how a document's tag joins the prefix and the id: rfc9110, or w3c-wcag22
 
 --- The tag of a node: the file tag, then each level slugged, dash-joined.
 ---@param prefix string
@@ -134,7 +135,8 @@ function M.render(doc, forest)
         table.insert(out, help.with_tag(heading, n.tag))
         table.insert(tags, { name = n.tag, line = #out })
         for _, e in ipairs(n.node.entries) do
-            table.insert(out, ("|%s%s|  %s"):format(doc.prefix, e.id, e.label))
+            local tag = doc.key == "shortname" and (doc.prefix .. "-" .. e.id) or (doc.prefix .. e.id)
+            table.insert(out, ("|%s|  %s"):format(tag, e.label))
         end
         table.insert(out, "")
     end

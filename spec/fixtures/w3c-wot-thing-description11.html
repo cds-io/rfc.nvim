@@ -1,0 +1,2747 @@
+<!--
+  An excerpt of https://www.w3.org/TR/wot-thing-description11/ (shortname wot-thing-description11), fetched 2026-10-23, for the
+  cds.html spec. Kept: the head, the metadata, the abstract and status,
+  numbered sections 1 and 2 in full, then, as fragments, the first of each
+  construct the reader has a rule for that those sections lack, and the
+  references. Everything else is cut. Copyright W3C and its contributors;
+  copied under the W3C Document License, which permits reproduction with
+  this notice.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="generator" content=
+  "HTML Tidy for HTML5 for Linux version 5.7.27">
+  <meta charset="utf-8">
+  <meta name="generator" content="ReSpec 34.2.2">
+  <meta name="viewport" content=
+  "width=device-width, initial-scale=1, shrink-to-fit=no">
+  <style>
+  span.example-title{text-transform:none}
+  :is(aside,div).example,div.illegal-example{padding:.5em;margin:1em 0;position:relative;clear:both}
+  div.illegal-example{color:red}
+  div.illegal-example p{color:#000}
+  :is(aside,div).example{border-left-width:.5em;border-left-style:solid;border-color:#e0cb52;background:#fcfaee}
+  aside.example div.example{border-left-width:.1em;border-color:#999;background:#fff}
+  .example pre{background-color:rgba(0,0,0,.03)}
+  </style>
+  <style>
+  .issue-label{text-transform:initial}
+  .warning>p:first-child{margin-top:0}
+  .warning{padding:.5em;border-left-width:.5em;border-left-style:solid}
+  span.warning{padding:.1em .5em .15em}
+  .issue.closed span.issue-number{text-decoration:line-through}
+  .issue.closed span.issue-number::after{content:" (Closed)";font-size:smaller}
+  .warning{border-color:#f11;border-width:.2em;border-style:solid;background:#fbe9e9}
+  .warning-title:before{content:"⚠";font-size:1.3em;float:left;padding-right:.3em;margin-top:-.3em}
+  li.task-list-item{list-style:none}
+  input.task-list-item-checkbox{margin:0 .35em .25em -1.6em;vertical-align:middle}
+  .issue a.respec-gh-label{padding:5px;margin:0 2px 0 2px;font-size:10px;text-transform:none;text-decoration:none;font-weight:700;border-radius:4px;position:relative;bottom:2px;border:none;display:inline-block}
+  </style>
+  <style>
+  dfn{cursor:pointer}
+  .dfn-panel{position:absolute;z-index:35;min-width:300px;max-width:500px;padding:.5em .75em;margin-top:.6em;font-family:"Helvetica Neue",sans-serif;font-size:small;background:#fff;color:#000;box-shadow:0 1em 3em -.4em rgba(0,0,0,.3),0 0 1px 1px rgba(0,0,0,.05);border-radius:2px}
+  .dfn-panel:not(.docked)>.caret{position:absolute;top:-9px}
+  .dfn-panel:not(.docked)>.caret::after,.dfn-panel:not(.docked)>.caret::before{content:"";position:absolute;border:10px solid transparent;border-top:0;border-bottom:10px solid #fff;top:0}
+  .dfn-panel:not(.docked)>.caret::before{border-bottom:9px solid #a2a9b1}
+  .dfn-panel *{margin:0}
+  .dfn-panel b{display:block;color:#000;margin-top:.25em}
+  .dfn-panel ul a[href]{color:#333}
+  .dfn-panel>div{display:flex}
+  .dfn-panel a.self-link{font-weight:700;margin-right:auto}
+  .dfn-panel .marker{padding:.1em;margin-left:.5em;border-radius:.2em;text-align:center;white-space:nowrap;font-size:90%;color:#040b1c}
+  .dfn-panel .marker.dfn-exported{background:#d1edfd;box-shadow:0 0 0 .125em #1ca5f940}
+  .dfn-panel .marker.idl-block{background:#8ccbf2;box-shadow:0 0 0 .125em #0670b161}
+  .dfn-panel a:not(:hover){text-decoration:none!important;border-bottom:none!important}
+  .dfn-panel a[href]:hover{border-bottom-width:1px}
+  .dfn-panel ul{padding:0}
+  .dfn-panel li{margin-left:1em}
+  .dfn-panel.docked{position:fixed;left:.5em;top:unset;bottom:2em;margin:0 auto;max-width:calc(100vw - .75em * 2 - .5em - .2em * 2);max-height:30vh;overflow:auto}
+  </style>
+  <title>Web of Things (WoT) Thing Description 1.1</title>
+  <style id="respec-mainstyle">
+  @keyframes pop{
+  0%{transform:scale(1,1)}
+  25%{transform:scale(1.25,1.25);opacity:.75}
+  100%{transform:scale(1,1)}
+  }
+  :is(h1,h2,h3,h4,h5,h6,a) abbr{border:none}
+  dfn{font-weight:700}
+  a.internalDFN{color:inherit;border-bottom:1px solid #99c;text-decoration:none}
+  a.externalDFN{color:inherit;border-bottom:1px dotted #ccc;text-decoration:none}
+  a.bibref{text-decoration:none}
+  .respec-offending-element:target{animation:pop .25s ease-in-out 0s 1}
+  .respec-offending-element,a[href].respec-offending-element{text-decoration:red wavy underline}
+  @supports not (text-decoration:red wavy underline){
+  .respec-offending-element:not(pre){display:inline-block}
+  .respec-offending-element{background:url(data:image/gif;base64,R0lGODdhBAADAPEAANv///8AAP///wAAACwAAAAABAADAEACBZQjmIAFADs=) bottom repeat-x}
+  }
+  #references :target{background:#eaf3ff;animation:pop .4s ease-in-out 0s 1}
+  cite .bibref{font-style:normal}
+  a[href].orcid{padding-left:4px;padding-right:4px}
+  a[href].orcid>svg{margin-bottom:-2px}
+  .toc a,.tof a{text-decoration:none}
+  a .figno,a .secno{color:#000}
+  ol.tof,ul.tof{list-style:none outside none}
+  .caption{margin-top:.5em;font-style:italic}
+  table.simple{border-spacing:0;border-collapse:collapse;border-bottom:3px solid #005a9c}
+  .simple th{background:#005a9c;color:#fff;padding:3px 5px;text-align:left}
+  .simple th a{color:#fff;padding:3px 5px;text-align:left}
+  .simple th[scope=row]{background:inherit;color:inherit;border-top:1px solid #ddd}
+  .simple td{padding:3px 10px;border-top:1px solid #ddd}
+  .simple tr:nth-child(even){background:#f0f6ff}
+  .section dd>p:first-child{margin-top:0}
+  .section dd>p:last-child{margin-bottom:0}
+  .section dd{margin-bottom:1em}
+  .section dl.attrs dd,.section dl.eldef dd{margin-bottom:0}
+  #issue-summary>ul{column-count:2}
+  #issue-summary li{list-style:none;display:inline-block}
+  details.respec-tests-details{margin-left:1em;display:inline-block;vertical-align:top}
+  details.respec-tests-details>*{padding-right:2em}
+  details.respec-tests-details[open]{z-index:999999;position:absolute;border:thin solid #cad3e2;border-radius:.3em;background-color:#fff;padding-bottom:.5em}
+  details.respec-tests-details[open]>summary{border-bottom:thin solid #cad3e2;padding-left:1em;margin-bottom:1em;line-height:2em}
+  details.respec-tests-details>ul{width:100%;margin-top:-.3em}
+  details.respec-tests-details>li{padding-left:1em}
+  .self-link:hover{opacity:1;text-decoration:none;background-color:transparent}
+  aside.example .marker>a.self-link{color:inherit}
+  .header-wrapper{display:flex;align-items:baseline}
+  :is(h2,h3,h4,h5,h6):not(#toc>h2,#abstract>h2,#sotd>h2,.head>h2){position:relative;left:-.5em}
+  :is(h2,h3,h4,h5,h6):not(#toch2)+a.self-link{color:inherit;order:-1;position:relative;left:-1.1em;font-size:1rem;opacity:.5}
+  :is(h2,h3,h4,h5,h6)+a.self-link::before{content:"§";text-decoration:none;color:var(--heading-text)}
+  :is(h2,h3)+a.self-link{top:-.2em}
+  :is(h4,h5,h6)+a.self-link::before{color:#000}
+  @media (max-width:767px){
+  dd{margin-left:0}
+  }
+  @media print{
+  .removeOnSave{display:none}
+  }
+  </style>
+  <style>
+
+  a[href].internalDFN {
+    color: inherit;
+    border-bottom: 1px solid #99c;
+    text-decoration: none;
+  }
+
+  .example {
+                border-color: #EA1252;
+                background: #FEF11E;
+                counter-increment: example;
+                overflow: auto;
+                clear: both;
+  }
+
+  .with-default .with-default-control {
+    margin-top: 1em;
+    margin-bottom: 1em;
+  }
+
+  .with-default pre.selected {
+    margin-top: 0;
+    margin-bottom: 1em;
+    height: auto;
+  }
+
+  .with-default pre {
+    margin-top: 0;
+    margin-bottom: 0;
+    height: 0;
+  }
+
+  /* Print parts that might be hidden */
+  @media print {
+        .with-default pre {
+                margin-top: 0;
+                margin-bottom: 1em;
+                height: auto;
+        }
+  }
+
+  </style>
+  <script>
+        function defaultCheckboxListener() {
+                document.querySelectorAll('.with-default').forEach(n => {
+                        let wo = n.querySelector('pre:nth-of-type(1)');
+                        let w = n.querySelector('pre:nth-of-type(2)');
+                        let cbox = n.querySelector('.with-default-control input[type="checkbox"]');
+
+                        w.classList.add('selected');
+                        cbox.checked = true;
+
+                        cbox.addEventListener('change', e => {
+                                if (e.target.checked) {
+                                        // with default
+                                        w.classList.add('selected');
+                                        wo.classList.remove('selected');
+                                } else {
+                                        // without
+                                        w.classList.remove('selected');
+                                        wo.classList.add('selected');
+                                }
+                        });
+                });
+        }
+
+        if (document.respec) {
+                // ReSpec mode
+                document.addEventListener('DOMContentLoaded', () => {
+                        // let ReSpec do syntax highlighting first
+                        document.respec.ready.then(() => {
+                                defaultCheckboxListener();
+                        });
+                });
+        } else {
+                // W3C specs on the W3C server don't use ReSpec
+                document.addEventListener('readystatechange', () => {
+                        if (document.readyState === 'complete') {
+                                defaultCheckboxListener();
+                        }
+                });
+        }
+  </script>
+  <script>
+        function openTab(example, tabClass) {
+          var i;
+          var x = document.getElementsByClassName(example);
+          for (i = 0; i < x.length; i++) {
+                x[i].classList.remove("selected");
+                if ( x[i].classList.contains(tabClass) ) {
+                        x[i].classList.add("selected");
+                }
+          }
+        }
+  </script>
+  <style>
+
+  /* example tab selection */
+  .ds-selector-tabs {
+    padding-bottom: 2em;
+  }
+  .ds-selector-tabs .selectors {
+    padding: 0;
+    border-bottom: 1px solid #ccc;
+    height: 28px;
+  }
+  .ds-selector-tabs .selectors button {
+    display: inline-block;
+    min-width: 54px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: bold;
+    height: 27px;
+    padding: 0 8px;
+    line-height: 27px;
+    transition: all,0.218s;
+    border-top-right-radius: 2px;
+    border-top-left-radius: 2px;
+    color: #666;
+    border: 1px solid transparent;
+  }
+  .ds-selector-tabs .selectors button:first-child {
+    margin-left: 2px;
+  }
+  .ds-selector-tabs .selectors button.selected {
+    color: #202020 !important;
+    border: 1px solid #ccc;
+    border-bottom: 1px solid #fff !important;
+  }
+  .ds-selector-tabs .selectors button:hover {
+    background-color: transparent;
+    color: #202020;
+    cursor: pointer;
+  }
+  .ds-selector-tabs pre, .ds-selector-tabs table {
+    display: none;
+  }
+  /* Print parts that might be hidden */
+  @media print {
+    .ds-selector-tabs pre, .ds-selector-tabs table {
+      display: inline;
+    }
+  }
+  .ds-selector-tabs pre.selected, .ds-selector-tabs table.selected {
+    display: block;
+  }
+  a.playground {
+    display: inline-block;
+    width: 150px;
+    border: 1px solid transparent;
+    border-top-right-radius: 2px;
+    border-top-left-radius: 2px;
+    background-color: rgb(192, 192, 192);
+    text-decoration: none;
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+  a[href].playground {
+    padding: 4px 0 3px 8px;
+    border-bottom: none;
+    text-decoration: none;
+    color: #666;
+  }
+
+  </style>
+  <style>
+
+  .rfc2119-assertion {
+  background-color: rgb(230,230,230)
+  }
+  .at-risk {
+  background-color: yellow;
+  }
+
+
+  </style>
+  <meta name="description" content=
+  "This document describes a formal information model and a common representation for a Web of Things (WoT) Thing Description 1.1. A Thing Description describes the metadata and interfaces of Things, where a Thing is an abstraction of a physical or virtual entity that provides interactions to and participates in the Web of Things. Thing Descriptions provide a set of interactions based on a small vocabulary that makes it possible both to integrate diverse devices and to allow diverse applications to interoperate. Thing Descriptions, by default, are encoded in a JSON format that also allows JSON-LD processing. The latter provides a powerful foundation to represent knowledge about Things in a machine-understandable way. A Thing Description instance can be hosted by the Thing itself or hosted externally when a Thing has resource restrictions (e.g., limited memory space) or when a Web of Things-compatible legacy device is retrofitted with a Thing Description. Furthermore, this document introduces the Thing Model, which allows authors to describe only the model or class of an Internet of Things (IoT) entity. Thing Models can be seen as a template for Thing Description instances, but with reduced constraints such as no or few requirements for specific communication metadata.">
+  <link rel="canonical" href=
+  "https://www.w3.org/TR/wot-thing-description11/">
+  <style>
+  .hljs{display:block;overflow-x:auto;padding:.5em;color:#383a42;background:#fafafa}
+  .hljs-comment,.hljs-quote{color:#717277;font-style:italic}
+  .hljs-doctag,.hljs-formula,.hljs-keyword{color:#a626a4}
+  .hljs-deletion,.hljs-name,.hljs-section,.hljs-selector-tag,.hljs-subst{color:#ca4706;font-weight:700}
+  .hljs-literal{color:#0b76c5}
+  .hljs-addition,.hljs-attribute,.hljs-meta-string,.hljs-regexp,.hljs-string{color:#42803c}
+  .hljs-built_in,.hljs-class .hljs-title{color:#9a6a01}
+  .hljs-attr,.hljs-number,.hljs-selector-attr,.hljs-selector-class,.hljs-selector-pseudo,.hljs-template-variable,.hljs-type,.hljs-variable{color:#986801}
+  .hljs-bullet,.hljs-link,.hljs-meta,.hljs-selector-id,.hljs-symbol,.hljs-title{color:#336ae3}
+  .hljs-emphasis{font-style:italic}
+  .hljs-strong{font-weight:700}
+  .hljs-link{text-decoration:underline}
+  </style>
+  <style>
+  var{position:relative;cursor:pointer}
+  var[data-type]::after,var[data-type]::before{position:absolute;left:50%;top:-6px;opacity:0;transition:opacity .4s;pointer-events:none}
+  var[data-type]::before{content:"";transform:translateX(-50%);border-width:4px 6px 0 6px;border-style:solid;border-color:transparent;border-top-color:#000}
+  var[data-type]::after{content:attr(data-type);transform:translateX(-50%) translateY(-100%);background:#000;text-align:center;font-family:"Dank Mono","Fira Code",monospace;font-style:normal;padding:6px;border-radius:3px;color:#daca88;text-indent:0;font-weight:400}
+  var[data-type]:hover::after,var[data-type]:hover::before{opacity:1}
+  </style>
+  <script id="initialUserConfig" type="application/json">
+  {
+  "specStatus": "REC",
+  "publishDate": "2023-12-05",
+  "crEnd": "2019-06-13",
+  "previousMaturity": "FPWD",
+  "previousPublishDate": "2020-11-24",
+  "implementationReportURI": "https://w3c.github.io/wot-thing-description/testing/report11.html",
+  "errata": "https://w3c.github.io/wot-thing-description/errata11.html",
+  "shortName": "wot-thing-description11",
+  "copyrightStart": 2017,
+  "noLegacyStyle": true,
+  "inlineCSS": true,
+  "noIDLIn": true,
+  "group": "wg/wot",
+  "charterDisclosureURI": "https://www.w3.org/2004/01/pp-impl/95969/status",
+  "wgPublicList": "public-wot-wg",
+  "edDraftURI": "https://w3c.github.io/wot-thing-description/",
+  "github": "https://github.com/w3c/wot-thing-description",
+  "issueBase": "https://www.github.com/w3c/wot-thing-description/issues",
+  "editors": [
+    {
+      "name": "Sebastian Kaebisch",
+      "w3cid": "43064",
+      "company": "Siemens AG",
+      "companyURL": "https://www.siemens.com/"
+    },
+    {
+      "name": "Michael McCool",
+      "w3cid": "93137",
+      "company": "Intel Corp.",
+      "companyURL": "https://www.intel.com"
+    },
+    {
+      "name": "Ege Korkan",
+      "w3cid": "110131",
+      "company": "Siemens AG",
+      "companyURL": "https://www.siemens.com/"
+    }
+  ],
+  "formerEditors": [
+    {
+      "name": "Takuki Kamiya",
+      "w3cid": "29376",
+      "company": "Fujitsu Research of America",
+      "companyURL": "https://www.fujitsu.com/global/"
+    },
+    {
+      "name": "Victor Charpenay",
+      "w3cid": "84448",
+      "note": "when at Siemens AG"
+    },
+    {
+      "name": "Matthias Kovatsch",
+      "note": "when at Huawei"
+    }
+  ],
+  "xref": [
+    "i18n-glossary"
+  ],
+  "localBiblio": {
+    "LINKSET-MEDIA-TYPES": {
+      "title": "Linkset: Media Types and a Link Relation Type for Link Sets",
+      "href": "https://datatracker.ietf.org/doc/draft-ietf-httpapi-linkset/",
+      "publisher": "IETF",
+      "authors": [
+        "Erik Wilde",
+        "Herbert Van de Sompel"
+      ],
+      "id": "linkset-media-types"
+    },
+    "OWASP-Top-10": {
+      "title": "OWASP Top Ten",
+      "href": "https://owasp.org/www-project-top-ten/",
+      "publisher": "OWASP",
+      "id": "owasp-top-10"
+    },
+    "JSON-SCHEMA": {
+      "title": "JSON Schema Validation: A Vocabulary for Structural Validation of JSON",
+      "href": "https://datatracker.ietf.org/doc/html/draft-handrews-json-schema-validation-01",
+      "authors": [
+        "Austin Wright",
+        "Henry Andrews",
+        "Geraint Luff"
+      ],
+      "status": "Internet-Draft",
+      "date": "19 March 2018",
+      "publisher": "IETF",
+      "id": "json-schema"
+    },
+    "OPENAPI": {
+      "title": "OpenAPI Specification: Version 3.0.1",
+      "href": "https://spec.openapis.org/oas/v3.0.1",
+      "authors": [
+        "Darrel Miller",
+        "Jeremy Whitlock",
+        "Marsh Gardiner",
+        "Mike Ralphson",
+        "Ron Ratovsky",
+        "Uri Sarid"
+      ],
+      "publisher": "OpenAPI Initiative, Linux Foundation",
+      "date": "6 December 2017",
+      "id": "openapi"
+    },
+    "SEMVER": {
+      "title": "Semantic Versioning 2.0.0",
+      "href": "https://semver.org/",
+      "authors": [
+        "Tom Preston-Werner"
+      ],
+      "date": "26 December 2017",
+      "id": "semver"
+    },
+    "WOT-ARCHITECTURE": {
+      "title": "Web of Things (WoT) Architecture 1.1",
+      "href": "https://www.w3.org/TR/wot-architecture11/",
+      "authors": [
+        "Michael Lagally",
+        "Ryuichi Matsukura",
+        "Kunihiko Toumura"
+      ],
+      "publisher": "W3C",
+      "date": "November 2020"
+    },
+    "WOT-PROFILE": {
+      "title": "Web of Things (WoT) Profile",
+      "href": "https://www.w3.org/TR/wot-profile/",
+      "authors": [
+        "Michael Lagally",
+        "Michael McCool",
+        "Ryuichi Matsukura",
+        "Sebastian Kaebisch",
+        "Tomoaki Mizushima"
+      ],
+      "publisher": "W3C",
+      "date": "November 2020",
+      "id": "wot-profile"
+    },
+    "WOT-SECURITY-GUIDELINES": {
+      "title": "Web of Things (WoT) Security and Privacy Guidelines",
+      "href": "https://w3c.github.io/wot-security/",
+      "authors": [
+        "Michael McCool",
+        "Elena Reshetova"
+      ],
+      "publisher": "W3C",
+      "date": "July 2021",
+      "id": "wot-security-guidelines"
+    },
+    "MQTT": {
+      "title": "MQTT Version 3.1.1",
+      "href": "http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html",
+      "authors": [
+        "Andrew Banks",
+        "Rahul Gupta"
+      ],
+      "publisher": "OASIS",
+      "date": "December 2015",
+      "status": "OASIS Standard Incorporating Approved Errata 01",
+      "id": "mqtt"
+    },
+    "RIJGERSBERG": {
+      "href": "http://www.semantic-web-journal.net/content/ontology-units-measure-and-related-concepts",
+      "authors": [
+        "Hajo Rijgersberg",
+        "Mark van Assem",
+        "Jan Top"
+      ],
+      "title": "Ontology of Units of Measure and Related Concepts",
+      "publisher": "Semantic Web journal, IOS Press",
+      "date": "2013"
+    },
+    "LDML": {
+      "title": "Unicode Technical Standard #35: Unicode Locale Data Markup Language (LDML)",
+      "href": "https://unicode.org/reports/tr35/",
+      "authors": [
+        "Mark Davis",
+        "CLDR Contributors"
+      ],
+      "date": "March 2022",
+      "id": "ldml"
+    },
+    "JSON-SCHEMA-ONTOLOGY": {
+      "title": "JSON Schema in RDF",
+      "href": "https://www.w3.org/2019/wot/json-schema",
+      "authors": [
+        "Victor Charpenay",
+        "Maxime Lefrançois",
+        "María Poveda Villalón"
+      ],
+      "publisher": "W3C",
+      "date": "July 2022",
+      "id": "json-schema-ontology"
+    }
+  },
+  "otherLinks": [
+    {
+      "key": "Previous Recommendation",
+      "data": [
+        {
+          "value": "https://www.w3.org/TR/2020/REC-wot-thing-description-20200409/",
+          "href": "https://www.w3.org/TR/2020/REC-wot-thing-description-20200409/"
+        }
+      ]
+    },
+    {
+      "key": "Contributors",
+      "data": [
+        {
+          "value": "In the GitHub repository",
+          "href": "https://github.com/w3c/wot-thing-description/graphs/contributors"
+        }
+      ]
+    },
+    {
+      "key": "Repository",
+      "data": [
+        {
+          "value": "We are on GitHub",
+          "href": "https://github.com/w3c/wot-thing-description/"
+        },
+        {
+          "value": "File a bug",
+          "href": "https://github.com/w3c/wot-thing-description/issues"
+        }
+      ]
+    }
+  ],
+  "publishISODate": "2023-12-05T00:00:00.000Z",
+  "generatedSubtitle": "W3C Recommendation 05 December 2023"
+  }
+  </script>
+  <link rel="stylesheet" href=
+  "https://www.w3.org/StyleSheets/TR/2021/W3C-REC">
+</head>
+<body class="h-entry toc-inline" data-cite="i18n-glossary">
+  <div class="head">
+    <p class="logos"><a class="logo" href=
+    "https://www.w3.org/"><img crossorigin="" alt="W3C" height="48"
+    src="https://www.w3.org/StyleSheets/TR/2021/logos/W3C" width=
+    "72"></a></p>
+    <h1 id="title" class="title">Web of Things (WoT) Thing
+    Description 1.1</h1>
+    <p id="w3c-state"><a href=
+    "https://www.w3.org/standards/types#REC">W3C Recommendation</a>
+    <time class="dt-published" datetime="2023-12-05">05 December
+    2023</time></p>
+    <details open="">
+      <summary>
+        More details about this document
+      </summary>
+      <dl>
+        <dt>This version:</dt>
+        <dd>
+          <a class="u-url" href=
+          "https://www.w3.org/TR/2023/REC-wot-thing-description11-20231205/">
+          https://www.w3.org/TR/2023/REC-wot-thing-description11-20231205/</a>
+        </dd>
+        <dt>Latest published version:</dt>
+        <dd>
+          <a href=
+          "https://www.w3.org/TR/wot-thing-description11/">https://www.w3.org/TR/wot-thing-description11/</a>
+        </dd>
+        <dt>Latest editor's draft:</dt>
+        <dd>
+          <a href=
+          "https://w3c.github.io/wot-thing-description/">https://w3c.github.io/wot-thing-description/</a>
+        </dd>
+        <dt>History:</dt>
+        <dd>
+          <a href=
+          "https://www.w3.org/standards/history/wot-thing-description11/">
+          https://www.w3.org/standards/history/wot-thing-description11/</a>
+        </dd>
+        <dd>
+          <a href=
+          "https://github.com/w3c/wot-thing-description/commits/">Commit
+          history</a>
+        </dd>
+        <dt>Implementation report:</dt>
+        <dd>
+          <a href=
+          "https://w3c.github.io/wot-thing-description/testing/report11.html">
+          https://w3c.github.io/wot-thing-description/testing/report11.html</a>
+        </dd>
+        <dt>Editors:</dt>
+        <dd class="editor p-author h-card vcard" data-editor-id=
+        "43064">
+          <span class="p-name fn">Sebastian Kaebisch</span>
+          (<a class="p-org org h-org" href=
+          "https://www.siemens.com/">Siemens AG</a>)
+        </dd>
+        <dd class="editor p-author h-card vcard" data-editor-id=
+        "93137">
+          <span class="p-name fn">Michael McCool</span> (<a class=
+          "p-org org h-org" href="https://www.intel.com">Intel
+          Corp.</a>)
+        </dd>
+        <dd class="editor p-author h-card vcard" data-editor-id=
+        "110131">
+          <span class="p-name fn">Ege Korkan</span> (<a class=
+          "p-org org h-org" href="https://www.siemens.com/">Siemens
+          AG</a>)
+        </dd>
+        <dt>Former editors:</dt>
+        <dd class="editor p-author h-card vcard" data-editor-id=
+        "29376">
+          <span class="p-name fn">Takuki Kamiya</span> (<a class=
+          "p-org org h-org" href=
+          "https://www.fujitsu.com/global/">Fujitsu Research of
+          America</a>)
+        </dd>
+        <dd class="editor p-author h-card vcard" data-editor-id=
+        "84448"><span class="p-name fn">Victor Charpenay</span>
+        (when at Siemens AG)</dd>
+        <dd class="editor p-author h-card vcard"><span class=
+        "p-name fn">Matthias Kovatsch</span> (when at Huawei)</dd>
+        <dt>Feedback:</dt>
+        <dd>
+          <a href=
+          "https://github.com/w3c/wot-thing-description/">GitHub
+          w3c/wot-thing-description</a> (<a href=
+          "https://github.com/w3c/wot-thing-description/pulls/">pull
+          requests</a>, <a href=
+          "https://github.com/w3c/wot-thing-description/issues/new/choose">
+          new issue</a>, <a href=
+          "https://github.com/w3c/wot-thing-description/issues/">open
+          issues</a>)
+        </dd>
+        <dd>
+          <a href=
+          "mailto:public-wot-wg@w3.org?subject=%5Bwot-thing-description11%5D%20YOUR%20TOPIC%20HERE">
+          public-wot-wg@w3.org</a> with subject line
+          <kbd>[wot-thing-description11] <em>… message topic
+          …</em></kbd> (<a rel="discussion" href=
+          "https://lists.w3.org/Archives/Public/public-wot-wg">archives</a>)
+        </dd>
+        <dt>Errata:</dt>
+        <dd>
+          <a href=
+          "https://w3c.github.io/wot-thing-description/errata11.html">
+          Errata exists</a>.
+        </dd>
+        <dt>Previous Recommendation</dt>
+        <dd>
+          <a href=
+          "https://www.w3.org/TR/2020/REC-wot-thing-description-20200409/">
+          https://www.w3.org/TR/2020/REC-wot-thing-description-20200409/</a>
+        </dd>
+        <dt>Contributors</dt>
+        <dd>
+          <a href=
+          "https://github.com/w3c/wot-thing-description/graphs/contributors">
+          In the GitHub repository</a>
+        </dd>
+        <dt>Repository</dt>
+        <dd>
+          <a href=
+          "https://github.com/w3c/wot-thing-description/">We are on
+          GitHub</a>
+        </dd>
+        <dd>
+          <a href=
+          "https://github.com/w3c/wot-thing-description/issues">File
+          a bug</a>
+        </dd>
+      </dl>
+    </details>
+    <p>See also <a href=
+    "https://www.w3.org/Translations/?technology=wot-thing-description11">
+    <strong>translations</strong></a>.</p>
+    <p class="copyright"><a href=
+    "https://www.w3.org/policies/#copyright">Copyright</a> ©
+    2017-2023 <a href="https://www.w3.org/">World Wide Web
+    Consortium</a>. <abbr title=
+    "World Wide Web Consortium">W3C</abbr><sup>®</sup> <a href=
+    "https://www.w3.org/policies/#Legal_Disclaimer">liability</a>,
+    <a href=
+    "https://www.w3.org/policies/#W3C_Trademarks">trademark</a> and
+    <a rel="license" href=
+    "https://www.w3.org/copyright/software-license-2023/" title=
+    "W3C Software and Document Notice and License">permissive
+    document license</a> rules apply.</p>
+    <hr title="Separator for header">
+  </div>
+  <section id="abstract" class="introductory">
+    <h2>Abstract</h2>
+    <p>This document describes a formal information model and a
+    common representation for a Web of Things (WoT) Thing
+    Description 1.1. A Thing Description describes the metadata and
+    interfaces of <a href="#dfn-thing" class="internalDFN"
+    data-link-type="dfn" id="ref-for-dfn-thing-1">Things</a>, where
+    a <a href="#dfn-thing" class="internalDFN" data-link-type="dfn"
+    id="ref-for-dfn-thing-2">Thing</a> is an abstraction of a
+    physical or virtual entity that provides interactions to and
+    participates in the Web of Things. Thing Descriptions provide a
+    set of interactions based on a small vocabulary that makes it
+    possible both to integrate diverse devices and to allow diverse
+    applications to interoperate. Thing Descriptions, by default,
+    are encoded in a JSON format that also allows JSON-LD
+    processing. The latter provides a powerful foundation to
+    represent knowledge about <a href="#dfn-thing" class=
+    "internalDFN" data-link-type="dfn" id=
+    "ref-for-dfn-thing-3">Things</a> in a machine-understandable
+    way. A Thing Description instance can be hosted by the <a href=
+    "#dfn-thing" class="internalDFN" data-link-type="dfn" id=
+    "ref-for-dfn-thing-4">Thing</a> itself or hosted externally
+    when a <a href="#dfn-thing" class="internalDFN" data-link-type=
+    "dfn" id="ref-for-dfn-thing-5">Thing</a> has resource
+    restrictions (e.g., limited memory space) or when a Web of
+    Things-compatible legacy device is retrofitted with a Thing
+    Description. Furthermore, this document introduces the Thing
+    Model, which allows authors to describe only the model or class
+    of an Internet of Things (IoT) entity. Thing Models can be seen
+    as a template for Thing Description instances, but with reduced
+    constraints such as no or few requirements for specific
+    communication metadata.</p>
+    <p>This specification describes a superset of the features
+    defined in Thing Description 1.0 [<cite><a class="bibref"
+    data-link-type="biblio" href="#bib-wot-thing-description10"
+    title=
+    "Web of Things (WoT) Thing Description">WOT-THING-DESCRIPTION10</a></cite>].
+    Unless otherwise specified, documents created with version 1.0
+    of this specification remain compatible with Thing Description
+    1.1.</p>
+  </section>
+  <section id="sotd" class="introductory">
+    <h2>Status of This Document</h2>
+    <p><em>This section describes the status of this document at
+    the time of its publication. A list of current <abbr title=
+    "World Wide Web Consortium">W3C</abbr> publications and the
+    latest revision of this technical report can be found in the
+    <a href="https://www.w3.org/TR/"><abbr title=
+    "World Wide Web Consortium">W3C</abbr> technical reports
+    index</a> at https://www.w3.org/TR/.</em></p>
+    <p>Future updates to this specification may incorporate
+    <a href="https://www.w3.org/2021/Process-20211102/#allow-new-features">
+    new features</a>.</p>
+    <p>The Web of Things Working Group intends to submit this
+    document for consideration as a <abbr title=
+    "World Wide Web Consortium">W3C</abbr> Proposed Recommendation
+    after at least the minimum CR review period has passed.
+    However, before PR transition is requested, any features or
+    assertions currently marked as at-risk that did not appear in
+    the TD 1.0 specification and do not have at least two
+    implementations at that time will either be removed or
+    converted into informative statements, as appropriate.</p>
+    <p>This document was published by the <a href=
+    "https://www.w3.org/groups/wg/wot">Web of Things Working
+    Group</a> as a Recommendation using the <a href=
+    "https://www.w3.org/2023/Process-20231103/#recs-and-notes">Recommendation
+    track</a>.</p>
+    <p><abbr title="World Wide Web Consortium">W3C</abbr>
+    recommends the wide deployment of this specification as a
+    standard for the Web.</p>
+    <p>A <abbr title="World Wide Web Consortium">W3C</abbr>
+    Recommendation is a specification that, after extensive
+    consensus-building, is endorsed by <abbr title=
+    "World Wide Web Consortium">W3C</abbr> and its Members, and has
+    commitments from Working Group members to <a href=
+    "https://www.w3.org/Consortium/Patent-Policy/#sec-Requirements">
+    royalty-free licensing</a> for implementations.</p>
+    <p>This document was produced by a group operating under the
+    <a href=
+    "https://www.w3.org/Consortium/Patent-Policy/"><abbr title=
+    "World Wide Web Consortium">W3C</abbr> Patent Policy</a>.
+    <abbr title="World Wide Web Consortium">W3C</abbr> maintains a
+    <a rel="disclosure" href=
+    "https://www.w3.org/groups/wg/wot/ipr">public list of any
+    patent disclosures</a> made in connection with the deliverables
+    of the group; that page also includes instructions for
+    disclosing a patent. An individual who has actual knowledge of
+    a patent which the individual believes contains <a href=
+    "https://www.w3.org/Consortium/Patent-Policy/#def-essential">Essential
+    Claim(s)</a> must disclose the information in accordance with
+    <a href=
+    "https://www.w3.org/Consortium/Patent-Policy/#sec-Disclosure">section
+    6 of the <abbr title="World Wide Web Consortium">W3C</abbr>
+    Patent Policy</a>.</p>
+    <p>This document is governed by the <a id=
+    "w3c_process_revision" href=
+    "https://www.w3.org/2023/Process-20231103/">03 November 2023
+    <abbr title="World Wide Web Consortium">W3C</abbr> Process
+    Document</a>.</p>
+  </section>
+  <nav id="toc">
+    <h2 class="introductory" id="table-of-contents">Table of
+    Contents</h2>
+    <ol class="toc">
+      <li class="tocline">
+        <a class="tocxref" href="#abstract">Abstract</a>
+      </li>
+      <li class="tocline">
+        <a class="tocxref" href="#sotd">Status of This Document</a>
+      </li>
+      <li class="tocline">
+        <a class="tocxref" href="#introduction"><bdi class=
+        "secno">1.</bdi> Introduction</a>
+        <ol class="toc">
+          <li class="tocline">
+            <a class="tocxref" href="#introduction-td"><bdi class=
+            "secno">1.1</bdi> Thing Description</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href="#introduction-tm"><bdi class=
+            "secno">1.2</bdi> Thing Model</a>
+          </li>
+        </ol>
+      </li>
+      <li class="tocline">
+        <a class="tocxref" href="#conformance"><bdi class=
+        "secno">2.</bdi> Conformance</a>
+      </li>
+      <li class="tocline">
+        <a class="tocxref" href="#terminology"><bdi class=
+        "secno">3.</bdi> Terminology</a>
+      </li>
+      <li class="tocline">
+        <a class="tocxref" href="#namespaces"><bdi class=
+        "secno">4.</bdi> Namespaces</a>
+      </li>
+      <li class="tocline">
+        <a class="tocxref" href=
+        "#sec-vocabulary-definition"><bdi class="secno">5.</bdi> TD
+        Information Model</a>
+        <ol class="toc">
+          <li class="tocline">
+            <a class="tocxref" href="#overview"><bdi class=
+            "secno">5.1</bdi> Overview</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#preliminary-definitions"><bdi class="secno">5.2</bdi>
+            Preliminaries</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#class-definitions"><bdi class="secno">5.3</bdi> Class
+            Definitions</a>
+            <ol class="toc">
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#sec-core-vocabulary-definition"><bdi class=
+                "secno">5.3.1</bdi> Core Vocabulary Definitions</a>
+                <ol class="toc">
+                  <li class="tocline">
+                    <a class="tocxref" href="#thing"><bdi class=
+                    "secno">5.3.1.1</bdi> <code>Thing</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#interactionaffordance"><bdi class=
+                    "secno">5.3.1.2</bdi>
+                    <code>InteractionAffordance</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#propertyaffordance"><bdi class=
+                    "secno">5.3.1.3</bdi>
+                    <code>PropertyAffordance</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#actionaffordance"><bdi class=
+                    "secno">5.3.1.4</bdi>
+                    <code>ActionAffordance</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#eventaffordance"><bdi class=
+                    "secno">5.3.1.5</bdi>
+                    <code>EventAffordance</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#versioninfo"><bdi class="secno">5.3.1.6</bdi>
+                    <code>VersionInfo</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#multilanguage"><bdi class=
+                    "secno">5.3.1.7</bdi>
+                    <code>MultiLanguage</code></a>
+                  </li>
+                </ol>
+              </li>
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#sec-data-schema-vocabulary-definition"><bdi class="secno">
+                5.3.2</bdi> Data Schema Vocabulary Definitions</a>
+                <ol class="toc">
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#dataschema"><bdi class="secno">5.3.2.1</bdi>
+                    <code>DataSchema</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#arrayschema"><bdi class="secno">5.3.2.2</bdi>
+                    <code>ArraySchema</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#booleanschema"><bdi class=
+                    "secno">5.3.2.3</bdi>
+                    <code>BooleanSchema</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#numberschema"><bdi class=
+                    "secno">5.3.2.4</bdi>
+                    <code>NumberSchema</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#integerschema"><bdi class=
+                    "secno">5.3.2.5</bdi>
+                    <code>IntegerSchema</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#objectschema"><bdi class=
+                    "secno">5.3.2.6</bdi>
+                    <code>ObjectSchema</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#stringschema"><bdi class=
+                    "secno">5.3.2.7</bdi>
+                    <code>StringSchema</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#nullschema"><bdi class="secno">5.3.2.8</bdi>
+                    <code>NullSchema</code></a>
+                  </li>
+                </ol>
+              </li>
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#sec-security-vocabulary-definition"><bdi class=
+                "secno">5.3.3</bdi> Security Vocabulary
+                Definitions</a>
+                <ol class="toc">
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#securityscheme"><bdi class=
+                    "secno">5.3.3.1</bdi>
+                    <code>SecurityScheme</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#nosecurityscheme"><bdi class=
+                    "secno">5.3.3.2</bdi>
+                    <code>NoSecurityScheme</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#autosecurityscheme"><bdi class=
+                    "secno">5.3.3.3</bdi>
+                    <code>AutoSecurityScheme</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#combosecurityscheme"><bdi class=
+                    "secno">5.3.3.4</bdi>
+                    <code>ComboSecurityScheme</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#basicsecurityscheme"><bdi class=
+                    "secno">5.3.3.5</bdi>
+                    <code>BasicSecurityScheme</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#digestsecurityscheme"><bdi class=
+                    "secno">5.3.3.6</bdi>
+                    <code>DigestSecurityScheme</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#apikeysecurityscheme"><bdi class=
+                    "secno">5.3.3.7</bdi>
+                    <code>APIKeySecurityScheme</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#bearersecurityscheme"><bdi class=
+                    "secno">5.3.3.8</bdi>
+                    <code>BearerSecurityScheme</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#psksecurityscheme"><bdi class=
+                    "secno">5.3.3.9</bdi>
+                    <code>PSKSecurityScheme</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#oauth2securityscheme"><bdi class=
+                    "secno">5.3.3.10</bdi>
+                    <code>OAuth2SecurityScheme</code></a>
+                  </li>
+                </ol>
+              </li>
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#sec-hypermedia-vocabulary-definition"><bdi class=
+                "secno">5.3.4</bdi> Hypermedia Controls Vocabulary
+                Definitions</a>
+                <ol class="toc">
+                  <li class="tocline">
+                    <a class="tocxref" href="#link"><bdi class=
+                    "secno">5.3.4.1</bdi> <code>Link</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href="#form"><bdi class=
+                    "secno">5.3.4.2</bdi> <code>Form</code></a>
+                    <ol class="toc">
+                      <li class="tocline">
+                        <a class="tocxref" href=
+                        "#sec-op-data-schema-mapping"><bdi class=
+                        "secno">5.3.4.2.1</bdi> Mapping op Values
+                        to Data Schemas</a>
+                      </li>
+                      <li class="tocline">
+                        <a class="tocxref" href=
+                        "#sec-response-usage"><bdi class=
+                        "secno">5.3.4.2.2</bdi> Response-related
+                        Terms Usage</a>
+                      </li>
+                    </ol>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#expectedresponse"><bdi class=
+                    "secno">5.3.4.3</bdi>
+                    <code>ExpectedResponse</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#additionalexpectedresponse"><bdi class=
+                    "secno">5.3.4.4</bdi>
+                    <code>AdditionalExpectedResponse</code></a>
+                  </li>
+                </ol>
+              </li>
+            </ol>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#sec-default-values"><bdi class="secno">5.4</bdi>
+            Default Value Definitions</a>
+          </li>
+        </ol>
+      </li>
+      <li class="tocline">
+        <a class="tocxref" href="#sec-td-serialization"><bdi class=
+        "secno">6.</bdi> TD Representation Format</a>
+        <ol class="toc">
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#td-basic-types-mapping"><bdi class="secno">6.1</bdi>
+            Mapping to JSON Types</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#omitting-default-values"><bdi class="secno">6.2</bdi>
+            Omitting Default Values</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#td-class-serialization"><bdi class="secno">6.3</bdi>
+            Information Model Serialization</a>
+            <ol class="toc">
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#sec-thing-as-a-whole-json"><bdi class=
+                "secno">6.3.1</bdi> Thing Root Object</a>
+              </li>
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#titles-descriptions-serialization-json"><bdi class="secno">
+                6.3.2</bdi> Human-Readable Metadata</a>
+              </li>
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#version-serialization-json"><bdi class=
+                "secno">6.3.3</bdi> <code>version</code></a>
+              </li>
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#security-serialization-json"><bdi class=
+                "secno">6.3.4</bdi>
+                <code>securityDefinitions</code> and
+                <code>security</code></a>
+                <ol class="toc">
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#security-multiple"><bdi class=
+                    "secno">6.3.4.1</bdi> Multiple Security
+                    Definitions</a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#security-security-forms"><bdi class=
+                    "secno">6.3.4.2</bdi> <code>security</code> in
+                    Forms</a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#security-comboSecurityScheme"><bdi class=
+                    "secno">6.3.4.3</bdi>
+                    <code>ComboSecurityScheme</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#security-oauth2"><bdi class=
+                    "secno">6.3.4.4</bdi> OAuth 2.0 usage</a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#security-apikey"><bdi class=
+                    "secno">6.3.4.5</bdi> API key usage</a>
+                  </li>
+                </ol>
+              </li>
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#property-serialization-json"><bdi class=
+                "secno">6.3.5</bdi> <code>properties</code></a>
+              </li>
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#action-serialization-json"><bdi class=
+                "secno">6.3.6</bdi> <code>actions</code></a>
+              </li>
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#event-serialization-json"><bdi class=
+                "secno">6.3.7</bdi> <code>events</code></a>
+              </li>
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#link-serialization-json"><bdi class=
+                "secno">6.3.8</bdi> <code>links</code></a>
+              </li>
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#form-serialization-json"><bdi class=
+                "secno">6.3.9</bdi> <code>forms</code></a>
+                <ol class="toc">
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#form-uriVariables"><bdi class=
+                    "secno">6.3.9.1</bdi>
+                    <code>uriVariables</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#form-contentType"><bdi class=
+                    "secno">6.3.9.2</bdi>
+                    <code>contentType</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#form-response"><bdi class=
+                    "secno">6.3.9.3</bdi> <code>response</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#form-additionalResponses"><bdi class=
+                    "secno">6.3.9.4</bdi>
+                    <code>additionalResponses</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#form-contentMediaType-contentEncoding"><bdi class="secno">
+                    6.3.9.5</bdi> <code>contentMediaType</code> and
+                    <code>contentEncoding</code></a>
+                  </li>
+                  <li class="tocline">
+                    <a class="tocxref" href=
+                    "#form-top-level"><bdi class=
+                    "secno">6.3.9.6</bdi> Top level
+                    <code>forms</code></a>
+                  </li>
+                </ol>
+              </li>
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#data-schema-serialization-json"><bdi class=
+                "secno">6.3.10</bdi> Data Schemas</a>
+              </li>
+            </ol>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#identification-serialization-json"><bdi class=
+            "secno">6.4</bdi> Identification</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#validation-serialization-json"><bdi class=
+            "secno">6.5</bdi> Validation</a>
+            <ol class="toc">
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#minimal-validation-serialization-json"><bdi class="secno">
+                6.5.1</bdi> Minimal Validation</a>
+              </li>
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#basic-validation-serialization-json"><bdi class=
+                "secno">6.5.2</bdi> Basic Validation</a>
+              </li>
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#full-validation-serialization-json"><bdi class=
+                "secno">6.5.3</bdi> Full Validation</a>
+              </li>
+            </ol>
+          </li>
+        </ol>
+      </li>
+      <li class="tocline">
+        <a class="tocxref" href=
+        "#sec-context-extensions"><bdi class="secno">7.</bdi> TD
+        Context Extensions</a>
+        <ol class="toc">
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#semantic-annotations"><bdi class="secno">7.1</bdi>
+            Semantic Annotations</a>
+            <ol class="toc">
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#semantic-annotations-example-version-units"><bdi class="secno">
+                7.1.1</bdi> Example I: Additional Basic
+                Metadata</a>
+              </li>
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#semantic-annotations-example-state"><bdi class=
+                "secno">7.1.2</bdi> Example II: State
+                Annotations</a>
+              </li>
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#semantic-annotations-example-geoloc"><bdi class=
+                "secno">7.1.3</bdi> Example III: Geolocation
+                Annotations</a>
+              </li>
+            </ol>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#adding-protocol-bindings"><bdi class=
+            "secno">7.2</bdi> Adding Protocol Bindings</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#adding-security-schemes"><bdi class="secno">7.3</bdi>
+            Adding Security Schemes</a>
+          </li>
+        </ol>
+      </li>
+      <li class="tocline">
+        <a class="tocxref" href="#behavior"><bdi class=
+        "secno">8.</bdi> Behavioral Assertions</a>
+        <ol class="toc">
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#behavior-security"><bdi class="secno">8.1</bdi>
+            Security Configurations</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href="#behavior-data"><bdi class=
+            "secno">8.2</bdi> Data Schemas</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#protocol-bindings"><bdi class="secno">8.3</bdi>
+            Protocol Bindings</a>
+            <ol class="toc">
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#http-binding-assertions"><bdi class=
+                "secno">8.3.1</bdi> Protocol Binding based on
+                HTTP</a>
+              </li>
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#other-protocol-bindings"><bdi class=
+                "secno">8.3.2</bdi> Other Protocol Bindings</a>
+              </li>
+            </ol>
+          </li>
+        </ol>
+      </li>
+      <li class="tocline">
+        <a class="tocxref" href="#thing-model"><bdi class=
+        "secno">9.</bdi> Thing Model</a>
+        <ol class="toc">
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#thing-model-concept"><bdi class="secno">9.1</bdi>
+            Basic Concept</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#thing-model-declaration"><bdi class="secno">9.2</bdi>
+            Thing Model Declaration</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#thing-model-tools"><bdi class="secno">9.3</bdi>
+            Modeling Tools</a>
+            <ol class="toc">
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#thing-model-versioning"><bdi class=
+                "secno">9.3.1</bdi> Versioning</a>
+              </li>
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#thing-model-extension-import"><bdi class=
+                "secno">9.3.2</bdi> Extension and Import</a>
+              </li>
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#thing-model-composition"><bdi class=
+                "secno">9.3.3</bdi> Composition</a>
+              </li>
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#thing-model-td-optional"><bdi class=
+                "secno">9.3.4</bdi> tm:optional</a>
+              </li>
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#thing-model-td-placeholder"><bdi class=
+                "secno">9.3.5</bdi> Placeholder</a>
+              </li>
+            </ol>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#thing-model-td-generation"><bdi class=
+            "secno">9.4</bdi> Derivation of Thing Description
+            Instances</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#thing-model-td-generation-examples"><bdi class=
+            "secno">9.5</bdi> Examples</a>
+          </li>
+        </ol>
+      </li>
+      <li class="tocline">
+        <a class="tocxref" href=
+        "#sec-security-consideration"><bdi class="secno">10.</bdi>
+        Security Considerations</a>
+        <ol class="toc">
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#sec-security-consideration-TD-tampering"><bdi class=
+            "secno">10.1</bdi> TD Interception and Tampering</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#sec-security-consideration-context-tampering"><bdi class="secno">
+            10.2</bdi> Context Interception and Tampering</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#security-consideration-access-duration"><bdi class=
+            "secno">10.3</bdi> Limited Duration Accesses</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#sec-security-consideration-vulnerability-auditing"><bdi class="secno">
+            10.4</bdi> Vulnerability Auditing</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#sec-security-consideration-script-injection"><bdi class="secno">
+            10.5</bdi> Script Injection</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#sec-security-consideration-execution"><bdi class=
+            "secno">10.6</bdi> JSON Parsing</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#sec-security-consideration-jsonld-expansion"><bdi class="secno">
+            10.7</bdi> JSON-LD Expansion</a>
+          </li>
+        </ol>
+      </li>
+      <li class="tocline">
+        <a class="tocxref" href=
+        "#sec-privacy-consideration"><bdi class="secno">11.</bdi>
+        Privacy Considerations</a>
+        <ol class="toc">
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#sec-privacy-consideration-context"><bdi class=
+            "secno">11.1</bdi> Context Fetching</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#sec-privacy-consideration-id"><bdi class=
+            "secno">11.2</bdi> Immutable Identifiers</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#sec-privacy-consideration-fingerprint"><bdi class=
+            "secno">11.3</bdi> Fingerprinting</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#sec-privacy-consideration-id-metadata"><bdi class=
+            "secno">11.4</bdi> ID Metadata</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#sec-privacy-consideration-global-id-risk"><bdi class=
+            "secno">11.5</bdi> Globally Unique Identifiers</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#sec-privacy-consideration-inferencing"><bdi class=
+            "secno">11.6</bdi> Inferencing of Personally
+            Identifiable Information</a>
+          </li>
+        </ol>
+      </li>
+      <li class="tocline">
+        <a class="tocxref" href="#iana-section"><bdi class=
+        "secno">12.</bdi> IANA Considerations</a>
+        <ol class="toc">
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#media-type-section"><bdi class="secno">12.1</bdi>
+            <code>application/td+json</code> Media Type
+            Registration</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#media-type-section-tm"><bdi class="secno">12.2</bdi>
+            <code>application/tm+json</code> Media Type
+            Registration</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#content-format-section"><bdi class="secno">12.3</bdi>
+            CoAP Content-Format Registration</a>
+            <ol class="toc">
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#wot-thing-description"><bdi class=
+                "secno">12.3.1</bdi> WoT Thing Description</a>
+              </li>
+              <li class="tocline">
+                <a class="tocxref" href=
+                "#wot-thing-model"><bdi class="secno">12.3.2</bdi>
+                WoT Thing Model</a>
+              </li>
+            </ol>
+          </li>
+        </ol>
+      </li>
+      <li class="tocline">
+        <a class="tocxref" href=
+        "#example-serialization"><bdi class="secno">A.</bdi>
+        Example Thing Description Instances</a>
+        <ol class="toc">
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#myLampThing-example-serialization"><bdi class=
+            "secno">A.1</bdi> MyLampThing Example with CoAP
+            Protocol Binding</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#myLightSensor-example-serialization"><bdi class=
+            "secno">A.2</bdi> MyIlluminanceSensor Example with MQTT
+            Protocol Binding</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#webhook-example-serialization"><bdi class=
+            "secno">A.3</bdi> Webhook Event Example</a>
+          </li>
+        </ol>
+      </li>
+      <li class="tocline">
+        <a class="tocxref" href=
+        "#json-schema-for-validation"><bdi class="secno">B.</bdi>
+        JSON Schema for TD Instance Validation</a>
+      </li>
+      <li class="tocline">
+        <a class="tocxref" href="#contentType-usage"><bdi class=
+        "secno">C.</bdi> contentType usage in Thing
+        Descriptions</a>
+      </li>
+      <li class="tocline">
+        <a class="tocxref" href="#json-ld-ctx-usage"><bdi class=
+        "secno">D.</bdi> JSON-LD Context Usage</a>
+      </li>
+      <li class="tocline">
+        <a class="tocxref" href="#changes"><bdi class=
+        "secno">E.</bdi> Recent Specification Changes</a>
+        <ol class="toc">
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#changes-from-pr-2023"><bdi class="secno">E.1</bdi>
+            Changes from the Proposed Recommendation 11 July
+            2023</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#changes-from-cr-2023"><bdi class="secno">E.2</bdi>
+            Changes from the Candidate Recommendation 19 January
+            2023</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#changes-from-august-2022"><bdi class=
+            "secno">E.3</bdi> Changes from Fourth Public Working
+            Draft 3 August 2022</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#changes-from-march-2022"><bdi class="secno">E.4</bdi>
+            Changes from Third Public Working Draft 11 March
+            2022</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#changes-from-june-2021"><bdi class="secno">E.5</bdi>
+            Changes from Second Public Working Draft 7 June
+            2021</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#changes-from-fpwd"><bdi class="secno">E.6</bdi>
+            Changes from First Public Working Draft 24 November
+            2020</a>
+          </li>
+        </ol>
+      </li>
+      <li class="tocline">
+        <a class="tocxref" href="#acknowledgements"><bdi class=
+        "secno">F.</bdi> Acknowledgements</a>
+      </li>
+      <li class="tocline">
+        <a class="tocxref" href="#references"><bdi class=
+        "secno">G.</bdi> References</a>
+        <ol class="toc">
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#normative-references"><bdi class="secno">G.1</bdi>
+            Normative references</a>
+          </li>
+          <li class="tocline">
+            <a class="tocxref" href=
+            "#informative-references"><bdi class="secno">G.2</bdi>
+            Informative references</a>
+          </li>
+        </ol>
+      </li>
+    </ol>
+  </nav>
+  <section id="introduction" class="informative">
+    <div class="header-wrapper">
+      <h2 id="x1-introduction"><bdi class="secno">1.</bdi>
+      Introduction</h2><a class="self-link" href="#introduction"
+      aria-label="Permalink for Section 1."></a>
+    </div>
+    <p><em>This section is non-normative.</em></p>
+    <section id="introduction-td">
+      <div class="header-wrapper">
+        <h3 id="x1-1-thing-description"><bdi class=
+        "secno">1.1</bdi> Thing Description</h3><a class=
+        "self-link" href="#introduction-td" aria-label=
+        "Permalink for Section 1.1"></a>
+      </div>
+      <p>The WoT Thing Description (TD) is a central building block
+      in the <abbr title="World Wide Web Consortium">W3C</abbr> Web
+      of Things (WoT) and can be considered as the entry point of a
+      <a href="#dfn-thing" class="internalDFN" data-link-type="dfn"
+      id="ref-for-dfn-thing-6">Thing</a> (much like the
+      <i>index.html</i> of a Web site). A TD instance has five main
+      components: textual metadata about the <a href=
+      "#thing">Thing</a> itself, a set of <a href=
+      "#interactionaffordance">Interaction Affordances</a> that
+      indicate how the <a href="#dfn-thing" class="internalDFN"
+      data-link-type="dfn" id="ref-for-dfn-thing-7">Thing</a> can
+      be used, <a href=
+      "#sec-data-schema-vocabulary-definition">schemas</a> for the
+      data exchanged with the <a href="#dfn-thing" class=
+      "internalDFN" data-link-type="dfn" id=
+      "ref-for-dfn-thing-8">Thing</a> for
+      machine-understandability, <a href=
+      "#sec-security-vocabulary-definition">Security
+      Definitions</a> to provide metadata about the security
+      mechanisms that must be used for interactions, and, finally,
+      <a href="#sec-hypermedia-vocabulary-definition">Web links</a>
+      to express any formal or informal relation to other <a href=
+      "#dfn-thing" class="internalDFN" data-link-type="dfn" id=
+      "ref-for-dfn-thing-9">Things</a> or documents on the Web.</p>
+      <p>The <a href="#dfn-interaction-model" class="internalDFN"
+      data-link-type="dfn" id=
+      "ref-for-dfn-interaction-model-1">Interaction Model</a> of
+      <abbr title="World Wide Web Consortium">W3C</abbr> WoT
+      defines three types of <a href="#dfn-interaction-affordance"
+      class="internalDFN" data-link-type="dfn" id=
+      "ref-for-dfn-interaction-affordance-1">Interaction
+      Affordances</a>: Properties (<a href=
+      "#propertyaffordance"><code>PropertyAffordance</code></a>
+      class) can be used for sensing and controlling parameters,
+      such as getting the current value or setting an operation
+      state. Actions (<a href=
+      "#actionaffordance"><code>ActionAffordance</code></a> class)
+      model invocation of physical (and hence time-consuming)
+      processes, but can also be used to abstract RPC-like calls of
+      existing platforms. Events (<a href=
+      "#eventaffordance"><code>EventAffordance</code></a> class)
+      are used for the push model of communication where
+      notifications, discrete events, or streams of values are sent
+      asynchronously to the receiver. See [<cite><a class="bibref"
+      data-link-type="biblio" href="#bib-wot-architecture11" title=
+      "Web of Things (WoT) Architecture 1.1">wot-architecture11</a></cite>]
+      for details.</p>
+      <p>In general, the TD provides metadata for different
+      <a href="#dfn-protocol-binding" class="internalDFN"
+      data-link-type="dfn" id=
+      "ref-for-dfn-protocol-binding-1">Protocol Bindings</a>
+      identified by URI schemes [<cite><a class="bibref"
+      data-link-type="biblio" href="#bib-rfc3986" title=
+      "Uniform Resource Identifier (URI): Generic Syntax">RFC3986</a></cite>]
+      (e.g., <code>http</code>, <code>coap</code>, etc.
+      [<cite><a class="bibref" data-link-type="biblio" href=
+      "#bib-iana-uri-schemes" title=
+      "Uniform Resource Identifier (URI) Schemes">IANA-URI-SCHEMES</a></cite>]),
+      content types based on media types [<cite><a class="bibref"
+      data-link-type="biblio" href="#bib-rfc2046" title=
+      "Multipurpose Internet Mail Extensions (MIME) Part Two: Media Types">RFC2046</a></cite>]
+      (e.g., <code>application/json</code>,
+      <code>application/xml</code>, <code>application/cbor</code>,
+      <code>application/exi</code>, etc. [<cite><a class="bibref"
+      data-link-type="biblio" href="#bib-iana-media-types" title=
+      "Media Types">IANA-MEDIA-TYPES</a></cite>]), and security
+      mechanisms (for authentication, authorization,
+      confidentiality, etc.). Serialization of TD instances is
+      based on JSON [<cite><a class="bibref" data-link-type=
+      "biblio" href="#bib-rfc8259" title=
+      "The JavaScript Object Notation (JSON) Data Interchange Format">RFC8259</a></cite>],
+      where JSON names refer to terms of the TD vocabulary, as
+      defined in this specification document. In addition the JSON
+      serialization of TDs follows the syntax of JSON-LD 1.1
+      [<cite><a class="bibref" data-link-type="biblio" href=
+      "#bib-json-ld11" title="JSON-LD 1.1">JSON-LD11</a></cite>] to
+      enable extensions and rich semantic processing.</p>
+      <p><a href="#simple-thing-description-sample">Example 1</a>
+      shows a TD instance and illustrates the <a href=
+      "#dfn-interaction-model" class="internalDFN" data-link-type=
+      "dfn" id="ref-for-dfn-interaction-model-2">Interaction
+      Model</a> with Properties, Actions, and Events by describing
+      a lamp <a href="#dfn-thing" class="internalDFN"
+      data-link-type="dfn" id="ref-for-dfn-thing-10">Thing</a> with
+      the title <i>MyLampThing</i>.</p>
+      <aside class="example" id="simple-thing-description-sample">
+        <div class="marker">
+          <a class="self-link" href=
+          "#simple-thing-description-sample">Example
+          <bdi>1</bdi></a><span class="example-title">: Thing
+          Description sample</span>
+        </div>
+        <pre aria-busy="false"><code class="hljs json">{
+    <span class="hljs-attr">"@context"</span>: <span class=
+"hljs-string">"https://www.w3.org/2022/wot/td/v1.1"</span>,
+    <span class="hljs-attr">"id"</span>: <span class=
+"hljs-string">"urn:uuid:0804d572-cce8-422a-bb7c-4412fcd56f06"</span>,
+    <span class="hljs-attr">"title"</span>: <span class=
+"hljs-string">"MyLampThing"</span>,
+    <span class="hljs-attr">"securityDefinitions"</span>: {
+        <span class="hljs-attr">"basic_sc"</span>: {<span class=
+"hljs-attr">"scheme"</span>: <span class=
+"hljs-string">"basic"</span>, <span class=
+"hljs-attr">"in"</span>: <span class="hljs-string">"header"</span>}
+    },
+    <span class="hljs-attr">"security"</span>: <span class=
+"hljs-string">"basic_sc"</span>,
+    <span class="hljs-attr">"properties"</span>: {
+        <span class="hljs-attr">"status"</span>: {
+            <span class="hljs-attr">"type"</span>: <span class=
+"hljs-string">"string"</span>,
+            <span class="hljs-attr">"forms"</span>: [{<span class=
+"hljs-attr">"href"</span>: <span class=
+"hljs-string">"https://mylamp.example.com/status"</span>}]
+        }
+    },
+    <span class="hljs-attr">"actions"</span>: {
+        <span class="hljs-attr">"toggle"</span>: {
+            <span class="hljs-attr">"forms"</span>: [{<span class=
+"hljs-attr">"href"</span>: <span class=
+"hljs-string">"https://mylamp.example.com/toggle"</span>}]
+        }
+    },
+    <span class="hljs-attr">"events"</span>: {
+        <span class="hljs-attr">"overheating"</span>: {
+            <span class="hljs-attr">"data"</span>: {<span class=
+"hljs-attr">"type"</span>: <span class=
+"hljs-string">"string"</span>},
+            <span class="hljs-attr">"forms"</span>: [{
+                <span class="hljs-attr">"href"</span>: <span class=
+"hljs-string">"https://mylamp.example.com/oh"</span>,
+                <span class=
+"hljs-attr">"subprotocol"</span>: <span class=
+"hljs-string">"longpoll"</span>
+            }]
+        }
+    }
+}</code></pre>
+      </aside>
+      <p>From this TD example, we know there exists one <a href=
+      "#propertyaffordance">Property affordance</a> with the title
+      <i>status</i>. In addition, information is provided to
+      indicate that this Property is accessible via (the secure
+      form of) the HTTP protocol with a GET method at the URI
+      <code>https://mylamp.example.com/status</code> (announced
+      within the <code>forms</code> structure by the
+      <code>href</code> member), and will return a string-based
+      status value. The use of the GET method is not stated
+      explicitly, but is one of the default assumptions defined by
+      this document.</p>
+      <p>In a similar manner, an <a href="#actionaffordance">Action
+      affordance</a> is specified to toggle the switch status using
+      the POST method on the
+      <code>https://mylamp.example.com/toggle</code> resource,
+      where POST is again a default assumption for invoking
+      Actions.</p>
+      <p>The <a href="#eventaffordance">Event affordance</a>
+      enables a mechanism for asynchronous messages to be sent by a
+      <a href="#dfn-thing" class="internalDFN" data-link-type="dfn"
+      id="ref-for-dfn-thing-11">Thing</a>. Here, a subscription to
+      be notified upon a possible overheating event of the lamp can
+      be obtained by using HTTP with its long polling subprotocol
+      on <code>https://mylamp.example.com/oh</code>.</p>
+      <p>This example also specifies the <code>basic</code>
+      security scheme, requiring a username and password for
+      access. Note that a security scheme is first given a name in
+      <code>securityDefinitions</code> and then activated by
+      specifying that name in a <code>security</code> section. In
+      combination with the use of the HTTP protocol this example
+      demonstrates the use of HTTP Basic Authentication.
+      Specification of at least one security scheme at the top
+      level is mandatory, and gives the default access requirements
+      for every resource. However, security schemes can also be
+      specified per-form, with configurations given at the form
+      level overriding configurations given at the
+      <code>Thing</code> level, allowing for the specification of
+      fine-grained access control. It is also possible to use a
+      special <code>nosec</code> security scheme to indicate that
+      no access control mechanisms are used. Additional examples
+      will be provided later.</p>
+      <p>The Thing Description offers the possibility to add
+      contextual definitions in some namespace. This mechanism can
+      be used to integrate additional semantics to the content of
+      the Thing Description instance, provided that formal
+      knowledge, e.g., logic rules for a specific domain of
+      application, can be found under the given namespace.
+      Contextual information can also help specify some
+      configurations and behavior of the underlying communication
+      protocols declared in the <code>forms</code> field. <a href=
+      "#thing-description-full-serialization">Example 2</a> extends
+      the TD sample from Example 1 by introducing a second
+      definition in the <code>@context</code> to declare the prefix
+      <code>saref</code> as referring to <a href=
+      "https://ontology.tno.nl/saref.ttl">SAREF</a>, the
+      Smart&nbsp;Appliance Reference Ontology [<cite><a class=
+      "bibref" data-link-type="biblio" href="#bib-smartm2m" title=
+      "ETSI TS 103 264 V2.1.1 (2017-03): SmartM2M; Smart Appliances; Reference Ontology and oneM2M Mapping">SMARTM2M</a></cite>].
+      This IoT ontology includes terms interpreted as semantic
+      labels that can be set as values of the <code>@type</code>
+      field, giving the semantics of <a href="#dfn-thing" class=
+      "internalDFN" data-link-type="dfn" id=
+      "ref-for-dfn-thing-12">Things</a> and their <a href=
+      "#dfn-interaction-affordance" class="internalDFN"
+      data-link-type="dfn" id=
+      "ref-for-dfn-interaction-affordance-2">Interaction
+      Affordances</a>. In the example below, the <a href=
+      "#dfn-thing" class="internalDFN" data-link-type="dfn" id=
+      "ref-for-dfn-thing-13">Thing</a> is labelled with
+      <code>saref:LightSwitch</code>, the <code>status</code>
+      <a href="#dfn-property" class="internalDFN" data-link-type=
+      "dfn" id="ref-for-dfn-property-1">Property</a> is labelled
+      with <code>saref:OnOffState</code> and the
+      <code>toggle</code> <a href="#dfn-action" class="internalDFN"
+      data-link-type="dfn" id="ref-for-dfn-action-1">Action</a>
+      with <code>saref:ToggleCommand</code>.</p>
+      <aside class="example" id=
+      "thing-description-full-serialization">
+        <div class="marker">
+          <a class="self-link" href=
+          "#thing-description-full-serialization">Example
+          <bdi>2</bdi></a><span class="example-title">: Thing
+          Description with TD Context Extension for semantic
+          annotations</span>
+        </div>
+        <pre aria-busy="false"><code class="hljs json">{
+    <span class="hljs-attr">"@context"</span>: [
+        <span class=
+"hljs-string">"https://www.w3.org/2022/wot/td/v1.1"</span>,
+        { <span class="hljs-attr">"saref"</span>: <span class=
+"hljs-string">"https://w3id.org/saref#"</span> }
+    ],
+    <span class="hljs-attr">"id"</span>: <span class=
+"hljs-string">"urn:uuid:300f4c4b-ca6b-484a-88cf-fd5224a9a61d"</span>,
+    <span class="hljs-attr">"title"</span>: <span class=
+"hljs-string">"MyLampThing"</span>,
+    <span class="hljs-attr">"@type"</span>: <span class=
+"hljs-string">"saref:LightSwitch"</span>,
+    <span class="hljs-attr">"securityDefinitions"</span>: {
+        <span class="hljs-attr">"basic_sc"</span>: {<span class=
+"hljs-attr">"scheme"</span>: <span class=
+"hljs-string">"basic"</span>, <span class=
+"hljs-attr">"in"</span>: <span class="hljs-string">"header"</span>}
+    },
+    <span class="hljs-attr">"security"</span>: <span class=
+"hljs-string">"basic_sc"</span>,
+    <span class="hljs-attr">"properties"</span>: {
+        <span class="hljs-attr">"status"</span>: {
+            <span class="hljs-attr">"@type"</span>: <span class=
+"hljs-string">"saref:OnOffState"</span>,
+            <span class="hljs-attr">"type"</span>: <span class=
+"hljs-string">"string"</span>,
+            <span class="hljs-attr">"forms"</span>: [{
+                <span class="hljs-attr">"href"</span>: <span class=
+"hljs-string">"https://mylamp.example.com/status"</span>
+            }]
+        }
+    },
+    <span class="hljs-attr">"actions"</span>: {
+        <span class="hljs-attr">"toggle"</span>: {
+            <span class="hljs-attr">"@type"</span>: <span class=
+"hljs-string">"saref:ToggleCommand"</span>,
+            <span class="hljs-attr">"forms"</span>: [{
+                <span class="hljs-attr">"href"</span>: <span class=
+"hljs-string">"https://mylamp.example.com/toggle"</span>
+            }]
+        }
+    },
+    <span class="hljs-attr">"events"</span>: {
+        <span class="hljs-attr">"overheating"</span>: {
+            <span class="hljs-attr">"data"</span>: {<span class=
+"hljs-attr">"type"</span>: <span class=
+"hljs-string">"string"</span>},
+            <span class="hljs-attr">"forms"</span>: [{
+                <span class="hljs-attr">"href"</span>: <span class=
+"hljs-string">"https://mylamp.example.com/oh"</span>
+            }]
+        }
+    }
+}</code></pre>
+      </aside>
+      <p>The declaration mechanism inside some
+      <code>@context</code> is specified by JSON-LD. A TD instance
+      complies to version 1.1 of that specification
+      [<cite><a class="bibref" data-link-type="biblio" href=
+      "#bib-json-ld11" title="JSON-LD 1.1">json-ld11</a></cite>].
+      Hence, a TD instance can be also processed as an RDF document
+      (for details about semantic processing, please refer to
+      Appendix <a href="#json-ld-ctx-usage" class=
+      "sec-ref"><bdi class="secno">D.</bdi> JSON-LD Context
+      Usage</a> and the documentation under the namespace IRIs,
+      e.g., <a href=
+      "https://www.w3.org/2019/wot/td">https://www.w3.org/2019/wot/td</a>).</p>
+    </section>
+    <section id="introduction-tm">
+      <div class="header-wrapper">
+        <h3 id="x1-2-thing-model"><bdi class="secno">1.2</bdi>
+        Thing Model</h3><a class="self-link" href=
+        "#introduction-tm" aria-label=
+        "Permalink for Section 1.2"></a>
+      </div>
+      <p>One of the main intentions of a <a href=
+      "#dfn-thing-description" class="internalDFN" data-link-type=
+      "dfn" id="ref-for-dfn-thing-description-1">Thing
+      Description</a> is to provide a <a href="#dfn-consumer"
+      class="internalDFN" data-link-type="dfn" id=
+      "ref-for-dfn-consumer-1">Consumer</a> with all the details
+      necessary to successfully interact with a <a href=
+      "#dfn-thing" class="internalDFN" data-link-type="dfn" id=
+      "ref-for-dfn-thing-14">Thing</a>. In some IoT application
+      scenarios, a fully detailed <a href="#dfn-thing-description"
+      class="internalDFN" data-link-type="dfn" id=
+      "ref-for-dfn-thing-description-2">Thing Description</a>,
+      e.g., with communication metadata is not necessary (e.g., IoT
+      ecosystems may implicitly handle communication separately),
+      or may not be available because a new entity has not yet been
+      deployed (e.g., IP address is not yet known). Sometimes, also
+      a kind of class definition is required that forces capability
+      definitions that should be available for all created
+      instances (e.g., large-scale production of new devices).</p>
+      <p>In order to address the above-mentioned scenarios or
+      others, the <a href="#dfn-thing-model" class="internalDFN"
+      data-link-type="dfn" id="ref-for-dfn-thing-model-1">Thing
+      Model</a> can be used that mainly provides the data model
+      definitions within <a href="#dfn-thing" class="internalDFN"
+      data-link-type="dfn" id="ref-for-dfn-thing-15">Things</a>'
+      <a href="#dfn-property" class="internalDFN" data-link-type=
+      "dfn" id="ref-for-dfn-property-2">Properties</a>, <a href=
+      "#dfn-action" class="internalDFN" data-link-type="dfn" id=
+      "ref-for-dfn-action-2">Actions</a>, and/or <a href=
+      "#dfn-event" class="internalDFN" data-link-type="dfn" id=
+      "ref-for-dfn-event-1">Events</a> and can be potentially used
+      as template for creating <a href="#dfn-thing-description"
+      class="internalDFN" data-link-type="dfn" id=
+      "ref-for-dfn-thing-description-3">Thing Description</a>
+      instances. In the following a sample <a href=
+      "#dfn-thing-model" class="internalDFN" data-link-type="dfn"
+      id="ref-for-dfn-thing-model-2">Thing Model</a> is presented
+      that can be seen as a model for the <a href=
+      "#dfn-thing-description" class="internalDFN" data-link-type=
+      "dfn" id="ref-for-dfn-thing-description-4">Thing
+      Description</a> instance in <a href=
+      "#simple-thing-description-sample" class="box-ref">Example
+      <bdi>1</bdi></a>.</p>
+      <div class="example" id="td-model-example-lamp">
+        <div class="marker">
+          <a class="self-link" href=
+          "#td-model-example-lamp">Example
+          <bdi>3</bdi></a><span class="example-title">: Thing Model
+          sample</span>
+        </div>
+        <pre aria-busy="false"><code class="hljs json">{
+    <span class="hljs-attr">"@context"</span>: [<span class=
+"hljs-string">"https://www.w3.org/2022/wot/td/v1.1"</span>], 
+    <span class="hljs-attr">"@type"</span>: <span class=
+"hljs-string">"tm:ThingModel"</span>,
+    <span class="hljs-attr">"title"</span>: <span class=
+"hljs-string">"Lamp Thing Model"</span>,
+    <span class="hljs-attr">"properties"</span>: {
+        <span class="hljs-attr">"status"</span>: {
+            <span class=
+"hljs-attr">"description"</span>: <span class=
+"hljs-string">"current status of the lamp (on|off)"</span>,
+            <span class="hljs-attr">"type"</span>: <span class=
+"hljs-string">"string"</span>,
+            <span class="hljs-attr">"readOnly"</span>: <span class=
+"hljs-literal">true</span>
+        }
+    },
+    <span class="hljs-attr">"actions"</span>: {
+        <span class="hljs-attr">"toggle"</span>: {
+            <span class=
+"hljs-attr">"description"</span>: <span class=
+"hljs-string">"Turn the lamp on or off"</span>
+        }
+    },
+    <span class="hljs-attr">"events"</span>: {
+        <span class="hljs-attr">"overheating"</span>: {
+            <span class=
+"hljs-attr">"description"</span>: <span class=
+"hljs-string">"Lamp reaches a critical temperature (overheating)"</span>,
+            <span class="hljs-attr">"data"</span>: {<span class=
+"hljs-attr">"type"</span>: <span class=
+"hljs-string">"string"</span>}
+        }
+    }
+}</code></pre>
+      </div>
+      <p><a href="#dfn-thing-model" class="internalDFN"
+      data-link-type="dfn" id="ref-for-dfn-thing-model-3">Thing
+      Model</a> definitions are identified by the <code>"@type":
+      "tm:ThingModel"</code>. As the example shows, it does not
+      provide details about a single <a href="#dfn-thing" class=
+      "internalDFN" data-link-type="dfn" id=
+      "ref-for-dfn-thing-16">Thing</a> instance due to the lack of
+      communication and security metadata. This specification
+      presents a mechanism for deriving valid <a href=
+      "#dfn-thing-description" class="internalDFN" data-link-type=
+      "dfn" id="ref-for-dfn-thing-description-5">Thing
+      Description</a> instances from such <a href=
+      "#dfn-thing-model" class="internalDFN" data-link-type="dfn"
+      id="ref-for-dfn-thing-model-4">Thing Model</a> definitions.
+      In addition, other design concepts are specified, including
+      how to override, extend, and reuse existing <a href=
+      "#dfn-thing-model" class="internalDFN" data-link-type="dfn"
+      id="ref-for-dfn-thing-model-5">Thing Model</a>
+      definitions.</p>
+    </section>
+  </section>
+  <section id="conformance">
+    <div class="header-wrapper">
+      <h2 id="x2-conformance"><bdi class="secno">2.</bdi>
+      Conformance</h2><a class="self-link" href="#conformance"
+      aria-label="Permalink for Section 2."></a>
+    </div>
+    <p>As well as sections marked as non-normative, all authoring
+    guidelines, diagrams, examples, and notes in this specification
+    are non-normative. Everything else in this specification is
+    normative.</p>
+    <p>The key words <em class="rfc2119">MAY</em>, <em class=
+    "rfc2119">MUST</em>, <em class="rfc2119">MUST NOT</em>,
+    <em class="rfc2119">RECOMMENDED</em>, <em class=
+    "rfc2119">SHOULD</em>, and <em class="rfc2119">SHOULD NOT</em>
+    in this document are to be interpreted as described in <a href=
+    "https://datatracker.ietf.org/doc/html/bcp14">BCP 14</a>
+    [<cite><a class="bibref" data-link-type="biblio" href=
+    "#bib-rfc2119" title=
+    "Key words for use in RFCs to Indicate Requirement Levels">RFC2119</a></cite>]
+    [<cite><a class="bibref" data-link-type="biblio" href=
+    "#bib-rfc8174" title=
+    "Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words">RFC8174</a></cite>]
+    when, and only when, they appear in all capitals, as shown
+    here.</p>
+    <p>A Thing Description instance complies with this
+    specification if it follows the normative statements in
+    <a href="#sec-vocabulary-definition" class=
+    "sec-ref"><bdi class="secno">5.</bdi> TD Information Model</a>
+    and <a href="#sec-td-serialization" class="sec-ref"><bdi class=
+    "secno">6.</bdi> TD Representation Format</a> regarding Thing
+    Description serialization.</p>
+    <p>A JSON Schema [<cite><a class="bibref" data-link-type=
+    "biblio" href="#bib-json-schema" title=
+    "JSON Schema Validation: A Vocabulary for Structural Validation of JSON">JSON-SCHEMA</a></cite>]
+    to validate Thing Description instances is provided in Appendix
+    <a href="#json-schema-for-validation" class=
+    "sec-ref"><bdi class="secno">B.</bdi> JSON Schema for TD
+    Instance Validation</a>.</p>
+  </section>
+<!-- excerpt: figure -->
+<figure id="td-core-model">
+        <img src="visualization/td.png" alt=
+        "UML diagram of the TD&nbsp;information model for the TD core vocabulary">
+        <figcaption>
+          <a class="self-link" href="#td-core-model">Figure
+          <bdi class="figno">1</bdi></a> <span class="fig-title">TD
+          core vocabulary</span>
+        </figcaption>
+      </figure>
+<!-- excerpt: table -->
+<table class="def numbered" id="table-namespaces-used-in-tds">
+      <caption>
+        <a class="self-link" href=
+        "#table-namespaces-used-in-tds">Table <bdi class=
+        "tableno">1</bdi></a> <span class="table-title">Namespaces
+        used in TDs</span>
+      </caption>
+      <thead>
+        <tr>
+          <th>Vocabulary</th>
+          <th>Namespace IRI</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Core</td>
+          <td><code>https://www.w3.org/2019/wot/td#</code></td>
+        </tr>
+        <tr>
+          <td>Data Schema</td>
+          <td>
+          <code>https://www.w3.org/2019/wot/json-schema#</code></td>
+        </tr>
+        <tr>
+          <td>Security</td>
+          <td>
+          <code>https://www.w3.org/2019/wot/security#</code></td>
+        </tr>
+        <tr>
+          <td>Hypermedia Controls</td>
+          <td>
+          <code>https://www.w3.org/2019/wot/hypermedia#</code></td>
+        </tr>
+      </tbody>
+    </table>
+<!-- excerpt: tabbed example -->
+<aside class="example ds-selector-tabs" id="example-59">
+          <div class="marker">
+            <a class="self-link" href="#example-59">Example
+            <bdi>59</bdi></a>
+          </div>
+          <div class="marker">
+            <span class="example-title">Top level/parent Smart
+            Ventilator Thing Model</span>
+          </div>
+          <div class="selectors">
+            <button class="selected exampleTab1 SmartVentilator"
+            onclick=
+            "openTab('exampleTab1', 'SmartVentilator')">Smart
+            Ventilator TM</button> <button class=
+            "exampleTab1 Ventilation" onclick=
+            "openTab('exampleTab1', 'Ventilation')">Ventilation
+            TM</button> <button class="exampleTab1 LED" onclick=
+            "openTab('exampleTab1', 'LED')">LED TM</button>
+          </div>
+          <pre class="SmartVentilator exampleTab1 selected"
+          aria-busy="false"><code class="hljs json">{
+    <span class="hljs-attr">"@context"</span>: <span class=
+"hljs-string">"https://www.w3.org/2022/wot/td/v1.1"</span>,
+    <span class="hljs-attr">"@type"</span>: <span class=
+"hljs-string">"tm:ThingModel"</span>,
+    <span class="hljs-attr">"title"</span>: <span class=
+"hljs-string">"Smart Ventilator Thing Model"</span>,
+    <span class="hljs-attr">"version"</span> : { <span class=
+"hljs-attr">"model"</span>: <span class=
+"hljs-string">"1.0.0"</span> },
+    <span class="hljs-attr">"links"</span>: [
+      {
+        <span class="hljs-attr">"rel"</span>: <span class=
+"hljs-string">"tm:submodel"</span>,
+        <span class="hljs-attr">"href"</span>: <span class=
+"hljs-string">"./Ventilation.tm.jsonld"</span>,
+        <span class="hljs-attr">"type"</span>: <span class=
+"hljs-string">"application/tm+json"</span>,
+        <span class="hljs-attr">"instanceName"</span>: <span class=
+"hljs-string">"ventilation"</span>
+      },
+      {
+        <span class="hljs-attr">"rel"</span>: <span class=
+"hljs-string">"tm:submodel"</span>,
+        <span class="hljs-attr">"href"</span>: <span class=
+"hljs-string">"./LED.tm.jsonld"</span>,
+        <span class="hljs-attr">"type"</span>: <span class=
+"hljs-string">"application/tm+json"</span>,
+        <span class="hljs-attr">"instanceName"</span>: <span class=
+"hljs-string">"led"</span>
+      }
+    ],
+    <span class="hljs-attr">"properties"</span> : {
+        <span class="hljs-attr">"status"</span> : {<span class=
+"hljs-attr">"type"</span>: <span class=
+"hljs-string">"string"</span>, <span class=
+"hljs-attr">"enum"</span>: [<span class=
+"hljs-string">"on_value"</span>, <span class=
+"hljs-string">"off_value"</span>, <span class=
+"hljs-string">"error_value"</span>]}
+    }
+  }</code></pre>
+          <pre class="Ventilation exampleTab1" aria-busy=
+          "false"><code class="hljs json">{
+    <span class="hljs-attr">"@context"</span>: <span class=
+"hljs-string">"https://www.w3.org/2022/wot/td/v1.1"</span>,
+    <span class="hljs-attr">"@type"</span>: <span class=
+"hljs-string">"tm:ThingModel"</span>,
+    <span class="hljs-attr">"title"</span>: <span class=
+"hljs-string">"Ventilator Thing Model"</span>,
+    <span class="hljs-attr">"version"</span>: {
+        <span class="hljs-attr">"model"</span>: <span class=
+"hljs-string">"1.0.0"</span>
+    },
+    <span class="hljs-attr">"properties"</span>: {
+        <span class="hljs-attr">"switch"</span>: {
+            <span class="hljs-attr">"type"</span>: <span class=
+"hljs-string">"boolean"</span>,
+            <span class=
+"hljs-attr">"description"</span>: <span class=
+"hljs-string">"True=On; False=Off"</span>
+        },
+        <span class="hljs-attr">"adjustRpm"</span>: {
+            <span class="hljs-attr">"type"</span>: <span class=
+"hljs-string">"number"</span>,
+            <span class="hljs-attr">"minimum"</span>: <span class=
+"hljs-number">200</span>,
+            <span class="hljs-attr">"maximum"</span>: <span class=
+"hljs-number">1200</span>
+        }
+    }
+}</code></pre>
+          <pre class="LED exampleTab1" aria-busy=
+          "false"><code class="hljs json">{
+    <span class="hljs-attr">"@context"</span>: <span class=
+"hljs-string">"https://www.w3.org/2022/wot/td/v1.1"</span>,
+    <span class="hljs-attr">"@type"</span>: <span class=
+"hljs-string">"tm:ThingModel"</span>,
+    <span class="hljs-attr">"title"</span>: <span class=
+"hljs-string">"LED Thing Model"</span>,
+    <span class="hljs-attr">"version"</span>: {
+        <span class="hljs-attr">"model"</span>: <span class=
+"hljs-string">"1.0.0"</span>
+    },
+    <span class="hljs-attr">"properties"</span>: {
+        <span class="hljs-attr">"R"</span>: {
+            <span class="hljs-attr">"type"</span>: <span class=
+"hljs-string">"number"</span>,
+            <span class=
+"hljs-attr">"description"</span>: <span class=
+"hljs-string">"Red color"</span>
+        },
+        <span class="hljs-attr">"G"</span>: {
+            <span class="hljs-attr">"type"</span>: <span class=
+"hljs-string">"number"</span>,
+            <span class=
+"hljs-attr">"description"</span>: <span class=
+"hljs-string">"Green color"</span>
+        },
+        <span class="hljs-attr">"B"</span>: {
+            <span class="hljs-attr">"type"</span>: <span class=
+"hljs-string">"number"</span>,
+            <span class=
+"hljs-attr">"description"</span>: <span class=
+"hljs-string">"Blue color"</span>
+        }
+    },
+    <span class="hljs-attr">"actions"</span>: {
+        <span class="hljs-attr">"fadeIn"</span>: {
+            <span class="hljs-attr">"title"</span>: <span class=
+"hljs-string">"fadeIn"</span>,
+            <span class="hljs-attr">"input"</span>: {
+                <span class="hljs-attr">"type"</span>: <span class=
+"hljs-string">"number"</span>,
+                <span class=
+"hljs-attr">"description"</span>: <span class=
+"hljs-string">"fadeIn in ms"</span>
+            }
+        },
+        <span class="hljs-attr">"fadeOut"</span>: {
+            <span class="hljs-attr">"title"</span>: <span class=
+"hljs-string">"fadeOut"</span>,
+            <span class="hljs-attr">"input"</span>: {
+                <span class="hljs-attr">"type"</span>: <span class=
+"hljs-string">"number"</span>,
+                <span class=
+"hljs-attr">"description"</span>: <span class=
+"hljs-string">"fadeOut in ms"</span>
+            }
+        }
+    }
+}</code></pre>
+        </aside>
+<!-- excerpt: note -->
+<div class="note" role="note" id=
+          "issue-container-generatedID">
+            <div role="heading" class="note-title marker" id=
+            "h-note" aria-level="6">
+              <span>Note</span>
+            </div>
+            <p class="">Property instances are also instances of
+            the class <a href="#dataschema" class=
+            "sec-ref">DataSchema</a>. Therefore, it can contain the
+            <code>type</code>, <code>unit</code>,
+            <code>readOnly</code> and <code>writeOnly</code>
+            members, among others.</p>
+          </div>
+<!-- excerpt: list -->
+<ul>
+        <li>the <em>core</em> TD <a href="#dfn-vocabulary" class=
+        "internalDFN" data-link-type="dfn" id=
+        "ref-for-dfn-vocabulary-9">Vocabulary</a>, which reflects
+        the <a href="#dfn-interaction-model" class="internalDFN"
+        data-link-type="dfn" id="ref-for-dfn-interaction-model-3">
+          Interaction Model</a> with the <a href="#dfn-property"
+          class="internalDFN" data-link-type="dfn" id=
+          "ref-for-dfn-property-3">Properties</a>, <a href=
+          "#dfn-action" class="internalDFN" data-link-type="dfn"
+          id="ref-for-dfn-action-3">Actions</a>, and <a href=
+          "#dfn-event" class="internalDFN" data-link-type="dfn" id=
+          "ref-for-dfn-event-2">Events</a> <a href=
+          "#dfn-interaction-affordance" class="internalDFN"
+          data-link-type="dfn" id=
+          "ref-for-dfn-interaction-affordance-3">Interaction
+          Affordances</a> [<cite><a class="bibref" data-link-type=
+          "biblio" href="#bib-wot-architecture11" title=
+          "Web of Things (WoT) Architecture 1.1">wot-architecture11</a></cite>]
+        </li>
+        <li>the <em>Data Schema</em> <a href="#dfn-vocabulary"
+        class="internalDFN" data-link-type="dfn" id=
+        "ref-for-dfn-vocabulary-10">Vocabulary</a>, including (a
+        subset of) the terms defined by JSON Schema
+          [<cite><a class="bibref" data-link-type="biblio" href=
+          "#bib-json-schema" title=
+          "JSON Schema Validation: A Vocabulary for Structural Validation of JSON">JSON-SCHEMA</a></cite>]
+        </li>
+        <li>the <em>WoT Security</em> <a href="#dfn-vocabulary"
+        class="internalDFN" data-link-type="dfn" id=
+        "ref-for-dfn-vocabulary-11">Vocabulary</a>, identifying
+        security mechanisms and requirements for their
+        configuration
+        </li>
+        <li>the <em>Hypermedia Controls</em> <a href=
+        "#dfn-vocabulary" class="internalDFN" data-link-type="dfn"
+          id="ref-for-dfn-vocabulary-12">Vocabulary</a>, encoding
+          the main principles of RESTful communication using Web
+          links and forms
+        </li>
+      </ul>
+<section id="references" class="appendix">
+    <div class="header-wrapper">
+      <h2 id="g-references"><bdi class="secno">G.</bdi>
+      References</h2><a class="self-link" href="#references"
+      aria-label="Permalink for Appendix G."></a>
+    </div>
+    <section id="normative-references">
+      <div class="header-wrapper">
+        <h3 id="g-1-normative-references"><bdi class=
+        "secno">G.1</bdi> Normative references</h3><a class=
+        "self-link" href="#normative-references" aria-label=
+        "Permalink for Appendix G.1"></a>
+      </div>
+      <dl class="bibliography">
+        <dt id="bib-appmanifest">[APPMANIFEST]</dt>
+        <dd>
+          <a href="https://www.w3.org/TR/appmanifest/"><cite>Web
+          Application Manifest</cite></a>. Marcos Caceres; Kenneth
+          Christiansen; Matt Giuca; Aaron Gustafson; Daniel Murphy;
+          Anssi Kostiainen. W3C. 15 November 2023. W3C Working
+          Draft. URL: <a href=
+          "https://www.w3.org/TR/appmanifest/">https://www.w3.org/TR/appmanifest/</a>
+        </dd>
+        <dt id="bib-bcp47">[BCP47]</dt>
+        <dd>
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc5646"><cite>Tags for
+          Identifying Languages</cite></a>. A. Phillips, Ed.; M.
+          Davis, Ed.. IETF. September 2009. Best Current Practice.
+          URL: <a href=
+          "https://www.rfc-editor.org/rfc/rfc5646">https://www.rfc-editor.org/rfc/rfc5646</a>
+        </dd>
+        <dt id="bib-ecma-262">[ECMA-262]</dt>
+        <dd>
+          <a href=
+          "https://tc39.es/ecma262/multipage/"><cite>ECMAScript
+          Language Specification</cite></a>. Ecma International.
+          URL: <a href=
+          "https://tc39.es/ecma262/multipage/">https://tc39.es/ecma262/multipage/</a>
+        </dd>
+        <dt id="bib-json-ld11">[json-ld11]</dt>
+        <dd>
+          <a href="https://www.w3.org/TR/json-ld11/"><cite>JSON-LD
+          1.1</cite></a>. Gregg Kellogg; Pierre-Antoine Champin;
+          Dave Longley. W3C. 16 July 2020. W3C Recommendation. URL:
+          <a href=
+          "https://www.w3.org/TR/json-ld11/">https://www.w3.org/TR/json-ld11/</a>
+        </dd>
+        <dt id="bib-owasp-top-10">[OWASP-Top-10]</dt>
+        <dd>
+          <a href=
+          "https://owasp.org/www-project-top-ten/"><cite>OWASP Top
+          Ten</cite></a>. OWASP. URL: <a href=
+          "https://owasp.org/www-project-top-ten/">https://owasp.org/www-project-top-ten/</a>
+        </dd>
+        <dt id="bib-rfc2045">[RFC2045]</dt>
+        <dd>
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc2045"><cite>Multipurpose
+          Internet Mail Extensions (MIME) Part One: Format of
+          Internet Message Bodies</cite></a>. N. Freed; N.
+          Borenstein. IETF. November 1996. Draft Standard. URL:
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc2045">https://www.rfc-editor.org/rfc/rfc2045</a>
+        </dd>
+        <dt id="bib-rfc2046">[RFC2046]</dt>
+        <dd>
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc2046"><cite>Multipurpose
+          Internet Mail Extensions (MIME) Part Two: Media
+          Types</cite></a>. N. Freed; N. Borenstein. IETF. November
+          1996. Draft Standard. URL: <a href=
+          "https://www.rfc-editor.org/rfc/rfc2046">https://www.rfc-editor.org/rfc/rfc2046</a>
+        </dd>
+        <dt id="bib-rfc2119">[RFC2119]</dt>
+        <dd>
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc2119"><cite>Key words
+          for use in RFCs to Indicate Requirement
+          Levels</cite></a>. S. Bradner. IETF. March 1997. Best
+          Current Practice. URL: <a href=
+          "https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>
+        </dd>
+        <dt id="bib-rfc3339">[RFC3339]</dt>
+        <dd>
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc3339"><cite>Date and
+          Time on the Internet: Timestamps</cite></a>. G. Klyne; C.
+          Newman. IETF. July 2002. Proposed Standard. URL: <a href=
+          "https://www.rfc-editor.org/rfc/rfc3339">https://www.rfc-editor.org/rfc/rfc3339</a>
+        </dd>
+        <dt id="bib-rfc3629">[RFC3629]</dt>
+        <dd>
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc3629"><cite>UTF-8, a
+          transformation format of ISO 10646</cite></a>. F.
+          Yergeau. IETF. November 2003. Internet Standard. URL:
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc3629">https://www.rfc-editor.org/rfc/rfc3629</a>
+        </dd>
+        <dt id="bib-rfc3966">[RFC3966]</dt>
+        <dd>
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc3966"><cite>The tel
+          URI for Telephone Numbers</cite></a>. H. Schulzrinne.
+          IETF. December 2004. Proposed Standard. URL: <a href=
+          "https://www.rfc-editor.org/rfc/rfc3966">https://www.rfc-editor.org/rfc/rfc3966</a>
+        </dd>
+        <dt id="bib-rfc3986">[RFC3986]</dt>
+        <dd>
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc3986"><cite>Uniform
+          Resource Identifier (URI): Generic Syntax</cite></a>. T.
+          Berners-Lee; R. Fielding; L. Masinter. IETF. January
+          2005. Internet Standard. URL: <a href=
+          "https://www.rfc-editor.org/rfc/rfc3986">https://www.rfc-editor.org/rfc/rfc3986</a>
+        </dd>
+        <dt id="bib-rfc3987">[RFC3987]</dt>
+        <dd>
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc3987"><cite>Internationalized
+          Resource Identifiers (IRIs)</cite></a>. M. Duerst; M.
+          Suignard. IETF. January 2005. Proposed Standard. URL:
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc3987">https://www.rfc-editor.org/rfc/rfc3987</a>
+        </dd>
+        <dt id="bib-rfc4279">[RFC4279]</dt>
+        <dd>
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc4279"><cite>Pre-Shared
+          Key Ciphersuites for Transport Layer Security
+          (TLS)</cite></a>. P. Eronen, Ed.; H. Tschofenig, Ed..
+          IETF. December 2005. Proposed Standard. URL: <a href=
+          "https://www.rfc-editor.org/rfc/rfc4279">https://www.rfc-editor.org/rfc/rfc4279</a>
+        </dd>
+        <dt id="bib-rfc4648">[RFC4648]</dt>
+        <dd>
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc4648"><cite>The
+          Base16, Base32, and Base64 Data Encodings</cite></a>. S.
+          Josefsson. IETF. October 2006. Proposed Standard. URL:
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc4648">https://www.rfc-editor.org/rfc/rfc4648</a>
+        </dd>
+        <dt id="bib-rfc6068">[RFC6068]</dt>
+        <dd>
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc6068"><cite>The
+          'mailto' URI Scheme</cite></a>. M. Duerst; L. Masinter;
+          J. Zawinski. IETF. October 2010. Proposed Standard. URL:
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc6068">https://www.rfc-editor.org/rfc/rfc6068</a>
+        </dd>
+        <dt id="bib-rfc6570">[RFC6570]</dt>
+        <dd>
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc6570"><cite>URI
+          Template</cite></a>. J. Gregorio; R. Fielding; M. Hadley;
+          M. Nottingham; D. Orchard. IETF. March 2012. Proposed
+          Standard. URL: <a href=
+          "https://www.rfc-editor.org/rfc/rfc6570">https://www.rfc-editor.org/rfc/rfc6570</a>
+        </dd>
+        <dt id="bib-rfc6749">[RFC6749]</dt>
+        <dd>
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc6749"><cite>The OAuth
+          2.0 Authorization Framework</cite></a>. D. Hardt, Ed..
+          IETF. October 2012. Proposed Standard. URL: <a href=
+          "https://www.rfc-editor.org/rfc/rfc6749">https://www.rfc-editor.org/rfc/rfc6749</a>
+        </dd>
+        <dt id="bib-rfc6901">[RFC6901]</dt>
+        <dd>
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc6901"><cite>JavaScript
+          Object Notation (JSON) Pointer</cite></a>. P. Bryan, Ed.;
+          K. Zyp; M. Nottingham, Ed.. IETF. April 2013. Proposed
+          Standard. URL: <a href=
+          "https://www.rfc-editor.org/rfc/rfc6901">https://www.rfc-editor.org/rfc/rfc6901</a>
+        </dd>
+        <dt id="bib-rfc7252">[RFC7252]</dt>
+        <dd>
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc7252"><cite>The
+          Constrained Application Protocol (CoAP)</cite></a>. Z.
+          Shelby; K. Hartke; C. Bormann. IETF. June 2014. Proposed
+          Standard. URL: <a href=
+          "https://www.rfc-editor.org/rfc/rfc7252">https://www.rfc-editor.org/rfc/rfc7252</a>
+        </dd>
+        <dt id="bib-rfc8174">[RFC8174]</dt>
+        <dd>
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc8174"><cite>Ambiguity
+          of Uppercase vs Lowercase in RFC 2119 Key
+          Words</cite></a>. B. Leiba. IETF. May 2017. Best Current
+          Practice. URL: <a href=
+          "https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>
+        </dd>
+        <dt id="bib-rfc8252">[RFC8252]</dt>
+        <dd>
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc8252"><cite>OAuth 2.0
+          for Native Apps</cite></a>. W. Denniss; J. Bradley. IETF.
+          October 2017. Best Current Practice. URL: <a href=
+          "https://www.rfc-editor.org/rfc/rfc8252">https://www.rfc-editor.org/rfc/rfc8252</a>
+        </dd>
+        <dt id="bib-rfc8259">[RFC8259]</dt>
+        <dd>
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc8259"><cite>The
+          JavaScript Object Notation (JSON) Data Interchange
+          Format</cite></a>. T. Bray, Ed.. IETF. December 2017.
+          Internet Standard. URL: <a href=
+          "https://www.rfc-editor.org/rfc/rfc8259">https://www.rfc-editor.org/rfc/rfc8259</a>
+        </dd>
+        <dt id="bib-rfc8288">[RFC8288]</dt>
+        <dd>
+          <a href="https://httpwg.org/specs/rfc8288.html"><cite>Web
+          Linking</cite></a>. M. Nottingham. IETF. October 2017.
+          Proposed Standard. URL: <a href=
+          "https://httpwg.org/specs/rfc8288.html">https://httpwg.org/specs/rfc8288.html</a>
+        </dd>
+        <dt id="bib-rfc9112">[RFC9112]</dt>
+        <dd>
+          <a href=
+          "https://httpwg.org/specs/rfc9112.html"><cite>HTTP/1.1</cite></a>.
+          R. Fielding, Ed.; M. Nottingham, Ed.; J. Reschke, Ed..
+          IETF. June 2022. Internet Standard. URL: <a href=
+          "https://httpwg.org/specs/rfc9112.html">https://httpwg.org/specs/rfc9112.html</a>
+        </dd>
+        <dt id="bib-semver">[SEMVER]</dt>
+        <dd>
+          <a href="https://semver.org/"><cite>Semantic Versioning
+          2.0.0</cite></a>. Tom Preston-Werner. 26 December 2017.
+          URL: <a href=
+          "https://semver.org/">https://semver.org/</a>
+        </dd>
+        <dt id="bib-string-meta">[STRING-META]</dt>
+        <dd>
+          <a href=
+          "https://www.w3.org/TR/string-meta/"><cite>Strings on the
+          Web: Language and Direction Metadata</cite></a>. Richard
+          Ishida; Addison Phillips. W3C. 20 July 2023. W3C Working
+          Group Note. URL: <a href=
+          "https://www.w3.org/TR/string-meta/">https://www.w3.org/TR/string-meta/</a>
+        </dd>
+        <dt id="bib-websub">[websub]</dt>
+        <dd>
+          <a href=
+          "https://www.w3.org/TR/websub/"><cite>WebSub</cite></a>.
+          Julien Genestoux; Aaron Parecki. W3C. 23 January 2018.
+          W3C Recommendation. URL: <a href=
+          "https://www.w3.org/TR/websub/">https://www.w3.org/TR/websub/</a>
+        </dd>
+        <dt id="bib-wot-architecture11">[wot-architecture11]</dt>
+        <dd>
+          <a href=
+          "https://www.w3.org/TR/wot-architecture11/"><cite>Web of
+          Things (WoT) Architecture 1.1</cite></a>. Michael
+          Lagally; Ryuichi Matsukura; Kunihiko Toumura; Michael
+          McCool. W3C. 5 December 2023. W3C Recommendation.
+          URL: <a href=
+          "https://www.w3.org/TR/wot-architecture11/">https://www.w3.org/TR/wot-architecture11/</a>
+        </dd>
+        <dt id="bib-wot-profile">[WOT-PROFILE]</dt>
+        <dd>
+          <a href="https://www.w3.org/TR/wot-profile/"><cite>Web of
+          Things (WoT) Profile</cite></a>. Michael Lagally; Michael
+          McCool; Ryuichi Matsukura; Sebastian Kaebisch; Tomoaki
+          Mizushima. W3C. November 2020. URL: <a href=
+          "https://www.w3.org/TR/wot-profile/">https://www.w3.org/TR/wot-profile/</a>
+        </dd>
+        <dt id="bib-wot-security-guidelines">
+        [WOT-SECURITY-GUIDELINES]</dt>
+        <dd>
+          <a href="https://w3c.github.io/wot-security/"><cite>Web
+          of Things (WoT) Security and Privacy
+          Guidelines</cite></a>. Michael McCool; Elena Reshetova.
+          W3C. July 2021. URL: <a href=
+          "https://w3c.github.io/wot-security/">https://w3c.github.io/wot-security/</a>
+        </dd>
+        <dt id="bib-wot-thing-description10">
+        [wot-thing-description10]</dt>
+        <dd>
+          <a href=
+          "https://www.w3.org/TR/wot-thing-description10/"><cite>Web
+          of Things (WoT) Thing Description</cite></a>. Sebastian
+          Käbisch; Takuki Kamiya; Michael McCool; Victor Charpenay;
+          Matthias Kovatsch. W3C. 9 April 2020. W3C Recommendation.
+          URL: <a href=
+          "https://www.w3.org/TR/wot-thing-description10/">https://www.w3.org/TR/wot-thing-description10/</a>
+        </dd>
+        <dt id="bib-xmlschema11-2-20120405">
+        [XMLSCHEMA11-2-20120405]</dt>
+        <dd>
+          <a href=
+          "https://www.w3.org/TR/2012/REC-xmlschema11-2-20120405/"><cite>
+          W3C XML Schema Definition Language (XSD) 1.1 Part 2:
+          Datatypes</cite></a>. David Peterson; Sandy Gao; Ashok
+          Malhotra; Michael Sperberg-McQueen; Henry Thompson; Paul
+          V. Biron et al. W3C. 5 April 2012. W3C Recommendation.
+          URL: <a href=
+          "https://www.w3.org/TR/2012/REC-xmlschema11-2-20120405/">https://www.w3.org/TR/2012/REC-xmlschema11-2-20120405/</a>
+        </dd>
+      </dl>
+    </section>
+    <section id="informative-references">
+      <div class="header-wrapper">
+        <h3 id="g-2-informative-references"><bdi class=
+        "secno">G.2</bdi> Informative references</h3><a class=
+        "self-link" href="#informative-references" aria-label=
+        "Permalink for Appendix G.2"></a>
+      </div>
+      <dl class="bibliography">
+        <dt id="bib-html">[html]</dt>
+        <dd>
+          <a href=
+          "https://html.spec.whatwg.org/multipage/"><cite>HTML
+          Standard</cite></a>. Anne van Kesteren; Domenic Denicola;
+          Ian Hickson; Philip Jägenstedt; Simon Pieters. WHATWG.
+          Living Standard. URL: <a href=
+          "https://html.spec.whatwg.org/multipage/">https://html.spec.whatwg.org/multipage/</a>
+        </dd>
+        <dt id="bib-http-in-rdf10">[HTTP-in-RDF10]</dt>
+        <dd>
+          <a href="https://www.w3.org/TR/HTTP-in-RDF10/"><cite>HTTP
+          Vocabulary in RDF 1.0</cite></a>. Johannes Koch; Carlos
+          A. Velasco; Philip Ackermann. W3C. 2 February 2017. W3C
+          Working Group Note. URL: <a href=
+          "https://www.w3.org/TR/HTTP-in-RDF10/">https://www.w3.org/TR/HTTP-in-RDF10/</a>
+        </dd>
+        <dt id="bib-iana-media-types">[IANA-MEDIA-TYPES]</dt>
+        <dd>
+          <a href=
+          "https://www.iana.org/assignments/media-types/"><cite>Media
+          Types</cite></a>. IANA. URL: <a href=
+          "https://www.iana.org/assignments/media-types/">https://www.iana.org/assignments/media-types/</a>
+        </dd>
+        <dt id="bib-iana-uri-schemes">[IANA-URI-SCHEMES]</dt>
+        <dd>
+          <a href=
+          "https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml">
+          <cite>Uniform Resource Identifier (URI)
+          Schemes</cite></a>. IANA. URL: <a href=
+          "https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml">
+          https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml</a>
+        </dd>
+        <dt id="bib-json-schema">[JSON-SCHEMA]</dt>
+        <dd>
+          <a href=
+          "https://datatracker.ietf.org/doc/html/draft-handrews-json-schema-validation-01">
+          <cite>JSON Schema Validation: A Vocabulary for Structural
+          Validation of JSON</cite></a>. Austin Wright; Henry
+          Andrews; Geraint Luff. IETF. 19 March 2018.
+          Internet-Draft. URL: <a href=
+          "https://datatracker.ietf.org/doc/html/draft-handrews-json-schema-validation-01">
+          https://datatracker.ietf.org/doc/html/draft-handrews-json-schema-validation-01</a>
+        </dd>
+        <dt id="bib-json-schema-ontology">
+        [JSON-SCHEMA-ONTOLOGY]</dt>
+        <dd>
+          <a href=
+          "https://www.w3.org/2019/wot/json-schema"><cite>JSON
+          Schema in RDF</cite></a>. Victor Charpenay; Maxime
+          Lefrançois; María Poveda Villalón. W3C. July 2022. URL:
+          <a href=
+          "https://www.w3.org/2019/wot/json-schema">https://www.w3.org/2019/wot/json-schema</a>
+        </dd>
+        <dt id="bib-ldml">[LDML]</dt>
+        <dd>
+          <a href="https://unicode.org/reports/tr35/"><cite>Unicode
+          Technical Standard #35: Unicode Locale Data Markup
+          Language (LDML)</cite></a>. Mark Davis; CLDR
+          Contributors. March 2022. URL: <a href=
+          "https://unicode.org/reports/tr35/">https://unicode.org/reports/tr35/</a>
+        </dd>
+        <dt id="bib-linked-data">[LINKED-DATA]</dt>
+        <dd>
+          <a href=
+          "https://www.w3.org/DesignIssues/LinkedData.html"><cite>Linked
+          Data Design Issues</cite></a>. Tim Berners-Lee. W3C. 27
+          July 2006. W3C-Internal Document. URL: <a href=
+          "https://www.w3.org/DesignIssues/LinkedData.html">https://www.w3.org/DesignIssues/LinkedData.html</a>
+        </dd>
+        <dt id="bib-linkset-media-types">[LINKSET-MEDIA-TYPES]</dt>
+        <dd>
+          <a href=
+          "https://datatracker.ietf.org/doc/draft-ietf-httpapi-linkset/">
+          <cite>Linkset: Media Types and a Link Relation Type for
+          Link Sets</cite></a>. Erik Wilde; Herbert Van de Sompel.
+          IETF. URL: <a href=
+          "https://datatracker.ietf.org/doc/draft-ietf-httpapi-linkset/">
+          https://datatracker.ietf.org/doc/draft-ietf-httpapi-linkset/</a>
+        </dd>
+        <dt id="bib-mqtt">[MQTT]</dt>
+        <dd>
+          <a href=
+          "http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html">
+          <cite>MQTT Version 3.1.1</cite></a>. Andrew Banks; Rahul
+          Gupta. OASIS. December 2015. OASIS Standard Incorporating
+          Approved Errata 01. URL: <a href=
+          "http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html">
+          http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html</a>
+        </dd>
+        <dt id="bib-openapi">[OPENAPI]</dt>
+        <dd>
+          <a href=
+          "https://spec.openapis.org/oas/v3.0.1"><cite>OpenAPI
+          Specification: Version 3.0.1</cite></a>. Darrel Miller;
+          Jeremy Whitlock; Marsh Gardiner; Mike Ralphson; Ron
+          Ratovsky; Uri Sarid. OpenAPI Initiative, Linux
+          Foundation. 6 December 2017. URL: <a href=
+          "https://spec.openapis.org/oas/v3.0.1">https://spec.openapis.org/oas/v3.0.1</a>
+        </dd>
+        <dt id="bib-rdf-schema">[RDF-SCHEMA]</dt>
+        <dd>
+          <a href="https://www.w3.org/TR/rdf-schema/"><cite>RDF
+          Schema 1.1</cite></a>. Dan Brickley; Ramanathan Guha.
+          W3C. 25 February 2014. W3C Recommendation. URL: <a href=
+          "https://www.w3.org/TR/rdf-schema/">https://www.w3.org/TR/rdf-schema/</a>
+        </dd>
+        <dt id="bib-rfc6750">[RFC6750]</dt>
+        <dd>
+          <a href=
+          "https://www.rfc-editor.org/rfc/rfc6750"><cite>The OAuth
+          2.0 Authorization Framework: Bearer Token
+          Usage</cite></a>. M. Jones; D. Hardt. IETF. October 2012.
+          Proposed Standard. URL: <a href=
+          "https://www.rfc-editor.org
+<!-- excerpt: references truncated -->
+
+</body></html>

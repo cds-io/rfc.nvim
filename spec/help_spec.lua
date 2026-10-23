@@ -1,4 +1,5 @@
 local help = require("rfc.help")
+local fp = require("cds.fp")
 local fixtures = require("spec.fixtures")
 
 local function ends_with(s, suffix)
@@ -87,6 +88,33 @@ describe("tags_in", function()
             { name = "rfc-subjects-iot-6lowpan", line = 3 },
             { name = "rfc-subjects-security-pki-x.509", line = 4 },
         }, help.tags_in(lines))
+    end)
+end)
+
+describe("w3c tags", function()
+    it("reads a w3c tag, file, section and reference", function()
+        local lines = {
+            "*w3c-css-grid-2.txt*  T  *w3c-css-grid-2*",
+            "5.3 Title  *w3c-css-grid-2#5.3*",
+            "Abstract  *w3c-wcag22#abstract*",
+            "[X]  *w3c-css-grid-2#ref-CSS-ALIGN-3*",
+        }
+        assert.are.same(
+            {
+                "w3c-css-grid-2.txt",
+                "w3c-css-grid-2",
+                "w3c-css-grid-2#5.3",
+                "w3c-wcag22#abstract",
+                "w3c-css-grid-2#ref-CSS-ALIGN-3",
+            },
+            fp.map(help.tags_in(lines), function(t)
+                return t.name
+            end)
+        )
+        assert.are.equal("w3c-css-grid-2#5.3", help.section_tag(lines[2]))
+        assert.is_nil(help.section_tag(lines[1]))
+        assert.is_nil(help.section_tag(lines[4]))
+        assert.are.same({ "  ", "w3c-css-grid-2#5.3" }, { help.row_tag("  |w3c-css-grid-2#5.3|  5.3 Title") })
     end)
 end)
 

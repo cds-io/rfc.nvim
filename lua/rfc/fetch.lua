@@ -4,6 +4,7 @@
 -- spec replaces the eight functions below with Tasks of fixture text.
 local Task = require("cds.task")
 local http = require("cds.http")
+local w3c = require("cds.w3c")
 
 local M = {}
 
@@ -123,6 +124,32 @@ end
 ---@return cds.Task
 function M.simd(file, id)
     return text(M.github_raw .. SIMD_REPO .. "/main/proposals/" .. file, "SIMD " .. id)
+end
+
+--- A W3C technical report by its URL, asked conditionally when the copy's
+--- time is given: a 304 answers false (unchanged); a 200 answers the body
+--- with the server's Last-Modified as the time to stamp the copy with (now,
+--- when the server sends none); a 404 is the report not existing.
+---@param url string         -- https://www.w3.org/TR/WCAG22/, the index's spelling
+---@param shortname string   -- for the message
+---@param since integer|nil  -- the copy's time
+---@return cds.Task
+function M.w3c(url, shortname, since)
+    return Task.new(function()
+        local headers = since and { ["If-Modified-Since"] = w3c.http_time(since) } or nil
+        local res, err = http.request({ method = "GET", url = url, headers = headers, timeout = 30 })
+        if not res then
+            return nil, ("W3C %s: %s"):format(shortname, err.message)
+        end
+        if res.status == 304 then
+            return false
+        end
+        if res.status ~= 200 then
+            return nil, describe({ status = res.status }, "W3C " .. shortname)
+        end
+        local modified = res.headers["last-modified"] and w3c.parse_http_time(res.headers["last-modified"])
+        return { body = res.body, modified = modified or os.time() }
+    end)
 end
 
 --- A listing page, every proposal under its status.

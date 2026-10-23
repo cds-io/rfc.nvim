@@ -9,10 +9,12 @@ local help = require("rfc.help")
 local help_eip = require("rfc.help_eip")
 local help_bip = require("rfc.help_bip")
 local help_simd = require("rfc.help_simd")
+local help_w3c = require("rfc.help_w3c")
 local rfc = require("cds.rfc")
 local eip = require("cds.eip")
 local bip = require("cds.bip")
 local simd = require("cds.simd")
+local w3c = require("cds.w3c")
 local subjects = require("cds.subjects")
 local Task = require("cds.task")
 local fp = require("cds.fp")
@@ -23,6 +25,8 @@ local M = {}
 ---@field id string
 ---@field label string      -- what the picker shows after the tag
 ---@field text boolean      -- whether the source has a text to render (an RFC published as PDF only has none)
+---@field date string|nil   -- YYYY-MM-DD, when the index dates the document (a W3C report's publication)
+---@field file string|nil   -- the document's file as the index spells it (a proposal's path, a report's URL), for a source that is `located`
 
 ---@class rfc.Subjects
 ---@field index_file string|nil   -- the cache file the subjects index is stored as; the source's own index file when the index carries the subjects
@@ -35,12 +39,13 @@ local M = {}
 
 ---@class rfc.Source
 ---@field prefix string     -- the tag prefix: rfc, eip
+---@field key "number"|"shortname"|nil  -- what names a document: a number (rfc9110) unless said; a shortname joins with a dash (w3c-wcag22)
 ---@field aliases string[]  -- other prefixes whose tags this source answers: erc for eip
 ---@field label string      -- how a message names it: RFC, EIP
 ---@field raw_ext string    -- the extension the fetched text is stored under
 ---@field index_file string -- the cache file the index is stored as
----@field fetch fun(id: string, file?: string): cds.Task  -- of the text as one string; `file` is what locate found
----@field locate nil|fun(id: string, index: string[]): string|nil  -- pure: the file the index names for a number, for a source whose files carry more than the number
+---@field fetch fun(id: string, file?: string, since?: integer): cds.Task  -- of the text as one string; `file` is the entry's, for a located source; `since` the copy's time, for a source that asks conditionally
+---@field located boolean|nil  -- the index names each document's file (its entries carry `file`), so a fetch goes through the index the rim keeps
 ---@field index fun(): cds.Task                    -- of the index text as one string
 ---@field entries fun(lines: string[]): rfc.Entry[]  -- pure
 ---@field render fun(id: string, lines: string[]): rfc.HelpDoc  -- pure, total
@@ -219,12 +224,7 @@ M.simd = {
     label = "SIMD",
     raw_ext = "md",
     index_file = "simd-index.json",
-    locate = function(id, index)
-        local found = fp.find(simd.index(index), function(e)
-            return e.id == id
-        end)
-        return found and found.file or nil
-    end,
+    located = true,
     fetch = function(id, file)
         return fetch.simd(file, id)
     end,
@@ -233,7 +233,7 @@ M.simd = {
     end,
     entries = function(lines)
         return fp.map(simd.index(lines), function(e)
-            return { id = e.id, label = e.title, text = true }
+            return { id = e.id, label = e.title, text = true, file = e.file }
         end)
     end,
     render = help_simd.render,
@@ -253,7 +253,69 @@ M.simd = {
     },
 }
 
-M.all = { M.rfc, M.eip, M.bip, M.simd }
+--- A report's picker label: its title, with the maturity when the index
+--- gives one.
+---@param e cds.w3c.Entry
+---@return string
+local function report_label(e)
+    return e.maturity ~= "" and (e.title .. " (" .. e.maturity .. ")") or e.title
+end
+
+--- The W3C's technical reports, by shortname: the TR page is the index,
+--- a report is fetched at the URL the page spells (89 shortnames carry
+--- uppercase letters, and the lowercased URL only redirects), asked
+--- conditionally when a copy is on disk, and rendered through cds.html.
+---@type rfc.Source
+M.w3c = {
+    prefix = "w3c",
+    aliases = {},
+    label = "W3C",
+    key = "shortname",
+    raw_ext = "html",
+    index_file = "w3c-index.html",
+    located = true,
+    fetch = function(id, url, since)
+        return fetch.w3c(url, id, since)
+    end,
+    index = function()
+        return fetch.listing("https://www.w3.org/TR/", "the W3C index")
+    end,
+    entries = function(lines)
+        return fp.map(w3c.index(lines), function(e)
+            return { id = e.id, label = report_label(e), text = true, date = e.date, file = e.url }
+        end)
+    end,
+    render = help_w3c.render,
+    -- three roots: the maturity, the tags, the working groups
+    subjects = {
+        index_file = "w3c-index.html",
+        index = function()
+            return fetch.listing("https://www.w3.org/TR/", "the W3C index")
+        end,
+        entries = function(lines)
+            return fp.map(w3c.index(lines), function(e)
+                local paths = e.maturity ~= "" and { { "Maturity", e.maturity } } or {}
+                vim.list_extend(
+                    paths,
+                    fp.map(e.tags, function(tag)
+                        return { "Tags", tag }
+                    end)
+                )
+                vim.list_extend(
+                    paths,
+                    fp.map(e.groups, function(group)
+                        return { "Deliverers", group }
+                    end)
+                )
+                return subjects.entry(e.id, report_label(e), paths)
+            end)
+        end,
+        title = "W3C reports by subject",
+        about = "From www.w3.org/TR, each report's maturity, tags and working group.",
+    },
+}
+
+M.all = { M.rfc, M.eip, M.bip, M.simd, M.w3c }
 
 --- The source a tag belongs to, by its prefix or one of the aliases, or
 --- nil: a document's tag (eip1559-abstract) or a subjects tag
@@ -261,7 +323,10 @@ M.all = { M.rfc, M.eip, M.bip, M.simd }
 ---@param tag string
 ---@return rfc.Source|nil
 function M.of(tag)
-    local prefix = tag:match("^(%l+)%d") or tag:match("^(%l+)%-subjects")
+    -- the dashed form first, a prefix ending in a letter (w3c, rfc): the
+    -- number form would read "w" from "w3c-…", and the dashed form must
+    -- not read "rfc9110" from "rfc9110-3.1"
+    local prefix = tag:match("^(%l[%l%d]-%l)%-") or tag:match("^(%l+)%d")
     if not prefix then
         return nil
     end

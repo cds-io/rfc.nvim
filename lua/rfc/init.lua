@@ -10,6 +10,7 @@ local view = require("rfc.view")
 local toc = require("rfc.toc")
 local subjects = require("rfc.subjects")
 local cds_subjects = require("cds.subjects")
+local w3c = require("cds.w3c")
 local cache = require("rfc.cache")
 local fp = require("cds.fp")
 local Task = require("cds.task")
@@ -70,21 +71,51 @@ local function enabled(source)
     return config.get().sources[source.prefix] == true
 end
 
---- The text from the source: straight by number, or, for a source whose
---- files the index names, through the index the rim keeps.
+--- A document's tag: the prefix and the id, joined with a dash for a
+--- source that goes by shortname (w3c-wcag22) and directly otherwise
+--- (rfc9110).
 ---@param source rfc.Source
 ---@param id string
----@return cds.Task  -- of the text as one string
-local function fetch_text(source, id)
-    if not source.locate then
+---@return string
+local function tag_of(source, id)
+    return source.key == "shortname" and (source.prefix .. "-" .. id) or (source.prefix .. id)
+end
+
+--- The id a tag of the source carries, or nil for a subjects tag: the
+--- number after the prefix, or the shortname before the section's #.
+---@param source rfc.Source
+---@param tag string
+---@return string|nil
+local function id_of(source, tag)
+    if tag:match("^%l[%l%d]-%l%-subjects") then
+        return nil
+    end
+    if source.key == "shortname" then
+        return tag:match("^" .. source.prefix .. "%-([^#%.]+)")
+    end
+    return tag:match("^%l+0*(%d+)")
+end
+
+local entry_of
+
+--- The text from the source: straight by number, or, for a source whose
+--- index names each document's file, with the file its entry carries, the
+--- index fetched first; `since` is the copy's time, for a source that asks
+--- conditionally.
+---@param source rfc.Source
+---@param id string
+---@param since integer|nil
+---@return cds.Task  -- of the text as one string, or as the cache's produce answers
+local function fetch_text(source, id, since)
+    if not source.located then
         return source.fetch(id)
     end
-    return M.index_lines(source):bind(function(index)
-        local file = source.locate(id, index)
-        if not file then
+    return M.index_lines(source):bind(function()
+        local entry = entry_of(source, id)
+        if not (entry and entry.file) then
             return Task.fail(("%s %s does not exist"):format(source.label, id))
         end
-        return source.fetch(id, file)
+        return source.fetch(id, entry.file, since)
     end)
 end
 
@@ -123,14 +154,29 @@ end
 ---@param source rfc.Source
 ---@param id string
 ---@return rfc.Fetched
+--- The index's entry for a document, from the cached index, parsed once
+--- per copy; nil without.
+---@param source rfc.Source
+---@param id string
+---@return rfc.Entry|nil
+entry_of = function(source, id)
+    local entries = index_of(source):memo("entries", source.entries) or {}
+    return fp.find(entries, function(e)
+        return e.id == id
+    end)
+end
+
 local function raw_of(source, id)
+    local entry = source.key == "shortname" and entry_of(source, id) or nil
     return cache.fetched(config.get(), {
-        file = source.prefix .. id .. "." .. source.raw_ext,
-        produce = function()
-            return fetch_text(source, id)
+        file = tag_of(source, id) .. "." .. source.raw_ext,
+        produce = function(since)
+            return fetch_text(source, id, since)
         end,
         label = source.label .. " " .. id,
         placeholder = source.placeholder,
+        -- a report republished after the copy was taken is asked for again
+        modified = entry and entry.date and w3c.date_time(entry.date) or nil,
     })
 end
 
@@ -141,11 +187,14 @@ end
 ---@return rfc.Derived
 local function document_of(source, id)
     return cache.derived(config.get(), {
-        name = source.prefix .. id,
+        name = tag_of(source, id),
         from = { raw_of(source, id) },
         version = help.RENDER,
         produce = function(lines)
-            return source.render(id, lines)
+            -- a render that needs the document's file (a report's URL, for
+            -- its figures) gets it as a third argument; the others ignore it
+            local entry = source.located and entry_of(source, id) or nil
+            return source.render(id, lines, entry and entry.file or nil)
         end,
     })
 end
@@ -158,7 +207,7 @@ end
 ---@return rfc.Derived
 local function subjects_of(source)
     local s = source.subjects
-    local doc = { prefix = source.prefix, title = s.title, about = s.about }
+    local doc = { prefix = source.prefix, title = s.title, about = s.about, key = source.key }
     local name = source.prefix .. "-subjects"
     if s.texts then
         local listed = index_of(source):memo("entries", source.entries) or {}
@@ -316,7 +365,7 @@ end
 function M.jump(tag)
     ensure_setup()
     local source = sources.of(tag)
-    local id = source and tag:match("^%l+0*(%d+)")
+    local id = source and id_of(source, tag)
     if source and id and enabled(source) and not document_of(source, id):current() then
         M.open(source, id, tag)
         return
@@ -341,7 +390,7 @@ end
 ---@param tag? string
 function M.open(source, id, tag)
     ensure_setup()
-    tag = tag or (source.prefix .. id)
+    tag = tag or tag_of(source, id)
     if document_of(source, id):current() then
         M.jump(tag)
         return
@@ -355,12 +404,14 @@ function M.open(source, id, tag)
             return
         end
         -- a buffer still holding the document's earlier render goes, so :help
-        -- reads the file written just now rather than showing what it loaded
+        -- reads the file written just now rather than showing what it loaded;
+        -- then straight to :help, since asking jump again would ask the
+        -- store again
         local stale = vim.fn.bufnr(store.doc_path(config.get(), name))
         if stale ~= -1 then
             vim.api.nvim_buf_delete(stale, { force = true })
         end
-        M.jump(tag)
+        help_tag(tag, source)
     end)
 end
 
@@ -390,7 +441,7 @@ end
 ---@param entry rfc.Entry
 ---@return string
 local function label(source, entry)
-    return source.prefix .. entry.id .. "  " .. entry.label
+    return tag_of(source, entry.id) .. "  " .. entry.label
 end
 
 --- A source's index as a Task of its lines: the cached copy while it is a
@@ -399,6 +450,30 @@ end
 ---@return cds.Task
 function M.index_lines(source)
     return index_of(source):lines()
+end
+
+--- Opens the document a shortname names in the source's index, fetching
+--- the index first; a word the index does not name is a search.
+---@param source rfc.Source
+---@param word string
+function M.open_named(source, word)
+    ensure_setup()
+    if not enabled(source) then
+        M.jump(tag_of(source, word:lower()))
+        return
+    end
+    run(M.index_lines(source), source.label .. " index", function(_, err)
+        if err then
+            M.notify(err, vim.log.levels.ERROR)
+            return
+        end
+        local hit = entry_of(source, word:lower())
+        if hit then
+            M.jump(tag_of(source, hit.id))
+        else
+            M.pick(word, { source })
+        end
+    end)
 end
 
 --- Picks a document from the given sources' indices (the enabled ones,
@@ -611,6 +686,10 @@ function M.command(source)
             M.subjects(source, vim.trim(arg:sub(#first + 1)))
         elseif sources.of(first) == source then
             M.jump(first)
+        elseif source.key == "shortname" and arg == first then
+            -- one word: the report of that shortname when the index names
+            -- it, a search otherwise
+            M.open_named(source, first)
         else
             M.pick(arg, from)
         end

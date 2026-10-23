@@ -3,6 +3,7 @@ local editor = require("spec.editor")
 local fixtures = require("spec.fixtures")
 local store = require("rfc.store")
 local config = require("rfc.config")
+local help = require("rfc.help")
 
 local function feed(keys)
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), "x", false)
@@ -999,6 +1000,226 @@ describe("rfc", function()
             assert.is_true(vim.tbl_contains(vim.fn.getcompletion("Rfc subjects ", "cmdline"), "web-http"))
             assert.are.equal("web-http", vim.fn.getcompletion("Rfc subjects webht", "cmdline")[1])
             assert.is_true(vim.tbl_contains(vim.fn.getcompletion("Simd sub", "cmdline"), "subjects"))
+        end)
+    end)
+
+    describe(":W3c", function()
+        local sources = require("rfc.sources")
+        it("knows a w3c tag's source, and still the others'", function()
+            assert.are.equal(sources.w3c, sources.of("w3c-css-grid-2#5.3"))
+            assert.are.equal(sources.w3c, sources.of("w3c-wcag22"))
+            assert.are.equal(sources.rfc, sources.of("rfc-subjects"))
+            assert.are.equal(sources.bip, sources.of("bip32-conventions"))
+            assert.are.equal(sources.eip, sources.of("erc20"))
+        end)
+
+        it("opens a report by shortname, writing text and document, tags at the sections", function()
+            vim.cmd("W3c wot-thing-description11")
+            assert.is_true(editor.wait_help("w3c-wot-thing-description11"))
+            assert.are.same({ "w3c-index", "w3c-wot-thing-description11" }, case.fetched)
+            assert.are.equal("fetching W3C wot-thing-description11", case.notices[1].msg)
+            local tags = vim.fn.readfile(store.doc_dir(config.get()) .. "/tags")
+            assert.is_truthy(
+                vim.tbl_contains(
+                    tags,
+                    "w3c-wot-thing-description11#1.1\tw3c-wot-thing-description11.txt\t/*w3c-wot-thing-description11#1.1*"
+                )
+            )
+        end)
+
+        it("opens a mixed-case shortname by its lowercased tag, fetching the index's spelling", function()
+            vim.cmd("W3c wcag22")
+            assert.is_true(vim.wait(2000, function()
+                return #case.urls > 0
+            end))
+            assert.are.equal("https://www.w3.org/TR/WCAG22/", case.urls[1])
+        end)
+
+        it("searches the titles and opens a lone match", function()
+            vim.cmd("W3c web content accessibility guidelines")
+            assert.is_true(editor.wait_help("w3c-wcag22"))
+        end)
+
+        it("follows a section link, a report link and a reference with CTRL-]", function()
+            vim.cmd("W3c wot-thing-description11")
+            assert.is_true(editor.wait_help("w3c-wot-thing-description11"))
+            assert.is_true(vim.fn.search("|w3c-wot-thing-description11#ref-", "W") > 0)
+            feed("<C-]>")
+            assert.is_true(vim.wait(500, function()
+                return vim.api.nvim_get_current_line():match("%*w3c%-wot%-thing%-description11#ref%-") ~= nil
+            end))
+            vim.cmd("1")
+            assert.is_true(vim.fn.search("|w3c-wot-architecture11|", "W") > 0)
+            feed("<C-]>")
+            assert.is_true(vim.wait(2000, function()
+                return #case.notices >= 3
+            end))
+            assert.are.equal("fetching W3C wot-architecture11", case.notices[2].msg)
+            assert.are.equal("W3C wot-architecture11 does not exist", case.notices[3].msg)
+        end)
+
+        it("lands on a section by its tag with # and completes it", function()
+            vim.cmd("W3c wot-thing-description11")
+            assert.is_true(editor.wait_help("w3c-wot-thing-description11"))
+            vim.cmd("help w3c-wot-thing-description11#1.1")
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^1%.1 "))
+            assert.are.equal(
+                "w3c-wot-thing-description11#1.1",
+                vim.fn.getcompletion("W3c w3c-wot-thing-description11#1.1", "cmdline")[1]
+            )
+        end)
+
+        it("stays put on CTRL-] over the title line's file tag", function()
+            vim.cmd("W3c wot-thing-description11")
+            assert.is_true(editor.wait_help("w3c-wot-thing-description11"))
+            vim.cmd("1")
+            vim.fn.search("w3c-wot-thing-description11.txt", "c")
+            feed("<C-]>")
+            assert.is_false(vim.wait(300, function()
+                return #case.notices > 1
+            end))
+            assert.is_true(editor.wait_help("w3c-wot-thing-description11"))
+        end)
+
+        it("parses the index once for an open by shortname", function()
+            local w3c = require("cds.w3c")
+            local index, parses = w3c.index, 0
+            w3c.index = function(...)
+                parses = parses + 1
+                return index(...)
+            end
+            finally(function()
+                w3c.index = index
+            end)
+            vim.cmd("W3c wot-thing-description11")
+            assert.is_true(editor.wait_help("w3c-wot-thing-description11"))
+            assert.are.equal(1, parses)
+        end)
+
+        it("asks for a report again when the index dates it later, and keeps the copy on 304", function()
+            vim.cmd("W3c wot-thing-description11")
+            assert.is_true(editor.wait_help("w3c-wot-thing-description11"))
+            vim.cmd("helpclose")
+            local cfg = config.get()
+            local raw = store.raw_path(cfg, "w3c-wot-thing-description11", "html")
+            -- a copy from before the index's date: the report is asked for again
+            local old = require("cds.w3c").date_time("2023-01-01")
+            vim.uv.fs_utime(raw, old, old)
+            case.w3c_modified = false
+            vim.cmd("W3c wot-thing-description11")
+            assert.is_true(editor.wait_help("w3c-wot-thing-description11"))
+            assert.are.same({ "w3c-index", "w3c-wot-thing-description11", "w3c-wot-thing-description11" }, case.fetched)
+            -- unchanged: the copy carries the index's date now
+            assert.are.equal(require("cds.w3c").date_time("2023-12-05"), vim.uv.fs_stat(raw).mtime.sec)
+        end)
+
+        it("says when a word names no report", function()
+            vim.cmd("W3c zzzz")
+            assert.is_true(vim.wait(500, function()
+                return #case.notices == 1
+            end))
+            assert.are.equal("nothing matches zzzz", case.notices[1].msg)
+        end)
+
+        it(":W3c subjects files reports by maturity, tag and working group", function()
+            vim.cmd("W3c subjects wot")
+            assert.is_true(editor.wait_help("w3c-subjects"))
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^WoT  %("))
+            vim.cmd("help w3c-subjects-maturity-standard")
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^Standard  %("))
+            vim.cmd("help w3c-subjects-deliverers-web-of-things-working-group")
+            assert.is_true(vim.fn.search("|w3c-wot-thing-description11|", "nw") > 0)
+        end)
+
+        it("says which source to enable when it is off", function()
+            case.setup({ rfc = true })
+            vim.cmd("W3c wot-thing-description11")
+            assert.are.equal("w3c-wot-thing-description11 is W3C; enable sources.w3c in setup()", case.notices[1].msg)
+        end)
+    end)
+
+    describe("a report's rich view", function()
+        local images = require("cds.images")
+        after_each(function()
+            images._use(nil)
+        end)
+
+        it("draws a report's figures through the images adapter, and ,tv clears them", function()
+            local placed, cleared = {}, 0
+            images._use({
+                name = "stub",
+                available = function()
+                    return true
+                end,
+                place = function(spec)
+                    table.insert(placed, spec)
+                    return { id = #placed }
+                end,
+                clear = function()
+                    cleared = cleared + 1
+                end,
+            })
+            vim.cmd("W3c wot-thing-description11")
+            assert.is_true(editor.wait_help("w3c-wot-thing-description11"))
+            assert.is_true(vim.wait(500, function()
+                return #placed >= 1
+            end))
+            assert.is_truthy(placed[1].url:match("^https://www%.w3%.org/TR/wot%-thing%-description11/.*%.png$"))
+            assert.are.equal(vim.api.nvim_get_current_buf(), placed[1].buf)
+            feed(",tv")
+            assert.is_true(vim.wait(500, function()
+                return cleared == #placed
+            end))
+        end)
+
+        it("shows figures as text alone without an image backend, and raises no error", function()
+            images._use(false)
+            vim.cmd("W3c wot-thing-description11")
+            assert.is_true(editor.wait_help("w3c-wot-thing-description11"))
+            assert.are.same(
+                {},
+                vim.tbl_filter(function(n)
+                    return n.level == vim.log.levels.ERROR
+                end, case.notices)
+            )
+        end)
+
+        it("folds a wide table under its caption with the entry form as virtual lines, and ,tv unfolds", function()
+            local cfg = config.get()
+            local wide = string.rep("x", 80)
+            store.write_doc(cfg, "w3c-wide", {
+                lines = {
+                    help.with_tag("*w3c-wide.txt*  Wide", "w3c-wide"),
+                    "",
+                    "Table 1: Wide ~",
+                    "  Name  Description",
+                    "  ----  -----------",
+                    "  id    " .. wide,
+                    "  name  " .. wide,
+                    "",
+                    help.MODELINE,
+                    help.FOOTER,
+                },
+                tags = { { name = "w3c-wide", line = 1 } },
+            })
+            vim.cmd("help w3c-wide")
+            assert.is_true(editor.wait_help("w3c-wide"))
+            assert.is_true(vim.wait(500, function()
+                return vim.fn.foldclosed(4) == 4
+            end))
+            assert.are.equal(7, vim.fn.foldclosedend(4))
+            local marks = vim.api.nvim_buf_get_extmarks(0, require("rfc.view").ns, 0, -1, { details = true })
+            local below = vim.tbl_filter(function(m)
+                return m[2] == 2 and m[4].virt_lines ~= nil
+            end, marks)
+            assert.are.equal(1, #below)
+            -- the label line, then the 80-character cell on the line below it
+            assert.is_truthy(vim.inspect(below[1][4].virt_lines):match("Description:"))
+            assert.is_truthy(vim.inspect(below[1][4].virt_lines):match("    " .. wide))
+            feed(",tv")
+            assert.is_true(vim.wait(500, function()
+                return vim.fn.foldclosed(4) == -1
+            end))
         end)
     end)
 

@@ -1,7 +1,7 @@
 # rfc.nvim
 
-RFCs, Ethereum's EIPs and ERCs, Bitcoin's BIPs and Solana's SIMDs, as
-Neovim help. `:Rfc 9110` fetches the RFC's text from the RFC Editor;
+RFCs, Ethereum's EIPs and ERCs, Bitcoin's BIPs, Solana's SIMDs and the
+W3C's technical reports, as Neovim help. `:Rfc 9110` fetches the RFC's text from the RFC Editor;
 `:Eip 1559`, `:Bip 32` and `:Simd 64` fetch a proposal's from its
 repository; each is rendered as a help document and opened with `:help`,
 so from then on the editor's own help navigation is the whole interface:
@@ -70,6 +70,13 @@ One command per source, each with the same four forms, and a fifth,
 :Simd receipt            a search over it
 :Simd 64                 a SIMD by number
 :Simd tr<Tab>            completion
+
+:W3c                     the W3C technical reports index
+:W3c web of things       a search over it
+:W3c wot-thing-description11   a report by its shortname
+:W3c w3c-css-grid-2#5.3  a tag: the shortname, then # and the section
+:W3c wcag<Tab>           completion
+:W3c subjects            the reports by maturity, tag and working group
 ```
 
 A picked or completed item reads `eip20  Token Standard (Final)`: the tag
@@ -100,6 +107,9 @@ fetches that CSV as an index, kept a day like every index, and renders it;
 an RFC sits under its deepest tags, and the count beside a subject is
 every RFC under it, each counted once.
 
+`:W3c subjects` has three roots, Maturity, Tags and Deliverers (the
+working groups), so `:W3c subjects wot` lands on the Web of Things
+reports and `:W3c subjects standard` on everything at Recommendation.
 `:Eip subjects` has two roots: the site's six categories (Core,
 Networking, Interface, ERC, Meta, Informational), with the hardfork meta
 EIPs filed under `Meta / Hardforks` since their titles say so, and the
@@ -114,7 +124,7 @@ the directory gains one.
 
 ## Sources
 
-Four sources, chosen in `setup`; only the RFC Editor is on by default.
+Five sources, chosen in `setup`; only the RFC Editor is on by default.
 
 | Source | Command | Tags | Text | Index | Subjects |
 |---|---|---|---|---|---|
@@ -122,6 +132,7 @@ Four sources, chosen in `setup`; only the RFC Editor is on by default.
 | `eip` | `:Eip` | `eip1559`, `eip1559-specification`, `eip20` with `erc20` as its alias | github.com/ethereum/EIPs, then ethereum/ERCs | the six category pages of eips.ethereum.org, as one | the categories |
 | `bip` | `:Bip` | `bip32`, `bip32-conventions`, `bip341-design` | github.com/bitcoin/bips | the repository's README | the README's Layer and Type |
 | `simd` | `:Simd` | `simd64`, `simd64-summary` | github.com/solana-foundation/solana-improvement-documents | the proposals directory, through the GitHub API | each proposal's status, from its text |
+| `w3c` | `:W3c` | `w3c-wcag22`, `w3c-css-grid-2#5.3` | www.w3.org/TR/<shortname>/ | www.w3.org/TR, the reports index | maturity, tags and working group, from the index |
 
 EIPs and ERCs share one number space, so the `eip` source covers both
 repositories: `:Eip 20` asks the EIPs repository, finds the stub that says
@@ -138,6 +149,19 @@ wikitables become aligned columns, footnotes (`<ref>`) become numbered
 notes where the references stand, and `[[bip-0340.mediawiki|BIP340]]`,
 `[[bip-0341.mediawiki#design|...]]` and a bare `BIP 32` become links, to
 the section when one is named.
+
+A W3C report is HTML only, as ReSpec or Bikeshed writes it, and
+`cds.html` reads either into the blocks the render folds: headings keep
+their numbers and get tags (`w3c-css-grid-2#5.3`; the `#` splits the
+shortname from the section, since shortnames carry dashes), prose wraps
+at 78, code is fenced, tables are aligned under a caption line, lists and
+definition lists indent, a figure is its caption, alt text and image URL
+(`gx` opens it), and a note, example, issue, `details` or tabbed example
+is a labelled block. Links to sections, to other reports and to the
+references become `|tags|`; links to definitions stay text. A report is
+fetched at the URL the index spells (`WCAG22`, not `wcag22`), and asked
+for again with `If-Modified-Since` when the index dates it after the
+copy, so a republished draft follows its publication.
 
 The SIMDs are markdown with a frontmatter, read as the EIPs are. The
 repository has no listing page, so the index is the `proposals` directory
@@ -189,6 +213,15 @@ the tags file, each source's index and the RFC subject tags
 (`rfc-subjects.csv`), fetched again when more than a day old, and each
 source's subjects document (`doc/rfc-subjects.txt`), rendered again when
 its index is newer. Delete the directory to start over.
+
+A report's figures and wide tables get more in the rich view. Where an
+image plugin is loaded and the terminal can draw (image.nvim under kitty
+or ghostty, through `cds.images`, the one module that names the plugin),
+each figure's image is drawn below its URL line; without one the caption,
+alt and URL read as text. A table wider than the page is folded under its
+caption, with each row laid out as its first cell over `Label: text`
+lines in virtual text; `zo` shows the aligned rows, and `,tv` puts both
+back as written.
 
 Everything in it is one of three cache entries (`lua/rfc/cache.lua`): a
 fetched file, served from disk while young enough and fetched otherwise

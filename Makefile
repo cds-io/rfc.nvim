@@ -17,10 +17,11 @@ check: vendor-check test test-nvim lint fmt-check
 # (CI) skips the check.
 CDS_SRC ?= ../cds
 CDS_FILES := lua/cds/task.lua lua/cds/async.lua lua/cds/proc.lua lua/cds/http.lua lua/cds/activity.lua lua/cds/rfc.lua \
-	lua/cds/eip.lua lua/cds/bip.lua lua/cds/simd.lua lua/cds/mentions.lua lua/cds/fp.lua lua/cds/result.lua lua/cds/csv.lua lua/cds/subjects.lua
+	lua/cds/eip.lua lua/cds/bip.lua lua/cds/simd.lua lua/cds/mentions.lua lua/cds/fp.lua lua/cds/result.lua lua/cds/csv.lua lua/cds/subjects.lua lua/cds/w3c.lua lua/cds/images.lua \
+	lua/cds/html/init.lua lua/cds/html/tokens.lua lua/cds/html/tree.lua lua/cds/html/inline.lua lua/cds/html/blocks.lua
 
 vendor:
-	@for f in $(CDS_FILES); do cp "$(CDS_SRC)/$$f" "$$f"; done
+	@for f in $(CDS_FILES); do mkdir -p "$$(dirname $$f)"; cp "$(CDS_SRC)/$$f" "$$f"; done
 
 vendor-check:
 	@if [ -d "$(CDS_SRC)" ]; then \
