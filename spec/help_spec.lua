@@ -73,6 +73,35 @@ describe("tags_in", function()
             { name = "simd64-summary", line = 2 },
         }, help.tags_in(lines))
     end)
+    it("reads a subjects tag, file and node alike", function()
+        local lines = {
+            "*rfc-subjects.txt*  RFCs by subject  *rfc-subjects*",
+            "web / HTTP  (3)   *rfc-subjects-web-http*",
+            "IoT / 6LoWPAN  (2)  *rfc-subjects-iot-6lowpan*",
+            "X.509  *rfc-subjects-security-pki-x.509*",
+        }
+        assert.are.same({
+            { name = "rfc-subjects.txt", line = 1 },
+            { name = "rfc-subjects", line = 1 },
+            { name = "rfc-subjects-web-http", line = 2 },
+            { name = "rfc-subjects-iot-6lowpan", line = 3 },
+            { name = "rfc-subjects-security-pki-x.509", line = 4 },
+        }, help.tags_in(lines))
+    end)
+end)
+
+describe("section_tag and row_tag", function()
+    it("takes a node tag as a section and the file tag as none", function()
+        assert.are.equal("rfc-subjects-web-http", help.section_tag("web / HTTP  (3)   *rfc-subjects-web-http*"))
+        assert.is_nil(help.section_tag("*rfc-subjects.txt*  RFCs by subject  *rfc-subjects*"))
+        assert.are.equal("rfc9110-3.1", help.section_tag("3.1.  Resources  *rfc9110-3.1*"))
+        assert.is_nil(help.section_tag("[CACHING]  *rfc9110-ref-CACHING*"))
+    end)
+    it("reads a contents row's indent and tag", function()
+        assert.are.same({ "  ", "rfc-subjects-web-http" }, { help.row_tag("  |rfc-subjects-web-http|  HTTP (3)") })
+        assert.are.same({ "", "eip1559-abstract" }, { help.row_tag("|eip1559-abstract|  Abstract") })
+        assert.is_nil(help.row_tag("|rfc9110|  HTTP Semantics (2022)"))
+    end)
 end)
 
 describe("render", function()

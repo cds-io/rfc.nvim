@@ -245,21 +245,72 @@ function M.render(rfc_num, lines)
     return { lines = out, tags = tags }
 end
 
---- The tags a rendered document carries: every `*tag*` whose name is a
---- source prefix (three or four letters) and a number (rfc9110,
---- eip1559-abstract, erc20.txt, simd64-summary), which is the shape every
---- render declares and no text contains by accident. The store reads every
---- document back through this to rebuild the tags file.
+-- What a tag looks like: a source prefix (three or four letters) and a
+-- number (rfc9110, eip1559-abstract, erc20.txt, simd64-summary), or the
+-- prefix and -subjects (rfc-subjects.txt, rfc-subjects-web-http). These
+-- are the shapes every render declares and no text contains by accident.
+M.TAG = { "%l%l%l%l?%d[%w%.%-]*", "%l%l%l%l?%-subjects[%w%.%-]*" }
+
+-- A section tag: a tag with a dash and a name after its number
+-- (rfc9110-3.1, eip1559-abstract) or after -subjects (rfc-subjects-web).
+-- The file tags and the reference entries' tags are not sections.
+M.SECTION = { "%l%l%l%l?%d+%-[%w%.%-]*", "%l%l%l%l?%-subjects%-[%w%.%-]*" }
+
+--- The tags a rendered document carries: every `*tag*` of a shape in TAG,
+--- in line order. The store reads every document back through this to
+--- rebuild the tags file.
 ---@param lines string[]
 ---@return rfc.HelpTag[]
 function M.tags_in(lines)
     local tags = {}
     for i, line in ipairs(lines) do
-        for name in line:gmatch("%*(%l%l%l%l?%d[%w%.%-]*)%*") do
-            table.insert(tags, { name = name, line = i })
+        local found = {}
+        for _, pattern in ipairs(M.TAG) do
+            local from = 1
+            while true do
+                local first, last, name = line:find("%*(" .. pattern .. ")%*", from)
+                if not first then
+                    break
+                end
+                table.insert(found, { at = first, name = name })
+                from = last + 1
+            end
+        end
+        table.sort(found, function(x, y)
+            return x.at < y.at
+        end)
+        for _, f in ipairs(found) do
+            table.insert(tags, { name = f.name, line = i })
         end
     end
     return tags
+end
+
+--- The section tag ending the line, or nil: a shape in SECTION between
+--- stars at the end, and not a reference entry's tag.
+---@param line string
+---@return string|nil
+function M.section_tag(line)
+    for _, pattern in ipairs(M.SECTION) do
+        local tag = line:match("%*(" .. pattern .. ")%*$")
+        if tag and not tag:match("^%l+%d+%-ref%-") then
+            return tag
+        end
+    end
+end
+
+--- A contents row's indent and the section tag it links, or nil for any
+--- other line.
+---@param line string
+---@return string|nil indent
+---@return string|nil tag
+function M.row_tag(line)
+    for _, pattern in ipairs(M.SECTION) do
+        local indent, tag = line:match("^(%s*)|(" .. pattern .. ")|")
+        if tag then
+            return indent, tag
+        end
+    end
 end
 
 --- The lines of a help tags file for the documents given, byte-sorted as

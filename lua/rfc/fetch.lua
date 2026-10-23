@@ -1,7 +1,7 @@
--- The network, as Tasks: the RFC Editor's text and index, the Ethereum
--- proposals' repositories and listing pages, the Bitcoin proposals'
--- repository, and the Solana proposals' directory and files. A spec
--- replaces the seven functions below with Tasks of fixture text.
+-- The network, as Tasks: the RFC Editor's text, index and subject tags,
+-- the Ethereum proposals' repositories and listing pages, the Bitcoin
+-- proposals' repository, and the Solana proposals' directory and files. A
+-- spec replaces the eight functions below with Tasks of fixture text.
 local Task = require("cds.task")
 local http = require("cds.http")
 
@@ -66,6 +66,14 @@ end
 ---@return cds.Task  -- of the index text as one string
 function M.index()
     return text(M.rfc_editor .. "rfc-index.txt", "the RFC index")
+end
+
+M.subject_tags = "https://rfc-editor.github.io/rfc-subject-tags/rfc-tags.csv"
+
+--- The RFC Editor's subject tags, the CSV their pipeline publishes daily.
+---@return cds.Task  -- of the CSV as one string
+function M.subjects()
+    return text(M.subject_tags, "the RFC subjects")
 end
 
 --- A proposal's markdown from its repository: ethereum/EIPs keeps

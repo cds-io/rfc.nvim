@@ -19,8 +19,12 @@ local M = {
     erc20 = "erc-20.md",
     eip20_moved = "eip-20-moved.md",
     erc1123 = "erc-1123.md",
-    eips_all = "eips-all.html",
-    ercs_all = "ercs-all.html",
+    -- excerpts of the category pages eips.ethereum.org/{core,erc,meta,informational}
+    -- (every status heading, a few rows each), fetched 2026-10-23
+    eips_core = "eips-core.html",
+    eips_erc = "eips-erc.html",
+    eips_meta = "eips-meta.html",
+    eips_informational = "eips-informational.html",
     bip32 = "bip-0032.mediawiki",
     bip22 = "bip-0022.mediawiki",
     bip341 = "bip-0341.mediawiki",
@@ -30,6 +34,9 @@ local M = {
     simd1 = "simd-0001-simd-process.md",
     simd_related = "simd-0268-raise-cpi-nesting-limit.md",
     simd_listing = "simd-proposals.json",
+    -- the RFC subject tags: the same eleven rows of the RFC Editor's
+    -- published build the cds.subjects spec reads in ../cds
+    rfc_tags = "rfc-tags.csv",
 }
 
 ---@param name string

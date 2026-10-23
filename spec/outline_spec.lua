@@ -97,6 +97,26 @@ describe("outline.of", function()
     end)
 end)
 
+describe("outline.of over a subjects document", function()
+    it("takes a heading's level from the contents block, never from its text", function()
+        local headings = outline.of({
+            "*rfc-subjects.txt*  RFCs by subject  *rfc-subjects*",
+            "",
+            "|rfc-subjects-iot|  IoT (0)",
+            "  |rfc-subjects-iot-6lowpan|  6LoWPAN (2)",
+            "",
+            "IoT  (0)  *rfc-subjects-iot*",
+            "",
+            "IoT / 6LoWPAN  (2)  *rfc-subjects-iot-6lowpan*",
+            "|rfc4944|  Transmission of IPv6 Packets over IEEE 802.15.4 Networks (2007)",
+        })
+        assert.are.same({
+            { tag = "rfc-subjects-iot", text = "IoT  (0)", level = 1, line = 6 },
+            { tag = "rfc-subjects-iot-6lowpan", text = "IoT / 6LoWPAN  (2)", level = 2, line = 8 },
+        }, headings)
+    end)
+end)
+
 describe("outline.at", function()
     local headings
     before_each(function()

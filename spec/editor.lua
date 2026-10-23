@@ -79,14 +79,28 @@ function M.start()
     fetch.proposal = function(_, _, prefix, id)
         return answer(prefix .. id, proposals[prefix .. id], prefix:upper() .. " " .. id .. " does not exist")
     end
-    local listings = {
-        bitcoin = { "bip-index", fixtures.bips_readme },
-        eips = { "eips-index", fixtures.eips_all },
-        ercs = { "ercs-index", fixtures.ercs_all },
+    -- the EIP site's category pages: four as fixtures, two as a page with
+    -- the title alone
+    local categories = {
+        core = fixtures.eips_core,
+        erc = fixtures.eips_erc,
+        meta = fixtures.eips_meta,
+        informational = fixtures.eips_informational,
     }
     fetch.listing = function(url)
-        local site = listings[url:match("bitcoin") or url:match("eips") or "ercs"]
-        return answer(site[1], site[2])
+        if url:match("bitcoin") then
+            return answer("bip-index", fixtures.bips_readme)
+        end
+        local category = url:match("eips%.ethereum%.org/(%a+)")
+        table.insert(case.fetched, "eips-" .. category)
+        if categories[category] then
+            return text_of(categories[category])
+        end
+        local title = category:sub(1, 1):upper() .. category:sub(2)
+        return Task.of('<h1 class="post-title">' .. title .. "</h1>\n")
+    end
+    fetch.subjects = function()
+        return answer("subjects", fixtures.rfc_tags)
     end
     fetch.simd_listing = function()
         return answer("simd-index", fixtures.simd_listing)
@@ -133,7 +147,8 @@ function M.wait_help(name)
         name = "rfc" .. name
     end
     return vim.wait(2000, function()
-        return vim.bo.filetype == "help" and vim.api.nvim_buf_get_name(0):match("/" .. name .. "%.txt$") ~= nil
+        return vim.bo.filetype == "help"
+            and vim.api.nvim_buf_get_name(0):match("/" .. vim.pesc(name) .. "%.txt$") ~= nil
     end)
 end
 

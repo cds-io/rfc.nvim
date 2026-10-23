@@ -38,7 +38,8 @@ A short explainer:
 
 ## Finding a document
 
-Two commands, one per source, each with the same four forms:
+One command per source, each with the same four forms, and a fifth,
+`subjects`, for a source that has them:
 
 ```
 :Rfc                     the RFC index in vim.ui.select
@@ -48,17 +49,22 @@ Two commands, one per source, each with the same four forms:
 :Rfc rfc2616-14.4        a tag
 :Rfc sem<Tab>            completion by number or title over the cached
                          index and the tags of cached RFCs
+:Rfc subjects            the RFCs by subject, as one help document
+:Rfc subjects dns        a subject by its slug or its name, else a search
+                         over the subjects
 
 :Eip                     EIPs and ERCs, one index
 :Eip token standard      a search over it
 :Eip 20                  ERC-20: the EIP and ERC numbers are one space
 :Eip erc20               a tag, by either name
 :Eip tok<Tab>            completion
+:Eip subjects            the EIPs by category
 
 :Bip                     the BIP index, the repository's README
 :Bip taproot             a search over it
 :Bip 32                  a BIP by number; `:Bip 0032` is the same one
 :Bip 3<Tab>              completion
+:Bip subjects            the BIPs by layer and by type
 
 :Simd                    the SIMD index, the repository's proposals directory
 :Simd receipt            a search over it
@@ -67,27 +73,56 @@ Two commands, one per source, each with the same four forms:
 ```
 
 A picked or completed item reads `eip20  Token Standard (Final)`: the tag
-first, then the title, and the command takes the first word. Completion
-cannot wait on the network, so it offers what the last picker or search
-left in the cache; those fetch an index that is missing or a day old.
+first, then the title, and the command takes the first word. The first
+item a picker offers is the source's subjects, `eip-subjects  EIPs by
+subject`, above the index and above a search's matches alike, so the
+taxonomy is one Enter away (a picker's own typed filter may hide it once
+the typed text stops matching). Completion cannot wait on the network, so
+it offers what the last picker or search left in the cache; those fetch
+an index that is missing or a day old.
+
+## By subject
+
+`:Rfc subjects` opens the RFCs by subject as one help document: a contents
+block of every subject, indented by level, then one section per subject
+listing the RFCs filed there as links. Everything a document has, this one
+has too: `gO` is the tree as a sidebar, Enter or CTRL-] on a listed RFC
+fetches and opens it, `]]` walks the subjects, `:helpgrep` searches them,
+and `:help rfc-subjects-naming-dns` lands on a subject by its tag (the
+path slugged, level by level). `:Rfc subjects dns` lands there too, and a
+word that names no subject is a search over them.
+
+The subjects come from the RFC Editor's subject tags
+([rfc-editor/rfc-subject-tags](https://github.com/rfc-editor/rfc-subject-tags),
+in beta): a curated tree of 19 roots, four levels at most, that their
+pipeline assigns to every RFC and publishes daily as a CSV. The plugin
+fetches that CSV as an index, kept a day like every index, and renders it;
+an RFC sits under its deepest tags, and a subject's heading carries the
+count of RFCs filed there directly.
+
+`:Eip subjects` is the site's six categories (Core, Networking, Interface,
+ERC, Meta, Informational), one level; `:Bip subjects` is the README's two
+columns, Layer and Type, each a root. The SIMDs have no subjects yet: their
+category and type live in each file's frontmatter alone.
 
 ## Sources
 
 Four sources, chosen in `setup`; only the RFC Editor is on by default.
 
-| Source | Command | Tags | Text | Index |
-|---|---|---|---|---|
-| `rfc` | `:Rfc` | `rfc9110`, `rfc9110-3.1` | rfc-editor.org | rfc-index.txt |
-| `eip` | `:Eip` | `eip1559`, `eip1559-specification`, `eip20` with `erc20` as its alias | github.com/ethereum/EIPs, then ethereum/ERCs | eips.ethereum.org/all and ercs.ethereum.org/all, as one |
-| `bip` | `:Bip` | `bip32`, `bip32-conventions`, `bip341-design` | github.com/bitcoin/bips | the repository's README |
-| `simd` | `:Simd` | `simd64`, `simd64-summary` | github.com/solana-foundation/solana-improvement-documents | the proposals directory, through the GitHub API |
+| Source | Command | Tags | Text | Index | Subjects |
+|---|---|---|---|---|---|
+| `rfc` | `:Rfc` | `rfc9110`, `rfc9110-3.1` | rfc-editor.org | rfc-index.txt | the RFC Editor's subject tags, `rfc-tags.csv` |
+| `eip` | `:Eip` | `eip1559`, `eip1559-specification`, `eip20` with `erc20` as its alias | github.com/ethereum/EIPs, then ethereum/ERCs | the six category pages of eips.ethereum.org, as one | the categories |
+| `bip` | `:Bip` | `bip32`, `bip32-conventions`, `bip341-design` | github.com/bitcoin/bips | the repository's README | the README's Layer and Type |
+| `simd` | `:Simd` | `simd64`, `simd64-summary` | github.com/solana-foundation/solana-improvement-documents | the proposals directory, through the GitHub API | none |
 
 EIPs and ERCs share one number space, so the `eip` source covers both
 repositories: `:Eip 20` asks the EIPs repository, finds the stub that says
 EIP-20 moved, and fetches ERC-20 from the ERCs repository instead. A
 proposal in the ERC category is tagged by both names, so `|erc20|` in
-another proposal's text and `:help erc20` land on it, and the index is both
-listing pages with each number once.
+another proposal's text and `:help erc20` land on it. The index is the
+site's six category pages read as one, each number once, which is also
+where a proposal's category comes from.
 
 The BIPs are written in MediaWiki, a few of the newer ones in markdown, and
 the `bip` source reads either: the preamble becomes the header, `==`
@@ -141,9 +176,11 @@ from the tags the render declared, since `:helptags` would read the `*/*`
 media ranges in an RFC's text as tags too.
 
 The cache is `stdpath("cache")/rfc/`: each text as fetched (`rfc9110.txt`,
-`eip1559.md`, `bip32.txt`, `simd64.md`), its document (`doc/rfc9110.txt`), the tags file and each
-source's index, fetched again when it is more than a day old. Delete the
-directory to start over.
+`eip1559.md`, `bip32.txt`, `simd64.md`), its document (`doc/rfc9110.txt`),
+the tags file, each source's index and the RFC subject tags
+(`rfc-subjects.csv`), fetched again when more than a day old, and each
+source's subjects document (`doc/rfc-subjects.txt`), rendered again when
+its index is newer. Delete the directory to start over.
 
 ## Installation
 

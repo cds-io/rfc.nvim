@@ -1,0 +1,11 @@
+rfc,title,year,tags,paths,technology,topic
+RFC20,ASCII format for network interchange,1969,ASCII,data formats | data formats / internationalization | data formats / internationalization / character sets | data formats / internationalization / character sets / ASCII,ASCII;character sets,data formats;internationalization
+RFC37,"Network Meeting Epilogue, etc",1970,ARPANET,ARPANET,,ARPANET
+RFC155,ARPA Network mailing lists,1971,mailing lists;ARPANET,ARPANET | messaging | messaging / email | messaging / email / mailing lists,email;mailing lists,ARPANET;messaging
+RFC175,"Comments on ""Socket Conventions Reconsidered""",1971,ARPANET,ARPANET,,ARPANET
+RFC791,Internet Protocol,1981,IPv4,internet layer | internet layer / IPv4,IPv4,internet layer
+RFC1945,Hypertext Transfer Protocol -- HTTP/1.0,1996,HTTP,web | web / HTTP,HTTP,web
+RFC2616,Hypertext Transfer Protocol -- HTTP/1.1,1999,HTTP,web | web / HTTP,HTTP,web
+RFC3986,Uniform Resource Identifier (URI): Generic Syntax,2005,URI,web | web / URI,URI,web
+RFC9110,HTTP Semantics,2022,HTTP,web | web / HTTP,HTTP,web
+RFC10053,A Framework for Computing-Aware Traffic Steering (CATS),2026,,,,

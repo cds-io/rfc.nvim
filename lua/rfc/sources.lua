@@ -13,6 +13,7 @@ local rfc = require("cds.rfc")
 local eip = require("cds.eip")
 local bip = require("cds.bip")
 local simd = require("cds.simd")
+local subjects = require("cds.subjects")
 local Task = require("cds.task")
 
 local M = {}
@@ -21,6 +22,13 @@ local M = {}
 ---@field id string
 ---@field label string      -- what the picker shows after the tag
 ---@field text boolean      -- whether the source has a text to render (an RFC published as PDF only has none)
+
+---@class rfc.Subjects
+---@field index_file string   -- the cache file the subjects index is stored as; the source's own index file when the index carries the subjects
+---@field index fun(): cds.Task   -- of the index text as one string
+---@field entries fun(lines: string[]): cds.subjects.Entry[]|nil, string|nil  -- pure
+---@field title string        -- the document's title: RFCs by subject
+---@field about string        -- the line naming the data
 
 ---@class rfc.Source
 ---@field prefix string     -- the tag prefix: rfc, eip
@@ -34,6 +42,7 @@ local M = {}
 ---@field entries fun(lines: string[]): rfc.Entry[]  -- pure
 ---@field render fun(id: string, lines: string[]): rfc.HelpDoc  -- pure, total
 ---@field placeholder nil|fun(lines: string[]): boolean  -- pure: whether a stored text stands in for the document rather than being it
+---@field subjects nil|rfc.Subjects   -- the source's taxonomy, for a source that has one
 
 ---@type rfc.Source
 M.rfc = {
@@ -60,10 +69,52 @@ M.rfc = {
         return entries
     end,
     render = help.render,
+    -- the RFC Editor's subject tags: a tree of 19 roots, four levels at
+    -- most, published daily as a CSV by rfc-editor/rfc-subject-tags
+    subjects = {
+        index_file = "rfc-subjects.csv",
+        index = function()
+            return fetch.subjects()
+        end,
+        entries = subjects.rfc,
+        title = "RFCs by subject",
+        about = "From rfc-editor.github.io/rfc-subject-tags, the RFC Editor's subject tags (beta).",
+    },
 }
 
-local EIPS = { repo = "ethereum/EIPs", dir = "EIPS", prefix = "eip", site = "https://eips.ethereum.org/all" }
-local ERCS = { repo = "ethereum/ERCs", dir = "ERCS", prefix = "erc", site = "https://ercs.ethereum.org/all" }
+local EIPS = { repo = "ethereum/EIPs", dir = "EIPS", prefix = "eip" }
+local ERCS = { repo = "ethereum/ERCs", dir = "ERCS", prefix = "erc" }
+-- The site's category pages, which together list every proposal (the ERC
+-- page lists the same numbers as the ERCs site's own) and name the
+-- category each row belongs to, where the all page does not.
+local EIP_SITE = "https://eips.ethereum.org/"
+local EIP_CATEGORIES = { "core", "networking", "interface", "erc", "meta", "informational" }
+
+--- The listing's entries with each number once; the first listing wins.
+---@param lines string[]
+---@return cds.eip.Entry[]
+local function eip_entries(lines)
+    local entries, seen = {}, {}
+    for _, e in ipairs(eip.listing(lines)) do
+        if not seen[e.id] then
+            seen[e.id] = true
+            table.insert(entries, e)
+        end
+    end
+    return entries
+end
+
+--- The six category pages, one after the other, as one text.
+---@return cds.Task
+local function eip_index()
+    local pages = {}
+    for _, c in ipairs(EIP_CATEGORIES) do
+        table.insert(pages, fetch.listing(EIP_SITE .. c, "the " .. c .. " EIP listing"))
+    end
+    return Task.all(pages):map(function(texts)
+        return table.concat(texts, "\n")
+    end)
+end
 
 --- Whether a text is the stub the EIPs repository leaves behind when a
 --- proposal moves to the ERCs repository.
@@ -79,7 +130,7 @@ M.eip = {
     aliases = { "erc" },
     label = "EIP",
     raw_ext = "md",
-    index_file = "eip-index.html",
+    index_file = "eip-categories.html",
     -- the EIPs repository first; a moved stub means the text lives in ERCs
     fetch = function(id)
         return fetch.proposal(EIPS.repo, EIPS.dir, EIPS.prefix, id):bind(function(text)
@@ -92,27 +143,29 @@ M.eip = {
     -- a stub stored by a fetch that did not yet follow the move is no text to
     -- render again; the document is fetched
     placeholder = moved,
-    -- both listing pages, one after the other, as one text
-    index = function()
-        return Task.all({
-            fetch.listing(EIPS.site, "the EIP listing"),
-            fetch.listing(ERCS.site, "the ERC listing"),
-        }):map(function(pages)
-            return table.concat(pages, "\n")
-        end)
-    end,
-    -- a number listed on both pages is one proposal; the first listing wins
+    index = eip_index,
     entries = function(lines)
-        local entries, seen = {}, {}
-        for _, e in ipairs(eip.listing(lines)) do
-            if not seen[e.id] then
-                seen[e.id] = true
-                table.insert(entries, { id = e.id, label = e.title .. " (" .. e.status .. ")", text = true })
-            end
+        local entries = {}
+        for _, e in ipairs(eip_entries(lines)) do
+            table.insert(entries, { id = e.id, label = e.title .. " (" .. e.status .. ")", text = true })
         end
         return entries
     end,
     render = help_eip.render,
+    -- the categories, one level: the page a row came from
+    subjects = {
+        index_file = "eip-categories.html",
+        index = eip_index,
+        entries = function(lines)
+            local entries = {}
+            for _, e in ipairs(eip_entries(lines)) do
+                table.insert(entries, subjects.entry(e.id, e.title .. " (" .. e.status .. ")", { { e.category } }))
+            end
+            return entries
+        end,
+        title = "EIPs by subject",
+        about = "From eips.ethereum.org, the site's categories.",
+    },
 }
 
 --- Every source, in the order the pickers list them.
@@ -140,6 +193,30 @@ M.bip = {
         return entries
     end,
     render = help_bip.render,
+    -- the README's Layer and Type columns, each a root; a Process BIP has
+    -- no layer and sits under Type alone
+    subjects = {
+        index_file = "bip-index.mediawiki",
+        index = function()
+            return fetch.listing(fetch.github_raw .. "bitcoin/bips/master/README.mediawiki", "the BIP index")
+        end,
+        entries = function(lines)
+            local entries = {}
+            for _, e in ipairs(bip.index(lines)) do
+                local paths = {}
+                if e.layer ~= "" then
+                    table.insert(paths, { "Layer", e.layer })
+                end
+                if e.type ~= "" then
+                    table.insert(paths, { "Type", e.type })
+                end
+                table.insert(entries, subjects.entry(e.id, e.title .. " (" .. e.status .. ")", paths))
+            end
+            return entries
+        end,
+        title = "BIPs by subject",
+        about = "From github.com/bitcoin/bips, the README's Layer and Type columns.",
+    },
 }
 
 --- Solana's proposals, from solana-foundation/solana-improvement-documents
@@ -179,11 +256,13 @@ M.simd = {
 
 M.all = { M.rfc, M.eip, M.bip, M.simd }
 
---- The source a tag belongs to, by its prefix or one of the aliases, or nil.
+--- The source a tag belongs to, by its prefix or one of the aliases, or
+--- nil: a document's tag (eip1559-abstract) or a subjects tag
+--- (eip-subjects, eip-subjects-core).
 ---@param tag string
 ---@return rfc.Source|nil
 function M.of(tag)
-    local prefix = tag:match("^(%l+)%d")
+    local prefix = tag:match("^(%l+)%d") or tag:match("^(%l+)%-subjects")
     if not prefix then
         return nil
     end

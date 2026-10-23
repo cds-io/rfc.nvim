@@ -253,11 +253,11 @@ describe("rfc", function()
             end
             vim.cmd("Rfc")
             assert.is_true(editor.wait_help("2616"))
-            assert.are.equal(4, #offered)
+            assert.are.equal(5, #offered)
             assert.are.equal("rfc", opts.kind)
             assert.are.equal(
                 "rfc2616  Hypertext Transfer Protocol -- HTTP/1.1. R. Fielding, J. Gettys, J. Mogul, H. Frystyk, L. Masinter, P. Leach, T. Berners-Lee. June 1999.",
-                opts.format_item(offered[4])
+                opts.format_item(offered[5])
             )
             assert.are.same({ "index", "2616" }, case.fetched)
             assert.are.equal(1, vim.fn.filereadable(store.index_path(config.get(), "rfc-index.txt")))
@@ -273,7 +273,7 @@ describe("rfc", function()
             vim.wait(500, function()
                 return offered ~= nil
             end)
-            assert.are.equal(4, #offered)
+            assert.are.equal(5, #offered)
             assert.are.same({ "index" }, case.fetched)
         end)
 
@@ -297,7 +297,7 @@ describe("rfc", function()
 
         it("declines an RFC the index lists without a text version", function()
             vim.ui.select = function(items, _, on_choice)
-                local chosen = vim.deepcopy(items[1])
+                local chosen = vim.deepcopy(items[2])
                 chosen.entry.text = false
                 on_choice(chosen)
             end
@@ -324,11 +324,19 @@ describe("rfc", function()
             section = { "eip1559-specification", "^SPECIFICATION" },
             missing = { id = "1559", tag = "|eip2718|", number = "2718" },
             index = {
-                count = 5 + 3 - 1,
+                count = 7 + 1,
                 label = "eip20  Token Standard (Final)",
-                fetched = { "eips-index", "ercs-index" },
+                fetched = {
+                    "eips-core",
+                    "eips-networking",
+                    "eips-interface",
+                    "eips-erc",
+                    "eips-meta",
+                    "eips-informational",
+                },
             },
             search = { "token", "eip20  Token Standard (Final)" },
+            door = "eip-subjects  EIPs by subject",
             complete = { "1559", "eip1559  " },
         },
         {
@@ -339,8 +347,9 @@ describe("rfc", function()
             fetched = { "bip32" },
             section = { "bip32-conventions", "^CONVENTIONS" },
             missing = { id = "341", tag = "|bip340|", number = "340" },
-            index = { count = 213, label = "bip1  BIP Purpose and Guidelines (Closed)", fetched = { "bip-index" } },
+            index = { count = 213 + 1, label = "bip1  BIP Purpose and Guidelines (Closed)", fetched = { "bip-index" } },
             search = { "hierarchical", "bip32  Hierarchical Deterministic Wallets (Deployed)" },
+            door = "bip-subjects  BIPs by subject",
             complete = { "hierarch", "bip32  Hierarchical Deterministic Wallets" },
         },
         {
@@ -414,6 +423,9 @@ describe("rfc", function()
                 end))
                 assert.are.equal(p.index.count, #seen.items)
                 assert.is_true(vim.tbl_contains(seen.labels, p.index.label))
+                if p.door then
+                    assert.are.equal(p.door, seen.labels[1])
+                end
                 table.sort(case.fetched)
                 local expected = vim.deepcopy(p.index.fetched)
                 table.sort(expected)
@@ -428,6 +440,9 @@ describe("rfc", function()
                 end))
                 assert.are.equal("documents matching " .. p.search[1], seen.prompt)
                 assert.is_true(vim.tbl_contains(seen.labels, p.search[2]))
+                if p.door then
+                    assert.are.equal(p.door, seen.labels[1])
+                end
             end)
 
             it("completes a number or a title from the cached index", function()
@@ -543,9 +558,10 @@ describe("rfc", function()
                 return offered ~= nil
             end)
             assert.are.equal("documents matching token", opts.prompt)
-            assert.are.equal(2, #offered)
+            assert.are.equal(2 + 1, #offered)
             local texts = vim.tbl_map(opts.format_item, offered)
             assert.is_truthy(vim.tbl_contains(texts, "eip20  Token Standard (Final)"))
+            assert.are.equal("eip-subjects  EIPs by subject", texts[1])
         end)
 
         it("searches only the command's own index", function()
@@ -559,9 +575,10 @@ describe("rfc", function()
     end)
 
     describe("completion", function()
-        it("offers nothing before any index or document is cached", function()
-            assert.are.same({}, vim.fn.getcompletion("Rfc ", "cmdline"))
-            assert.are.same({}, vim.fn.getcompletion("Eip ", "cmdline"))
+        it("offers the subjects word alone before any index or document is cached", function()
+            assert.are.same({ "subjects" }, vim.fn.getcompletion("Rfc ", "cmdline"))
+            assert.are.same({ "subjects" }, vim.fn.getcompletion("Eip ", "cmdline"))
+            assert.are.same({}, vim.fn.getcompletion("Simd ", "cmdline"))
         end)
 
         it("completes a number or a title from the command's cached index", function()
@@ -575,8 +592,8 @@ describe("rfc", function()
             vim.wait(500, function()
                 return offered == 2
             end)
-            assert.are.equal(4, #vim.fn.getcompletion("Rfc ", "cmdline"))
-            assert.are.equal(7, #vim.fn.getcompletion("Eip ", "cmdline"))
+            assert.are.equal(4 + 1, #vim.fn.getcompletion("Rfc ", "cmdline"))
+            assert.are.equal(7 + 1, #vim.fn.getcompletion("Eip ", "cmdline"))
             assert.are.equal(
                 "eip1559  Fee market change for ETH 1.0 chain (Final)",
                 vim.fn.getcompletion("Eip 1559", "cmdline")[1]
@@ -666,6 +683,269 @@ describe("rfc", function()
             local tags = vim.fn.readfile(store.doc_dir(cfg) .. "/tags")
             assert.is_truthy(vim.tbl_contains(tags, "erc55\teip55.txt\t/*erc55*"))
             assert.is_false(vim.tbl_contains(tags, "erc55\terc55.txt\t/*erc55*"))
+        end)
+
+        it("retires the eip index of the two all pages when it registers, so the categories are fetched", function()
+            local cfg = config.get()
+            store.write_index(cfg, "eip-index.html", { '<h1 class="post-title">All</h1>' })
+            case.setup({ rfc = true, eip = true })
+            assert.are.equal(0, vim.fn.filereadable(store.index_path(cfg, "eip-index.html")))
+            vim.cmd("Eip subjects")
+            assert.is_true(editor.wait_help("eip-subjects"))
+            assert.are.equal(6, #case.fetched)
+            assert.is_true(vim.fn.search("|eip-subjects-core|  Core (2)", "nw") > 0)
+            assert.are.equal(0, vim.fn.search("All (", "nw"))
+        end)
+
+        it("says when what an earlier layout left will not go", function()
+            local cfg = config.get()
+            -- a directory where the retirement expects a file
+            vim.fn.mkdir(store.raw_path(cfg, "erc55", "md"), "p")
+            case.setup({ rfc = true, eip = true })
+            assert.are.equal("could not retire " .. store.raw_path(cfg, "erc55", "md"), case.notices[1].msg)
+            assert.are.equal(vim.log.levels.ERROR, case.notices[1].level)
+        end)
+    end)
+
+    describe("subjects", function()
+        it(":Rfc subjects fetches the tags, writes the document and its tags, and opens it", function()
+            vim.cmd("Rfc subjects")
+            assert.is_true(editor.wait_help("rfc-subjects"))
+            assert.are.same({ "subjects" }, case.fetched)
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^%*rfc%-subjects%.txt%*  RFCs by subject"))
+            local cfg = config.get()
+            assert.are.equal(1, vim.fn.filereadable(store.index_path(cfg, "rfc-subjects.csv")))
+            local tags = vim.fn.readfile(store.doc_dir(cfg) .. "/tags")
+            assert.is_truthy(
+                vim.tbl_contains(tags, "rfc-subjects-web-http\trfc-subjects.txt\t/*rfc-subjects-web-http*")
+            )
+            assert.are.same(
+                { { msg = "fetching the RFC subjects", level = vim.log.levels.INFO, title = "rfc" } },
+                case.notices
+            )
+        end)
+
+        it("opens at a node named by its slug or its last level", function()
+            vim.cmd("Rfc subjects web-http")
+            assert.is_true(editor.wait_help("rfc-subjects"))
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^web / HTTP  %(3%)"))
+            vim.cmd("Rfc subjects uri")
+            assert.is_true(vim.wait(500, function()
+                return vim.api.nvim_get_current_line():match("^web / URI  %(1%)") ~= nil
+            end))
+        end)
+
+        it("offers the nodes a search matches, with their counts", function()
+            local seen
+            vim.ui.select = function(items, opts, on_choice)
+                seen = { labels = vim.tbl_map(opts.format_item, items), prompt = opts.prompt }
+                on_choice(nil)
+            end
+            vim.cmd("Rfc subjects mail")
+            assert.is_true(vim.wait(500, function()
+                return seen ~= nil
+            end))
+            assert.are.equal("subjects matching mail", seen.prompt)
+            assert.is_true(vim.tbl_contains(seen.labels, "messaging / email / mailing lists  (1)"))
+        end)
+
+        it("says when nothing matches", function()
+            vim.cmd("Rfc subjects zzzz")
+            assert.is_true(vim.wait(500, function()
+                return #case.notices == 2
+            end))
+            assert.are.equal("nothing matches zzzz", case.notices[2].msg)
+            assert.are.equal(vim.log.levels.WARN, case.notices[2].level)
+        end)
+
+        it("follows a listed document with CTRL-] and fetches it", function()
+            vim.cmd("Rfc subjects web-http")
+            assert.is_true(editor.wait_help("rfc-subjects"))
+            assert.is_true(vim.fn.search("|rfc1945|", "W") > 0)
+            feed("<C-]>")
+            assert.is_true(editor.wait_help("1945"))
+            assert.are.same({ "subjects", "1945" }, case.fetched)
+        end)
+
+        it("serves the cached document again without fetching", function()
+            vim.cmd("Rfc subjects")
+            assert.is_true(editor.wait_help("rfc-subjects"))
+            vim.cmd("helpclose")
+            case.notices = {}
+            vim.cmd("Rfc subjects")
+            assert.is_true(editor.wait_help("rfc-subjects"))
+            assert.are.same({ "subjects" }, case.fetched)
+            assert.are.same({}, case.notices)
+        end)
+
+        it("renders again when the index is newer than the document, in the buffer that showed it", function()
+            vim.cmd("Rfc subjects")
+            assert.is_true(editor.wait_help("rfc-subjects"))
+            local cfg = config.get()
+            local index = store.index_path(cfg, "rfc-subjects.csv")
+            local lines = vim.fn.readfile(index)
+            table.insert(lines, "RFC9999,Nine,2026,HTTP,web | web / HTTP,HTTP,web")
+            vim.fn.writefile(lines, index)
+            local later = os.time() + 10
+            vim.uv.fs_utime(index, later, later)
+            vim.cmd("Rfc subjects web-http")
+            assert.is_true(vim.wait(2000, function()
+                return vim.fn.search("|rfc9999|  Nine (2026)", "nw") > 0
+            end))
+            assert.are.same({ "subjects" }, case.fetched)
+        end)
+
+        it("warns and renders from the stale copy when the fetch fails", function()
+            local cfg = config.get()
+            local index = store.index_path(cfg, "rfc-subjects.csv")
+            store.write_index(cfg, "rfc-subjects.csv", fixtures.read(fixtures.rfc_tags))
+            local old = os.time() - 2 * 24 * 60 * 60
+            vim.uv.fs_utime(index, old, old)
+            require("rfc.fetch").subjects = function()
+                return require("cds.task").fail("boom")
+            end
+            vim.cmd("Rfc subjects")
+            assert.is_true(editor.wait_help("rfc-subjects"))
+            assert.are.equal("fetching the RFC subjects", case.notices[1].msg)
+            assert.are.equal(
+                "the RFC subjects index could not be refreshed (boom); using the stale copy",
+                case.notices[2].msg
+            )
+            assert.are.equal(vim.log.levels.WARN, case.notices[2].level)
+        end)
+
+        it("reports a failed fetch with no copy and opens nothing", function()
+            require("rfc.fetch").subjects = function()
+                return require("cds.task").fail("boom")
+            end
+            vim.cmd("Rfc subjects")
+            assert.is_true(vim.wait(500, function()
+                return #case.notices == 2
+            end))
+            assert.are.equal("boom", case.notices[2].msg)
+            assert.are.equal(vim.log.levels.ERROR, case.notices[2].level)
+            assert.are_not.equal("help", vim.bo.filetype)
+        end)
+
+        it(":Eip subjects lists the categories as roots", function()
+            vim.cmd("Eip subjects core")
+            assert.is_true(editor.wait_help("eip-subjects"))
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^Core  %(2%)"))
+            assert.is_true(vim.fn.search("|eip1559|  Fee market change for ETH 1.0 chain (Final)", "nw") > 0)
+            table.sort(case.fetched)
+            assert.are.same(
+                { "eips-core", "eips-erc", "eips-informational", "eips-interface", "eips-meta", "eips-networking" },
+                case.fetched
+            )
+        end)
+
+        it(":Bip subjects has Layer and Type as roots", function()
+            vim.cmd("Bip subjects layer-applications")
+            assert.is_true(editor.wait_help("bip-subjects"))
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^Layer / Applications  %("))
+            assert.is_true(vim.fn.search("|bip32|  Hierarchical Deterministic Wallets (Deployed)", "nw") > 0)
+            vim.cmd("help bip-subjects-type-informational")
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^Type / Informational  %("))
+        end)
+
+        it("shows the tree in the sidebar", function()
+            vim.cmd("Rfc subjects")
+            assert.is_true(editor.wait_help("rfc-subjects"))
+            feed("gO")
+            -- the sidebar is whichever window of the tab holds the tree rows
+            local function sidebar_rows()
+                for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+                    local rows = vim.api.nvim_buf_get_lines(vim.api.nvim_win_get_buf(win), 0, -1, false)
+                    if vim.tbl_contains(rows, "web  (0)") then
+                        return rows
+                    end
+                end
+            end
+            assert.is_true(vim.wait(500, function()
+                return sidebar_rows() ~= nil
+            end))
+            assert.is_true(vim.tbl_contains(sidebar_rows(), "  web / HTTP  (3)"))
+        end)
+
+        it("stands first in the picker and opens when chosen", function()
+            local seen = picker()
+            vim.cmd("Eip")
+            assert.is_true(vim.wait(500, function()
+                return seen.items ~= nil
+            end))
+            assert.are.equal("eip-subjects  EIPs by subject", seen.labels[1])
+            assert.are.equal(8, #seen.items)
+            vim.ui.select = function(items, _, on_choice)
+                on_choice(items[1])
+            end
+            vim.cmd("Eip")
+            assert.is_true(editor.wait_help("eip-subjects"))
+            assert.are.equal(6, #case.fetched)
+        end)
+
+        it("stands above a search's matches, and a lone match still opens at once", function()
+            local seen = picker()
+            vim.cmd("Eip token")
+            assert.is_true(vim.wait(500, function()
+                return seen.items ~= nil
+            end))
+            assert.are.equal("eip-subjects  EIPs by subject", seen.labels[1])
+            assert.are.equal(3, #seen.items)
+            vim.cmd("Eip fee market")
+            assert.is_true(editor.wait_help("eip1559"))
+        end)
+
+        it("offers no picker for a search with no match", function()
+            vim.ui.select = function()
+                error("no picker expected")
+            end
+            vim.cmd("Eip zzzz")
+            assert.is_true(vim.wait(500, function()
+                return #case.notices == 1
+            end))
+            assert.are.equal("nothing matches zzzz", case.notices[1].msg)
+        end)
+
+        it("takes a subjects tag as the command's argument and completes the nodes once written", function()
+            vim.cmd("Rfc rfc-subjects-web-uri")
+            assert.is_true(editor.wait_help("rfc-subjects"))
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^web / URI  %(1%)"))
+            assert.are.equal("rfc-subjects-web-http", vim.fn.getcompletion("Rfc rfc-subjects-web-h", "cmdline")[1])
+            assert.are.same({}, vim.fn.getcompletion("Eip rfc-subjects", "cmdline"))
+        end)
+
+        it("completes a node whose name ends in .txt, and still not the file tags", function()
+            local cfg = config.get()
+            local lines = fixtures.read(fixtures.rfc_tags)
+            table.insert(
+                lines,
+                "RFC9309,Robots Exclusion Protocol,2022,robots.txt,web | web / robots.txt,robots.txt,web"
+            )
+            store.write_index(cfg, "rfc-subjects.csv", lines)
+            vim.cmd("Rfc subjects")
+            assert.is_true(editor.wait_help("rfc-subjects"))
+            local offered = vim.fn.getcompletion("Rfc rfc-subjects", "cmdline")
+            assert.is_true(vim.tbl_contains(offered, "rfc-subjects-web-robots.txt"))
+            assert.is_false(vim.tbl_contains(offered, "rfc-subjects.txt"))
+            assert.is_false(vim.tbl_contains(vim.fn.getcompletion("Rfc rfc9110", "cmdline"), "rfc9110.txt"))
+        end)
+
+        it("says which source to enable when it is off", function()
+            case.setup({ rfc = true })
+            vim.cmd("Eip subjects")
+            assert.are.equal("eip-subjects is EIP; enable sources.eip in setup()", case.notices[1].msg)
+            assert.are.equal(vim.log.levels.WARN, case.notices[1].level)
+            assert.are.same({}, case.fetched)
+        end)
+
+        it("completes the word, and the nodes after it from the cached index", function()
+            assert.is_true(vim.tbl_contains(vim.fn.getcompletion("Rfc sub", "cmdline"), "subjects"))
+            assert.are.same({}, vim.fn.getcompletion("Rfc subjects ", "cmdline"))
+            vim.cmd("Rfc subjects")
+            assert.is_true(editor.wait_help("rfc-subjects"))
+            assert.is_true(vim.tbl_contains(vim.fn.getcompletion("Rfc subjects ", "cmdline"), "web-http"))
+            assert.are.equal("web-http", vim.fn.getcompletion("Rfc subjects webht", "cmdline")[1])
+            assert.are.same({}, vim.fn.getcompletion("Simd sub", "cmdline"))
         end)
     end)
 

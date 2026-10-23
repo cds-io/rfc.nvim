@@ -8,6 +8,8 @@ local sources = require("rfc.sources")
 local outline = require("rfc.outline")
 local view = require("rfc.view")
 local toc = require("rfc.toc")
+local subjects = require("rfc.subjects")
+local cds_subjects = require("cds.subjects")
 local Task = require("cds.task")
 
 local M = {}
@@ -47,8 +49,11 @@ local configured = false
 
 ---@param opts? rfc.Config
 function M.setup(opts)
-    store.register(config.set(opts))
+    local ok, err = store.register(config.set(opts))
     configured = true
+    if not ok then
+        M.notify(err, vim.log.levels.ERROR)
+    end
 end
 
 local function ensure_setup()
@@ -112,6 +117,8 @@ end
 ---@param task cds.Task
 ---@param label string
 ---@param done fun(value: any, err: any)
+local with_subjects
+
 local function run(task, label, done)
     local handle = task:on_main():run()
     M._activity:track("fetch", label, handle)
@@ -128,19 +135,70 @@ local function vim_error(err)
     return err:match("E%d+:.*") or err
 end
 
---- `:help tag`. A tag of a document that is not in the store, or that an
---- older render wrote, goes through open first (erc20 is eip20's alias, so
---- the document is eip20's); a tag of a source the reader has not enabled
---- says so; any other refusal is shown as :help would show it.
----@param tag string
-function M.jump(tag)
-    ensure_setup()
-    local source = sources.of(tag)
-    local id = source and tag:match("^%l+0*(%d+)")
-    if source and id and enabled(source) and not store.has(config.get(), source.prefix .. id) then
-        M.open(source, id, tag)
+--- The subjects document in the store: the subjects index through
+--- index_lines (the cached copy while it is a day old), then the document
+--- rendered and written unless it is already there by the current render
+--- and no older than the index.
+---@param source rfc.Source
+---@return cds.Task  -- of the document's name
+function M.ensure_subjects(source)
+    local s = source.subjects
+    local cfg = config.get()
+    local name = source.prefix .. "-subjects"
+    local index = { index_file = s.index_file, index = s.index, label = source.label .. " subjects" }
+    return M.index_lines(index):on_main():bind_result(function(lines)
+        if store.has_since(cfg, name, s.index_file) then
+            return name
+        end
+        local entries, err = s.entries(lines)
+        if not entries then
+            return nil, err
+        end
+        local doc =
+            subjects.render({ prefix = source.prefix, title = s.title, about = s.about }, cds_subjects.tree(entries))
+        local ok, werr = store.write_doc(cfg, name, doc)
+        return ok and name or nil, werr
+    end)
+end
+
+--- Runs `done` once the source's subjects document is in the store: a
+--- source the reader has not enabled is refused in words, a fetch is
+--- announced, a failure is notified, and a buffer still holding the old
+--- document goes first so :help reads the file written just now.
+---@param source rfc.Source
+---@param done fun()
+with_subjects = function(source, done)
+    local cfg = config.get()
+    local name = source.prefix .. "-subjects"
+    if not enabled(source) then
+        M.notify(
+            ("%s is %s; enable sources.%s in setup()"):format(name, source.label, source.prefix),
+            vim.log.levels.WARN
+        )
         return
     end
+    local _, fresh = store.read_index(cfg, source.subjects.index_file)
+    if not fresh then
+        M.notify("fetching the " .. source.label .. " subjects")
+    end
+    run(M.ensure_subjects(source), source.label .. " subjects", function(_, err)
+        if err then
+            M.notify(err, vim.log.levels.ERROR)
+            return
+        end
+        local stale = vim.fn.bufnr(store.doc_path(cfg, name))
+        if stale ~= -1 then
+            vim.api.nvim_buf_delete(stale, { force = true })
+        end
+        done()
+    end)
+end
+
+--- `:help tag`, with a refusal in words: a tag of a source the reader has
+--- not enabled says so; any other refusal is shown as :help would show it.
+---@param tag string
+---@param source rfc.Source|nil
+local function help_tag(tag, source)
     local ok, err = pcall(vim.cmd.help, tag)
     if ok then
         return
@@ -154,6 +212,35 @@ function M.jump(tag)
         return
     end
     M.notify(err, vim.log.levels.ERROR)
+end
+
+--- `:help tag`. A tag of a document that is not in the store, or that an
+--- older render wrote, goes through open first (erc20 is eip20's alias, so
+--- the document is eip20's); a subjects tag whose document is missing or
+--- older than its index goes through the subjects pipeline first; a tag
+--- of a source the reader has not enabled says so; any other refusal is
+--- shown as :help would show it.
+---@param tag string
+function M.jump(tag)
+    ensure_setup()
+    local source = sources.of(tag)
+    local id = source and tag:match("^%l+0*(%d+)")
+    if source and id and enabled(source) and not store.has(config.get(), source.prefix .. id) then
+        M.open(source, id, tag)
+        return
+    end
+    if source and not id and source.subjects and enabled(source) then
+        local name = source.prefix .. "-subjects"
+        if not store.has_since(config.get(), name, source.subjects.index_file) then
+            -- straight to :help afterwards: the document was just written,
+            -- and asking jump again would ask the store again
+            with_subjects(source, function()
+                help_tag(tag, source)
+            end)
+            return
+        end
+    end
+    help_tag(tag, source)
 end
 
 --- Opens the document at `tag` (its own tag by default), fetching it from
@@ -257,8 +344,16 @@ end
 ---@param from? rfc.Source[]
 function M.pick(query, from)
     ensure_setup()
-    local tasks = {}
+    local tasks, doors = {}, {}
     for _, source in ipairs(from or sources.all) do
+        if enabled(source) and source.subjects then
+            -- the door into the source's subjects: first in the list, as
+            -- `tag  title` like every other item
+            table.insert(
+                doors,
+                { source = source, door = true, text = source.prefix .. "-subjects  " .. source.subjects.title }
+            )
+        end
         if enabled(source) then
             table.insert(
                 tasks,
@@ -292,6 +387,10 @@ function M.pick(query, from)
             if not item then
                 return
             end
+            if item.door then
+                M.subjects(item.source, "")
+                return
+            end
             if not item.entry.text then
                 M.notify(("%s %s has no text version"):format(item.source.label, item.entry.id), vim.log.levels.WARN)
                 return
@@ -302,6 +401,7 @@ function M.pick(query, from)
             choose(items[1])
             return
         end
+        items = vim.list_extend(vim.deepcopy(doors), items)
         vim.ui.select(items, {
             kind = "rfc",
             prompt = query and ("documents matching " .. query) or "search/select a document",
@@ -312,12 +412,109 @@ function M.pick(query, from)
     end)
 end
 
+---@class rfc.SubjectNode
+---@field tag string     -- rfc-subjects-web-http
+---@field slug string    -- web-http: the tag without the file tag
+---@field leaf string    -- http: the last level's slug
+---@field path string    -- web / HTTP
+---@field count integer  -- the documents filed there directly
+
+-- The nodes of each cached subjects index, parsed once per version of the file.
+local forests = {}
+
+--- The nodes of a source's subjects, from the cached subjects index (fresh
+--- or stale; completion cannot wait on the network); none when nothing is
+--- cached or the index does not read.
+---@param source rfc.Source
+---@return rfc.SubjectNode[]
+function M.nodes(source)
+    ensure_setup()
+    local s = source.subjects
+    if not s then
+        return {}
+    end
+    local path = store.index_path(config.get(), s.index_file)
+    local stat = vim.uv.fs_stat(path)
+    if not stat then
+        return {}
+    end
+    local memo = forests[path]
+    if not memo or memo.mtime ~= stat.mtime.sec then
+        memo = { mtime = stat.mtime.sec, nodes = {} }
+        local entries = s.entries(vim.fn.readfile(path))
+        local file_tag = source.prefix .. "-subjects-"
+        for _, n in ipairs(subjects.nodes(source.prefix, cds_subjects.tree(entries or {}))) do
+            table.insert(memo.nodes, {
+                tag = n.tag,
+                slug = n.tag:sub(#file_tag + 1),
+                leaf = help.slug(n.node.name),
+                path = table.concat(n.node.path, " / "),
+                count = #n.node.entries,
+            })
+        end
+        forests[path] = memo
+    end
+    return memo.nodes
+end
+
+--- Opens the source's subjects document: at its top for an empty query;
+--- at the node the query names by its slug, or by its last level when
+--- that names one node; otherwise at the one node a fuzzy search over the
+--- paths finds, with several offered in vim.ui.select and none said so.
+---@param source rfc.Source
+---@param query string
+function M.subjects(source, query)
+    ensure_setup()
+    with_subjects(source, function()
+        if query == "" then
+            help_tag(source.prefix .. "-subjects", source)
+            return
+        end
+        local nodes = M.nodes(source)
+        local exact, by_leaf = nil, {}
+        for _, n in ipairs(nodes) do
+            if n.slug == query then
+                exact = n
+            end
+            if n.leaf == query then
+                table.insert(by_leaf, n)
+            end
+        end
+        local hit = exact or (#by_leaf == 1 and by_leaf[1]) or nil
+        if hit then
+            help_tag(hit.tag, source)
+            return
+        end
+        local matches = vim.fn.matchfuzzy(nodes, query, { key = "path" })
+        if #matches == 0 then
+            M.notify("nothing matches " .. query, vim.log.levels.WARN)
+            return
+        end
+        if #matches == 1 then
+            help_tag(matches[1].tag, source)
+            return
+        end
+        vim.ui.select(matches, {
+            kind = "rfc",
+            prompt = "subjects matching " .. query,
+            format_item = function(n)
+                return ("%s  (%d)"):format(n.path, n.count)
+            end,
+        }, function(n)
+            if n then
+                help_tag(n.tag, source)
+            end
+        end)
+    end)
+end
+
 -- The entries of each cached index, parsed once per version of the file.
 local parsed = {}
 
 --- What a command can complete to, from what is on disk: every entry of
 --- each given source's cached index (fresh or stale; completion cannot wait
---- on the network), and every tag of those sources' cached documents.
+--- on the network), the word `subjects` for a source that has them, and
+--- every tag of those sources' cached documents.
 ---@param from rfc.Source[]
 ---@return string[]
 function M.candidates(from)
@@ -341,11 +538,18 @@ function M.candidates(from)
             end
         end
     end
+    for _, source in ipairs(from) do
+        if enabled(source) and source.subjects then
+            table.insert(out, "subjects")
+        end
+    end
     local tags = store.doc_dir(cfg) .. "/tags"
     if vim.fn.filereadable(tags) == 1 then
         for _, line in ipairs(vim.fn.readfile(tags)) do
-            local name = line:match("^([^\t]+)\t")
-            if name and not name:match("%.txt$") and vim.tbl_contains(from, sources.of(name)) then
+            -- a document's file tag is its file's name; a node named
+            -- robots.txt ends the same way and is a tag to offer
+            local name, file = line:match("^([^\t]+)\t([^\t]+)")
+            if name and name ~= file and vim.tbl_contains(from, sources.of(name)) then
                 table.insert(out, name)
             end
         end
@@ -367,11 +571,12 @@ function M.complete(from, arglead)
 end
 
 --- The command for a source: a number, a tag (the source's own or an
---- alias), words to search its index, or nothing for its picker. A
---- completed item carries its title after the tag, so only the first word
---- is the tag.
+--- alias), `subjects` with a node after it or not, words to search its
+--- index, or nothing for its picker. A completed item carries its title
+--- after the tag, so only the first word is the tag. After `subjects`,
+--- completion is over the nodes of the cached subjects index.
 ---@param source rfc.Source
----@return fun(cmd: table), fun(arglead: string): string[]
+---@return fun(cmd: table), fun(arglead: string, cmdline: string): string[]
 function M.command(source)
     local from = { source }
     local function run_command(cmd)
@@ -382,15 +587,25 @@ function M.command(source)
         elseif first:match("^%d+$") then
             -- the BIPs are filed as bip-0032; the tag is bip32
             M.jump(source.prefix .. (first:gsub("^0+(%d)", "%1")))
+        elseif first == "subjects" and source.subjects then
+            M.subjects(source, vim.trim(arg:sub(#first + 1)))
         elseif sources.of(first) == source then
             M.jump(first)
         else
             M.pick(arg, from)
         end
     end
-    return run_command, function(arglead)
-        return M.complete(from, arglead)
-    end
+    return run_command,
+        function(arglead, cmdline)
+            if source.subjects and cmdline:match("^%S+%s+subjects%s") then
+                local slugs = {}
+                for _, n in ipairs(M.nodes(source)) do
+                    table.insert(slugs, n.slug)
+                end
+                return arglead == "" and slugs or vim.fn.matchfuzzy(slugs, arglead)
+            end
+            return M.complete(from, arglead)
+        end
 end
 
 -- The requirement keywords of RFC 2119, highlighted in a document's help

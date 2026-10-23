@@ -1,3 +1,57 @@
+2026-10-23  A source's subjects as a help document
+
+  lua/rfc/subjects.lua
+    render writes a forest of subjects as one help document: a contents
+    block, one row per subject indented by level, then one section per
+    subject with its path as the heading, a tag at the margin, and the
+    documents filed there directly as links. A subject's tag is its path
+    slugged level by level (rfc-subjects-naming-dns); a repeat is numbered.
+
+  lua/rfc/sources.lua
+    A source may declare subjects: an index file, a fetch, a pure reading
+    into cds.subjects entries, the document's title and the line naming
+    the data. The rfc source reads the RFC Editor's rfc-tags.csv, the
+    daily build of rfc-editor/rfc-subject-tags; the eip source's subjects
+    are the six categories, and its index is the site's six category pages
+    read as one, which name the category each row belongs to; the bip
+    source's are the README's Layer and Type columns, each a root. A
+    subjects tag belongs to its source, so it jumps and completes as any
+    tag of the source does.
+
+  lua/rfc/init.lua
+    `subjects` is a fifth form of each command: alone it opens the
+    source's subjects document; a slug, a subject's own name, or a search
+    after it lands on a subject, several matches offered in vim.ui.select.
+    The document is rendered when missing, older in render, or older than
+    its index, and the index is kept a day as every index is. The picker
+    offers the source's subjects as its first item, in the full index and
+    above a search's matches; a lone match still opens at once. Completion
+    offers the word, and the subjects' slugs after it.
+
+  lua/rfc/store.lua
+    What an earlier layout of the cache left that the current one would
+    misread is declared once (a glob and the reason: the erc documents and
+    texts, the eip index of the two all pages) and retired when the store
+    registers, as one fold over the declarations in the Result
+    convention; a path that will not go is reported by setup. The
+    category pages are kept as eip-categories.html.
+
+  lua/rfc/help.lua
+    TAG and SECTION name the two shapes a tag takes, a prefix with a
+    number and a prefix with -subjects; tags_in, section_tag and row_tag
+    read both, and the outline reads its headings through them.
+
+  lua/cds/
+    csv reads one-line CSV records; subjects reads the RFC Editor's CSV
+    into entries, builds entries from any source's paths, and folds them
+    into a forest; eip.listing reads the page's category.
+
+  spec/
+    The render line by line over a fixture of the RFC Editor's rows, the
+    forest and the CSV reader, and the editor cases for each command's
+    subjects form, the picker's first item, the rebuild on a newer index,
+    the stale copy and the failed fetch: 90 pure and 97 editor cases.
+
 2026-10-21  A floating window is no window for the sidebar's last-window check
 
   lua/rfc/toc.lua

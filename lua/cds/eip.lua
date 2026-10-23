@@ -43,6 +43,7 @@ local M = {}
 ---@field id string
 ---@field title string
 ---@field status string   -- the listing's section: "Final", "Draft", ...
+---@field category string -- the page's title: "Core", "ERC", "All"; "" before any
 
 ---@param s string
 ---@return string
@@ -292,19 +293,24 @@ function M.blocks(lines, from)
 end
 
 --- The listing page as entries: each table row's number and title, under
---- the status heading the row sits beneath.
+--- the status heading the row sits beneath and the category the page's
+--- title names (a category page reads "Core"; the all page reads "All").
 ---@param lines string[]
 ---@return cds.eip.Entry[]
 function M.listing(lines)
-  local entries, status, entry = {}, "", nil
+  local entries, status, category, entry = {}, "", "", nil
   for _, line in ipairs(lines) do
+    local page = line:match('<h1 class="post%-title">(.-)</h1>')
+    if page then
+      category = trim(unescape(page))
+    end
     local heading = line:match("<h2 [^>]*>(.-)</h2>")
     if heading then
       status = trim(unescape(heading))
     end
     local id = line:match('class="eipnum"><a [^>]*>(%d+)</a>')
     if id then
-      entry = { id = id, title = "", status = status }
+      entry = { id = id, title = "", status = status, category = category }
       table.insert(entries, entry)
     end
     local title = entry and line:match('class="title">(.-)</td>')

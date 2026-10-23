@@ -2,6 +2,8 @@
 -- lines that carry a section tag, with a level, and the questions the keys
 -- and the sidebar ask of them. Plain lines in, plain tables out; nothing
 -- here names the editor.
+local help = require("rfc.help")
+
 local M = {}
 
 ---@class rfc.Heading
@@ -30,18 +32,6 @@ local function depth(num)
     return parts
 end
 
---- A section tag ends the line: a source prefix (three or four letters),
---- the number, a dash and the section's name; the file tags and the
---- reference entries' tags are not sections.
----@param line string
----@return string|nil
-local function section_tag(line)
-    local tag = line:match("%*(%l%l%l%l?%d+%-[%w%.%-]*)%*$")
-    if tag and not tag:match("^%l+%d+%-ref%-") then
-        return tag
-    end
-end
-
 --- The headings of a rendered document, in order. A numbered heading's
 --- level is its number's depth; any other's is read from its row in the
 --- document's own table of contents, where the render indented it two
@@ -52,7 +42,7 @@ end
 function M.of(lines)
     local row_indent, shallowest = {}, nil
     for _, line in ipairs(lines) do
-        local indent, tag = line:match("^(%s*)|(%l%l%l%l?%d+%-[%w%.%-]*)|")
+        local indent, tag = help.row_tag(line)
         if tag and not row_indent[tag] then
             row_indent[tag] = #indent
             shallowest = math.min(shallowest or #indent, #indent)
@@ -60,7 +50,7 @@ function M.of(lines)
     end
     local headings = {}
     for i, line in ipairs(lines) do
-        local tag = i > 1 and section_tag(line) or nil
+        local tag = i > 1 and help.section_tag(line) or nil
         if tag then
             local text = line:gsub("%s*%*[^*]+%*$", "")
             local num = label(text)
