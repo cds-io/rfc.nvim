@@ -1,3 +1,12 @@
+2026-10-23  A document's window soft-wraps at word boundaries
+
+  lua/rfc/init.lua
+    attach() sets wrap, linebreak, breakindent and breakindentopt=list:-1
+    on every window showing the document. A rendered document keeps its
+    source's line breaks, so a paragraph can run far past the help width;
+    the window wraps it between words, continuations indented and list
+    items hanging under their marker.
+
 2026-10-23  The render version is a fingerprint of the code
 
   lua/rfc/store.lua, lua/rfc/help.lua, lua/rfc/init.lua

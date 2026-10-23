@@ -767,6 +767,15 @@ function M.attach(buf)
     vim.keymap.set("n", "<leader>tv", function()
         view.toggle(buf)
     end, { buffer = buf, desc = "rfc: [T]oggle the rich [v]iew" })
+    -- a rendered document keeps its source's line breaks, so a paragraph
+    -- can run far past the help width; the window wraps it at word
+    -- boundaries, continuations indented and list items hanging
+    for _, win in ipairs(vim.fn.win_findbuf(buf)) do
+        vim.wo[win].wrap = true
+        vim.wo[win].linebreak = true
+        vim.wo[win].breakindent = true
+        vim.wo[win].breakindentopt = "list:-1"
+    end
     if config.get().view == "rich" then
         -- :help sets the filetype before it reads the file, so the view is
         -- drawn now for a buffer that has its text and after the read otherwise
