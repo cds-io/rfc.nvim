@@ -100,9 +100,13 @@ fetches that CSV as an index, kept a day like every index, and renders it;
 an RFC sits under its deepest tags, and a subject's heading carries the
 count of RFCs filed there directly.
 
-`:Eip subjects` is the site's six categories (Core, Networking, Interface,
-ERC, Meta, Informational), one level; `:Bip subjects` is the README's two
-columns, Layer and Type, each a root. The SIMDs have no subjects yet: their
+`:Eip subjects` has two roots: the site's six categories (Core,
+Networking, Interface, ERC, Meta, Informational), with the hardfork meta
+EIPs filed under `Meta / Hardforks` since their titles say so, and the
+status, so `Status / Last Call` is the list of what is about to be final
+across the categories (`:Eip subjects hardforks` and `:Eip subjects
+last-call` land on those); `:Bip subjects` is the README's two columns,
+Layer and Type, each a root. The SIMDs have no subjects yet: their
 category and type live in each file's frontmatter alone.
 
 ## Sources

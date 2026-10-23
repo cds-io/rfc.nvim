@@ -324,7 +324,7 @@ describe("rfc", function()
             section = { "eip1559-specification", "^SPECIFICATION" },
             missing = { id = "1559", tag = "|eip2718|", number = "2718" },
             index = {
-                count = 7 + 1,
+                count = 8 + 1,
                 label = "eip20  Token Standard (Final)",
                 fetched = {
                     "eips-core",
@@ -593,7 +593,7 @@ describe("rfc", function()
                 return offered == 2
             end)
             assert.are.equal(4 + 1, #vim.fn.getcompletion("Rfc ", "cmdline"))
-            assert.are.equal(7 + 1, #vim.fn.getcompletion("Eip ", "cmdline"))
+            assert.are.equal(8 + 1, #vim.fn.getcompletion("Eip ", "cmdline"))
             assert.are.equal(
                 "eip1559  Fee market change for ETH 1.0 chain (Final)",
                 vim.fn.getcompletion("Eip 1559", "cmdline")[1]
@@ -634,7 +634,7 @@ describe("rfc", function()
             assert.are.same({}, case.notices)
             local fresh = vim.fn.readfile(path)
             assert.are.equal("  |eip1559-simple-summary|  Simple Summary", fresh[7])
-            assert.are.equal(" rfc.nvim render 6", fresh[#fresh])
+            assert.are.equal(" rfc.nvim render 7", fresh[#fresh])
         end)
 
         it("fetches again when the stored text is a moved stub, whatever render wrote the document", function()
@@ -851,6 +851,20 @@ describe("rfc", function()
             )
         end)
 
+        it(":Eip subjects files the hardfork meta EIPs under Meta, and every EIP under its status", function()
+            vim.cmd("Eip subjects hardforks")
+            assert.is_true(editor.wait_help("eip-subjects"))
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^Meta / Hardforks  %(1%)"))
+            assert.is_true(vim.fn.search("|eip7600|  Hardfork Meta - Pectra (Final)", "nw") > 0)
+            vim.cmd("help eip-subjects-meta")
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^Meta  %(2%)"))
+            vim.cmd("help eip-subjects-status-final")
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^Status / Final  %(5%)"))
+            assert.is_true(vim.fn.search("|eip1559|  Fee market change for ETH 1.0 chain (Final)", "nw") > 0)
+            vim.cmd("help eip-subjects-status-living")
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^Status / Living  %(3%)"))
+        end)
+
         it(":Bip subjects has Layer and Type as roots", function()
             vim.cmd("Bip subjects layer-applications")
             assert.is_true(editor.wait_help("bip-subjects"))
@@ -886,7 +900,7 @@ describe("rfc", function()
                 return seen.items ~= nil
             end))
             assert.are.equal("eip-subjects  EIPs by subject", seen.labels[1])
-            assert.are.equal(8, #seen.items)
+            assert.are.equal(9, #seen.items)
             vim.ui.select = function(items, _, on_choice)
                 on_choice(items[1])
             end

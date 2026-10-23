@@ -142,17 +142,24 @@ M.eip = {
         end)
     end,
     render = help_eip.render,
-    -- the categories, one level: the page a row came from
+    -- two roots: the category (the page a row came from), with the
+    -- hardfork meta EIPs one level down since their titles file them so
+    -- ("Hardfork Meta - Pectra"), and the status, so Last Call and Review
+    -- read as lists
     subjects = {
         index_file = "eip-categories.html",
         index = eip_index,
         entries = function(lines)
             return fp.map(eip_entries(lines), function(e)
-                return subjects.entry(e.id, e.title .. " (" .. e.status .. ")", { { e.category } })
+                local category = { e.category }
+                if e.title:match("^Hardfork Meta") then
+                    table.insert(category, "Hardforks")
+                end
+                return subjects.entry(e.id, e.title .. " (" .. e.status .. ")", { category, { "Status", e.status } })
             end)
         end,
         title = "EIPs by subject",
-        about = "From eips.ethereum.org, the site's categories.",
+        about = "From eips.ethereum.org, the site's categories and statuses.",
     },
 }
 
