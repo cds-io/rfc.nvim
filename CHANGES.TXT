@@ -1,3 +1,21 @@
+2026-10-23  A subject's heading is its name, and its count is everything under it
+
+  lua/rfc/subjects.lua
+    A section's heading reads the node's name alone (Hardforks, Final),
+    as the contents block does under its indent, so the sidebar's rows
+    carry no repeated parent; the tag at the heading's margin spells the
+    path. The count beside a name, in the contents block, the heading
+    and the subjects picker, is the documents under the node, its own and
+    its descendants', each counted once (Meta holds its 23 and the 20
+    hardforks; Status holds every EIP).
+
+  lua/rfc/help.lua
+    Render 8.
+
+  spec/
+    One pure case over a document on three paths of one subtree: 96 pure
+    and 117 editor cases.
+
 2026-10-23  The EIP subjects file the hardforks under Meta and every EIP under its status
 
   lua/rfc/sources.lua

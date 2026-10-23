@@ -433,7 +433,7 @@ end
 ---@field slug string    -- web-http: the tag without the file tag
 ---@field leaf string    -- http: the last level's slug
 ---@field path string    -- web / HTTP
----@field count integer  -- the documents filed there directly
+---@field count integer  -- the documents under it
 
 --- The nodes of a source's subjects, from the cached subjects index (fresh
 --- or stale; completion cannot wait on the network), parsed once per
@@ -455,7 +455,7 @@ function M.nodes(source)
                 slug = n.tag:sub(#file_tag + 1),
                 leaf = help.slug(n.node.name),
                 path = table.concat(n.node.path, " / "),
-                count = #n.node.entries,
+                count = subjects.total(n.node),
             }
         end)
     end) or {}

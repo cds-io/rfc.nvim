@@ -41,16 +41,16 @@ describe("render", function()
             DOC.about,
             "",
             "|rfc-subjects-arpanet|  ARPANET (3)",
-            "|rfc-subjects-data-formats|  data formats (0)",
-            "  |rfc-subjects-data-formats-internationalization|  internationalization (0)",
-            "    |rfc-subjects-data-formats-internationalization-character-sets|  character sets (0)",
+            "|rfc-subjects-data-formats|  data formats (1)",
+            "  |rfc-subjects-data-formats-internationalization|  internationalization (1)",
+            "    |rfc-subjects-data-formats-internationalization-character-sets|  character sets (1)",
             "      |rfc-subjects-data-formats-internationalization-character-sets-ascii|  ASCII (1)",
-            "|rfc-subjects-internet-layer|  internet layer (0)",
+            "|rfc-subjects-internet-layer|  internet layer (1)",
             "  |rfc-subjects-internet-layer-ipv4|  IPv4 (1)",
-            "|rfc-subjects-messaging|  messaging (0)",
-            "  |rfc-subjects-messaging-email|  email (0)",
+            "|rfc-subjects-messaging|  messaging (1)",
+            "  |rfc-subjects-messaging-email|  email (1)",
             "    |rfc-subjects-messaging-email-mailing-lists|  mailing lists (1)",
-            "|rfc-subjects-web|  web (0)",
+            "|rfc-subjects-web|  web (4)",
             "  |rfc-subjects-web-http|  HTTP (3)",
             "  |rfc-subjects-web-uri|  URI (1)",
             "",
@@ -59,7 +59,7 @@ describe("render", function()
             "|rfc155|  ARPA Network mailing lists (1971)",
             '|rfc175|  Comments on "Socket Conventions Reconsidered" (1971)',
             "",
-            help.with_tag("data formats  (0)", "rfc-subjects-data-formats"),
+            help.with_tag("data formats  (1)", "rfc-subjects-data-formats"),
             "",
         }, slice(doc.lines, 1, 24))
         assert.are.equal(help.FOOTER, doc.lines[#doc.lines])
@@ -88,7 +88,7 @@ describe("render", function()
         assert.are.equal(13, #headings)
         assert.are.same({ tag = "rfc-subjects-arpanet", text = "ARPANET  (3)", level = 1, line = 18 }, headings[1])
         assert.are.equal(4, headings[5].level)
-        assert.are.equal("data formats / internationalization / character sets / ASCII  (1)", headings[5].text)
+        assert.are.equal("ASCII  (1)", headings[5].text)
     end)
     it("numbers a repeated tag so the tags file never holds two", function()
         local forest = cds.tree({
@@ -102,6 +102,15 @@ describe("render", function()
         end
         assert.are.equal(1, names["rfc-subjects-naming-whois"])
         assert.are.equal(1, names["rfc-subjects-naming-whois-2"])
+    end)
+    it("counts a document once under a node, however many of its paths lie there", function()
+        local forest = cds.tree({
+            cds.entry("1", "A (2000)", { { "web" }, { "web", "HTTP" }, { "web", "URI" } }),
+            cds.entry("2", "B (2001)", { { "web", "HTTP" } }),
+        })
+        assert.are.equal(2, subjects.total(forest[1]))
+        assert.are.equal(2, subjects.total(forest[1].children[1]))
+        assert.are.equal("|rfc-subjects-web|  web (2)", subjects.render(DOC, forest).lines[4])
     end)
     it("renders an empty forest as the title, the about line and the footer", function()
         local d = subjects.render(DOC, {})

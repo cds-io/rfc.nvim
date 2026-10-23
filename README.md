@@ -97,8 +97,8 @@ The subjects come from the RFC Editor's subject tags
 in beta): a curated tree of 19 roots, four levels at most, that their
 pipeline assigns to every RFC and publishes daily as a CSV. The plugin
 fetches that CSV as an index, kept a day like every index, and renders it;
-an RFC sits under its deepest tags, and a subject's heading carries the
-count of RFCs filed there directly.
+an RFC sits under its deepest tags, and the count beside a subject is
+every RFC under it, each counted once.
 
 `:Eip subjects` has two roots: the site's six categories (Core,
 Networking, Interface, ERC, Meta, Informational), with the hardfork meta

@@ -51,10 +51,34 @@ function M.nodes(prefix, forest)
     return out
 end
 
+--- The documents under a node, its own and its descendants', each
+--- counted once however many of its paths lie there: what a heading's
+--- count means to a reader.
+---@param node cds.subjects.Node
+---@return integer
+function M.total(node)
+    local seen, n = {}, 0
+    local function visit(x)
+        for _, e in ipairs(x.entries) do
+            if not seen[e.id] then
+                seen[e.id] = true
+                n = n + 1
+            end
+        end
+        for _, child in ipairs(x.children) do
+            visit(child)
+        end
+    end
+    visit(node)
+    return n
+end
+
 --- The document: the title line with the file tags, the about line, a
 --- blank, the contents block, a blank, the sections (heading, entries,
---- blank), the modeline and the footer. A node with no direct entries
---- still has its heading, since the sidebar lists it.
+--- blank), the modeline and the footer. A heading is the node's name
+--- with the count of everything under it; the tag at its margin spells
+--- the path, and so does the contents block's indent. A node with no
+--- direct entries still has its heading, since the sidebar lists it.
 ---@param doc rfc.SubjectsDoc
 ---@param forest cds.subjects.Node[]
 ---@return rfc.HelpDoc
@@ -65,11 +89,11 @@ function M.render(doc, forest)
     local nodes = M.nodes(doc.prefix, forest)
     for _, n in ipairs(nodes) do
         local indent = ("  "):rep(#n.node.path - 1)
-        table.insert(out, ("%s|%s|  %s (%d)"):format(indent, n.tag, n.node.name, #n.node.entries))
+        table.insert(out, ("%s|%s|  %s (%d)"):format(indent, n.tag, n.node.name, M.total(n.node)))
     end
     table.insert(out, "")
     for _, n in ipairs(nodes) do
-        local heading = ("%s  (%d)"):format(table.concat(n.node.path, " / "), #n.node.entries)
+        local heading = ("%s  (%d)"):format(n.node.name, M.total(n.node))
         table.insert(out, help.with_tag(heading, n.tag))
         table.insert(tags, { name = n.tag, line = #out })
         for _, e in ipairs(n.node.entries) do

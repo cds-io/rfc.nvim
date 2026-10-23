@@ -117,8 +117,8 @@ describe("render", function()
             assert.are.equal(#lines + 4, #doc.lines)
             assert.are.equal("", doc.lines[#doc.lines - 2])
             assert.are.equal(" vim:tw=78:ts=8:ft=help:norl:", doc.lines[#doc.lines - 1])
-            assert.are.equal(" rfc.nvim render 7", doc.lines[#doc.lines])
-            assert.are.equal(7, help.render_of(doc.lines))
+            assert.are.equal(" rfc.nvim render 8", doc.lines[#doc.lines])
+            assert.are.equal(8, help.render_of(doc.lines))
         end)
         it("tags each heading at column 78", function()
             assert.are.equal("1.1.  Purpose", doc.lines[383]:match("^(.-)%s+%*rfc9110%-1%.1%*$"))
@@ -212,7 +212,7 @@ describe("render", function()
                 "*rfc1.txt*  RFC 1" .. string.rep(" ", 78 - #"*rfc1.txt*  RFC 1" - #"*rfc1*") .. "*rfc1*",
                 "",
                 " vim:tw=78:ts=8:ft=help:norl:",
-                " rfc.nvim render 7",
+                " rfc.nvim render 8",
             }, doc.lines)
             assert.are.equal(2, #doc.tags)
         end)
@@ -226,8 +226,8 @@ end)
 
 describe("render_of", function()
     it("reads the version from the last line, 0 when there is none", function()
-        assert.are.equal(7, help.render_of({ "x", " rfc.nvim render 7" }))
-        assert.are.equal(7, help.render_of({ " rfc.nvim render 7" }))
+        assert.are.equal(8, help.render_of({ "x", " rfc.nvim render 8" }))
+        assert.are.equal(99, help.render_of({ " rfc.nvim render 99" }))
         assert.are.equal(0, help.render_of({ "x", " vim:ft=help:" }))
         assert.are.equal(0, help.render_of({}))
     end)
