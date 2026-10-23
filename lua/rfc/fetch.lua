@@ -4,6 +4,7 @@
 -- spec replaces the eight functions below with Tasks of fixture text.
 local Task = require("cds.task")
 local http = require("cds.http")
+local status = http.status
 local w3c = require("cds.w3c")
 
 local M = {}
@@ -21,7 +22,7 @@ local function get(url)
     if not res then
         return nil, err.message
     end
-    if res.status ~= 200 then
+    if res.status ~= status.OK then
         return nil, { status = res.status }
     end
     return res.body
@@ -41,7 +42,7 @@ end
 ---@param what string
 ---@return string
 local function describe(err, what)
-    if type(err) == "table" and err.status == 404 then
+    if type(err) == "table" and err.status == status.NOT_FOUND then
         return what .. " does not exist"
     elseif type(err) == "table" then
         return ("HTTP %d fetching %s"):format(err.status, what)
@@ -98,7 +99,7 @@ function M.bip(id)
     local base = ("%sbitcoin/bips/master/bip-%04d."):format(M.github_raw, tonumber(id))
     return Task.new(function()
         local body, err = get(base .. "mediawiki")
-        if not body and type(err) == "table" and err.status == 404 then
+        if not body and type(err) == "table" and err.status == status.NOT_FOUND then
             body, err = get(base .. "md")
         end
         if not body then
@@ -141,10 +142,10 @@ function M.w3c(url, shortname, since)
         if not res then
             return nil, ("W3C %s: %s"):format(shortname, err.message)
         end
-        if res.status == 304 then
+        if res.status == status.NOT_MODIFIED then
             return false
         end
-        if res.status ~= 200 then
+        if res.status ~= status.OK then
             return nil, describe({ status = res.status }, "W3C " .. shortname)
         end
         local modified = res.headers["last-modified"] and w3c.parse_http_time(res.headers["last-modified"])

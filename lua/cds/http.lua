@@ -22,6 +22,23 @@ local M = {}
 ---@field kind "unreachable"|"timeout"|"interrupted"|"tls"|"curl"|"spawn"
 ---@field message string
 
+-- The statuses a caller branches on, by name, and the one class that
+-- matters as a class: a 5xx is the server's trouble, worth trying later.
+-- Success is OK alone, since a 201 or a 204 carries no body to read.
+M.status = {
+  OK = 200,
+  NOT_MODIFIED = 304,
+  UNAUTHORIZED = 401,
+  NOT_FOUND = 404,
+  CONFLICT = 409,
+}
+
+---@param code integer
+---@return boolean
+function M.status.transient(code)
+  return code >= 500 and code < 600
+end
+
 -- A private separator: curl prints it, then the status, after the body.
 local MARK = "\n--cds-http-status:"
 
