@@ -36,6 +36,7 @@ local M = {}
 ---@field obsoletes string|nil
 ---@field obsoleted_by string|nil
 ---@field formats string[]    -- "TXT", "HTML", "PDF", ...
+---@field status string|nil   -- "PROPOSED STANDARD", as the index prints it
 
 ---@param s string
 ---@return string
@@ -388,6 +389,7 @@ function M.index(lines)
       obsoletes = text:match("%(Obsoletes%s+(.-)%)"),
       obsoleted_by = text:match("%(Obsoleted by%s+(.-)%)"),
       formats = formats,
+      status = text:match("%(Status:%s*(.-)%)"),
     })
   end
   for _, line in ipairs(lines) do

@@ -4,6 +4,7 @@ local fixtures = require("spec.fixtures")
 local store = require("rfc.store")
 local config = require("rfc.config")
 local help = require("rfc.help")
+local fp = require("cds.fp")
 
 local function feed(keys)
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), "x", false)
@@ -536,6 +537,231 @@ describe("rfc", function()
         end)
     end)
 
+    describe(":Eip status", function()
+        --- Every picker that opens, in order: its items, labels and prompt.
+        local function pickers()
+            local seen = {}
+            vim.ui.select = function(items, opts, on_choice)
+                table.insert(seen, {
+                    items = items,
+                    labels = vim.tbl_map(opts.format_item, items),
+                    prompt = opts.prompt,
+                    choose = on_choice,
+                })
+            end
+            return seen
+        end
+        local function wait_for(seen, n)
+            return vim.wait(1000, function()
+                return #seen == n
+            end)
+        end
+        local function title()
+            return vim.api.nvim_buf_get_lines(0, 0, 1, false)[1]
+        end
+        --- The headings of the document shown, "Core  (2)" and the like, their tags stripped.
+        local function headings()
+            return fp.filter_map(vim.api.nvim_buf_get_lines(0, 0, -1, false), function(line)
+                return line:match("^(%S.-  %(%d+%))%s+%*")
+            end)
+        end
+
+        it("offers All and the statuses in lifecycle order, each with its count", function()
+            local seen = pickers()
+            vim.cmd("Eip status")
+            assert.is_true(wait_for(seen, 1))
+            assert.are.equal("EIP status", seen[1].prompt)
+            assert.are.same({ "All  (8)", "Final  (5)", "Living  (3)" }, seen[1].labels)
+        end)
+
+        it(
+            "renders the subjects document on the chosen status: its entries only, counts following, the title saying so",
+            function()
+                local seen = pickers()
+                vim.cmd("Eip status")
+                assert.is_true(wait_for(seen, 1))
+                seen[1].choose(seen[1].items[2])
+                assert.is_true(editor.wait_help("eip-subjects"))
+                assert.is_truthy(title():match("^%*eip%-subjects%.txt%*  EIPs by subject  %[Status: Final%]"))
+                assert.is_true(vim.fn.search("|eip1|  EIP Purpose and Guidelines (Living)", "nw") == 0)
+                assert.is_true(vim.fn.search("|eip1559|  Fee market change for ETH 1.0 chain (Final)", "nw") > 0)
+                local lines = headings()
+                assert.is_true(vim.tbl_contains(lines, "Final  (5)"))
+                assert.is_false(vim.tbl_contains(lines, "Living  (3)"))
+                assert.is_true(vim.tbl_contains(lines, "Core  (2)"))
+            end
+        )
+
+        it("takes the status as the argument, case aside, and All puts every entry back", function()
+            vim.cmd("Eip status living")
+            assert.is_true(editor.wait_help("eip-subjects"))
+            assert.is_truthy(title():match("%[Status: Living%]"))
+            assert.is_true(vim.tbl_contains(headings(), "Living  (3)"))
+            assert.is_false(vim.tbl_contains(headings(), "Core  (2)"))
+            vim.cmd("Eip status all")
+            assert.is_true(vim.wait(1000, function()
+                return title():match("%[Status") == nil
+            end))
+            assert.is_true(vim.tbl_contains(headings(), "Core  (2)"))
+            assert.is_true(vim.tbl_contains(headings(), "Living  (3)"))
+        end)
+
+        it("warns of a status the index does not hold, two words included", function()
+            vim.cmd("Eip status last call")
+            vim.wait(500, function()
+                return #case.notices == 1
+            end)
+            assert.are.equal("EIP has no status last call", case.notices[1].msg)
+        end)
+
+        it("opens :Eip subjects on the configured status until a choice is made", function()
+            case.setup({ eip = true }, { status = { eip = "final" } })
+            vim.cmd("Eip subjects")
+            assert.is_true(editor.wait_help("eip-subjects"))
+            assert.is_truthy(title():match("%[Status: Final%]"))
+            assert.is_true(vim.tbl_contains(headings(), "Final  (5)"))
+        end)
+
+        it("keeps the reader's section and window across the re-render, and cycles the status on gs", function()
+            vim.cmd("Eip subjects")
+            assert.is_true(editor.wait_help("eip-subjects"))
+            vim.cmd("help eip-subjects-core")
+            local win, windows = vim.api.nvim_get_current_win(), #vim.api.nvim_list_wins()
+            feed("gs")
+            assert.is_true(vim.wait(1000, function()
+                return title():match("%[Status: Final%]") ~= nil
+            end))
+            assert.are.equal(win, vim.api.nvim_get_current_win())
+            assert.are.equal(windows, #vim.api.nvim_list_wins())
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^Core  %(2%)"), vim.api.nvim_get_current_line())
+            feed("gs")
+            assert.is_true(vim.wait(1000, function()
+                return title():match("%[Status: Living%]") ~= nil
+            end))
+            -- no Core entry is Living, so the section is gone: the top of the document
+            assert.are.equal(1, vim.fn.line("."))
+            feed("gs")
+            assert.is_true(vim.wait(1000, function()
+                return title():match("%[Status") == nil
+            end))
+        end)
+
+        it("keeps every window showing the document in its own section", function()
+            vim.cmd("Eip subjects")
+            assert.is_true(editor.wait_help("eip-subjects"))
+            vim.cmd("help eip-subjects-erc")
+            local erc_win = vim.api.nvim_get_current_win()
+            vim.cmd("split")
+            vim.cmd("help eip-subjects-core")
+            local core_win = vim.api.nvim_get_current_win()
+            assert.are_not.equal(erc_win, core_win)
+            vim.cmd("Eip status final")
+            assert.is_true(vim.wait(1000, function()
+                return title():match("%[Status: Final%]") ~= nil
+            end))
+            assert.are.equal(core_win, vim.api.nvim_get_current_win())
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^Core  %(2%)"))
+            local erc_line = vim.api.nvim_buf_get_lines(
+                0,
+                vim.api.nvim_win_get_cursor(erc_win)[1] - 1,
+                vim.api.nvim_win_get_cursor(erc_win)[1],
+                false
+            )[1]
+            assert.is_truthy(erc_line:match("^ERC  %(2%)"), erc_line)
+        end)
+
+        it("takes the reader to the document's window when the status is chosen from elsewhere", function()
+            vim.cmd("Eip subjects")
+            assert.is_true(editor.wait_help("eip-subjects"))
+            local doc_win = vim.api.nvim_get_current_win()
+            vim.cmd("help eip-subjects-core")
+            vim.cmd("split")
+            vim.cmd("enew")
+            local windows = #vim.api.nvim_list_wins()
+            vim.cmd("Eip status final")
+            assert.is_true(vim.wait(1000, function()
+                return vim.api.nvim_get_current_win() == doc_win
+            end))
+            assert.are.equal(windows, #vim.api.nvim_list_wins())
+            assert.is_truthy(vim.api.nvim_get_current_line():match("^Core  %(2%)"))
+        end)
+
+        it("completes the statuses after the word, All first, once the index is cached", function()
+            local seen = pickers()
+            vim.cmd("Eip")
+            assert.is_true(wait_for(seen, 1))
+            assert.are.same({ "All", "Final", "Living" }, vim.fn.getcompletion("Eip status ", "cmdline"))
+            assert.are.same({ "Final" }, vim.fn.getcompletion("Eip status fin", "cmdline"))
+        end)
+
+        it(
+            "reads an RFC's status from the index, in the standards track's order, and filters the CSV's subjects by it",
+            function()
+                local seen = pickers()
+                vim.cmd("Rfc status")
+                assert.is_true(wait_for(seen, 1))
+                assert.are.same({ "All  (4)", "DRAFT STANDARD  (1)", "UNKNOWN  (3)" }, seen[1].labels)
+                vim.cmd("Rfc status draft standard")
+                assert.is_true(editor.wait_help("rfc-subjects"))
+                assert.is_truthy(title():match("%[Status: DRAFT STANDARD%]"))
+                assert.is_true(vim.fn.search("|rfc2616|", "nw") > 0)
+                assert.is_true(vim.fn.search("|rfc9110|", "nw") == 0)
+            end
+        )
+
+        it("orders a BIP's four statuses as the README's lifecycle runs", function()
+            local seen = pickers()
+            vim.cmd("Bip status")
+            assert.is_true(wait_for(seen, 1))
+            assert.are.same(
+                { "All  (213)", "Draft  (56)", "Complete  (22)", "Deployed  (78)", "Closed  (57)" },
+                seen[1].labels
+            )
+        end)
+
+        it("takes a W3C report's maturity as its status; a report without one counts under All alone", function()
+            local seen = pickers()
+            vim.cmd("W3c status")
+            assert.is_true(wait_for(seen, 1))
+            assert.are.same({
+                "All  (12)",
+                "Draft Standard  (2)",
+                "Candidate Standard  (2)",
+                "Standard  (3)",
+                "Draft Note  (1)",
+                "Note  (1)",
+                "Draft Registry  (1)",
+                "Statement  (1)",
+            }, seen[1].labels)
+        end)
+
+        it("knows a SIMD's status once its text is cached, and says where the statuses are before", function()
+            -- a listing of the three fixture proposals, so the subjects fetch only those
+            vim.fn.writefile({
+                '[{"name":"0001-simd-process.md"},{"name":"0064-transaction-receipt.md"},{"name":"0268-raise-cpi-nesting-limit.md"}]',
+            }, store.index_path(config.get(), "simd-index.json"))
+            local seen = pickers()
+            vim.cmd("Simd status")
+            assert.is_true(wait_for(seen, 1))
+            assert.are.same({ "All  (3)" }, seen[1].labels)
+            assert.are.equal(
+                "SIMD statuses are in the proposals' texts; :Simd subjects fetches every one",
+                case.notices[#case.notices].msg
+            )
+            vim.cmd("Simd subjects")
+            assert.is_true(editor.wait_help("simd-subjects"))
+            vim.cmd("Simd status")
+            assert.is_true(wait_for(seen, 2))
+            assert.are.same({ "All  (3)", "Accepted  (1)", "Living  (1)", "Stagnant  (1)" }, seen[2].labels)
+            seen[2].choose(seen[2].items[4])
+            assert.is_true(vim.wait(1000, function()
+                return title():match("%[Status: Stagnant%]") ~= nil
+            end))
+            assert.is_true(vim.fn.search("|simd64|  Transaction Receipt", "nw") > 0)
+            assert.is_true(vim.fn.search("|simd1|", "nw") == 0)
+        end)
+    end)
+
     describe(":Bip, its own", function()
         it("renders a proposal written in markdown", function()
             vim.cmd("Bip 3")
@@ -607,9 +833,9 @@ describe("rfc", function()
 
     describe("completion", function()
         it("offers the subjects word alone before any index or document is cached", function()
-            assert.are.same({ "subjects" }, vim.fn.getcompletion("Rfc ", "cmdline"))
-            assert.are.same({ "subjects" }, vim.fn.getcompletion("Eip ", "cmdline"))
-            assert.are.same({ "subjects" }, vim.fn.getcompletion("Simd ", "cmdline"))
+            assert.are.same({ "status", "subjects" }, vim.fn.getcompletion("Rfc ", "cmdline"))
+            assert.are.same({ "status", "subjects" }, vim.fn.getcompletion("Eip ", "cmdline"))
+            assert.are.same({ "status", "subjects" }, vim.fn.getcompletion("Simd ", "cmdline"))
         end)
 
         it("completes a number or a title from the command's cached index", function()
@@ -623,8 +849,8 @@ describe("rfc", function()
             vim.wait(500, function()
                 return offered == 2
             end)
-            assert.are.equal(4 + 1, #vim.fn.getcompletion("Rfc ", "cmdline"))
-            assert.are.equal(8 + 1, #vim.fn.getcompletion("Eip ", "cmdline"))
+            assert.are.equal(4 + 2, #vim.fn.getcompletion("Rfc ", "cmdline"))
+            assert.are.equal(8 + 2, #vim.fn.getcompletion("Eip ", "cmdline"))
             assert.are.equal(
                 "eip1559  Fee market change for ETH 1.0 chain (Final)",
                 vim.fn.getcompletion("Eip 1559", "cmdline")[1]

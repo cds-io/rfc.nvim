@@ -11,13 +11,13 @@ STYLUA ?= stylua
 
 check: vendor-check test test-nvim lint fmt-check
 
-# The house library lives in ../cds, its one source, with its own specs;
+# The house library lives in ../cds-lua, its one source, with its own specs;
 # these files are copies of it. `make vendor` refreshes them and
-# `vendor-check` refuses a copy that differs. A checkout without ../cds
+# `vendor-check` refuses a copy that differs. A checkout without ../cds-lua
 # (CI) skips the check.
-CDS_SRC ?= ../cds
+CDS_SRC ?= ../cds-lua
 CDS_FILES := lua/cds/task.lua lua/cds/async.lua lua/cds/proc.lua lua/cds/http.lua lua/cds/activity.lua lua/cds/rfc.lua \
-	lua/cds/eip.lua lua/cds/bip.lua lua/cds/simd.lua lua/cds/mentions.lua lua/cds/fp.lua lua/cds/result.lua lua/cds/csv.lua lua/cds/subjects.lua lua/cds/w3c.lua lua/cds/images.lua \
+	lua/cds/eip.lua lua/cds/bip.lua lua/cds/simd.lua lua/cds/mentions.lua lua/cds/fp.lua lua/cds/result.lua lua/cds/csv.lua lua/cds/subjects.lua lua/cds/w3c.lua lua/cds/images.lua lua/cds/redraw.lua \
 	lua/cds/html/init.lua lua/cds/html/tokens.lua lua/cds/html/tree.lua lua/cds/html/inline.lua lua/cds/html/blocks.lua
 
 vendor:

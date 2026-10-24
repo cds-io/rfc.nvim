@@ -115,6 +115,16 @@ function M.window(doc_win)
     return open[doc_win] and open[doc_win].win or nil
 end
 
+--- The rows again from the document, after it is rendered anew in its
+--- window; nothing when the window has no sidebar.
+---@param doc_win integer
+function M.reload(doc_win)
+    local s = open[doc_win]
+    if s and vim.api.nvim_win_is_valid(doc_win) then
+        load(s, vim.api.nvim_win_get_buf(doc_win))
+    end
+end
+
 --- The sidebar's cursor follows the document's, unless the reader is in
 --- the sidebar.
 ---@param doc_win integer

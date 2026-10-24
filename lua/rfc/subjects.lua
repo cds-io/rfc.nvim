@@ -14,6 +14,14 @@ local M = {}
 ---@field title string    -- RFCs by subject
 ---@field about string    -- the line naming the data
 ---@field key "number"|"shortname"|nil  -- how a document's tag joins the prefix and the id: rfc9110, or w3c-wcag22
+---@field status string|nil  -- the status the document is filtered to, named in its title line; nil for All
+
+--- What a status adds to the render version: +final; nothing for All.
+---@param status string|nil
+---@return string
+function M.suffix(status)
+    return status and ("+" .. help.slug(status)) or ""
+end
 
 --- The tag of a node: the file tag, then each level slugged, dash-joined.
 ---@param prefix string
@@ -111,9 +119,10 @@ function M.total(node)
     return n
 end
 
---- The document: the title line with the file tags, the about line, a
---- blank, the contents block, a blank, the sections (heading, entries,
---- blank), the modeline and the footer. A heading is the node's name
+--- The document: the title line with the file tags (and the status it is
+--- filtered to, when one is), the about line, a blank, the contents block,
+--- a blank, the sections (heading, entries, blank), the modeline and the
+--- footer. A heading is the node's name
 --- with the count of everything under it; the tag at its margin spells
 --- the path, and so does the contents block's indent. A node with no
 --- direct entries still has its heading, since the sidebar lists it.
@@ -122,7 +131,12 @@ end
 ---@return rfc.HelpDoc
 function M.render(doc, forest)
     local file_tag = doc.prefix .. "-subjects"
-    local out = { help.with_tag("*" .. file_tag .. ".txt*  " .. doc.title, file_tag), doc.about, "" }
+    local title = "*"
+        .. file_tag
+        .. ".txt*  "
+        .. doc.title
+        .. (doc.status and ("  [Status: " .. doc.status .. "]") or "")
+    local out = { help.with_tag(title, file_tag), doc.about, "" }
     local tags = { { name = file_tag, line = 1 }, { name = file_tag .. ".txt", line = 1 } }
     local nodes = M.nodes(doc.prefix, forest)
     for _, n in ipairs(nodes) do
@@ -141,7 +155,9 @@ function M.render(doc, forest)
         table.insert(out, "")
     end
     table.insert(out, help.MODELINE)
-    table.insert(out, help.FOOTER)
+    -- the footer names the render and the status, so a document rendered
+    -- under another status reads as another version
+    table.insert(out, help.FOOTER .. M.suffix(doc.status))
     return { lines = out, tags = tags }
 end
 

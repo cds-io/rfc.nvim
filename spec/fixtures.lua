@@ -1,5 +1,5 @@
 -- The RFC texts the plugin's specs read: the same five RFCs and index
--- excerpt the cds.rfc spec uses in ../cds (fetched from the RFC Editor,
+-- excerpt the cds.rfc spec uses in ../cds-lua (fetched from the RFC Editor,
 -- form feeds and the byte-order mark removed, as a fetched text is stored).
 -- Resolved from this file's own directory so a spec runs from any working
 -- directory (the nlua run starts busted twice).
@@ -13,7 +13,7 @@ local M = {
     rfc9110 = "rfc9110.txt",
     rfc_index = "rfc-index.txt",
     -- Ethereum proposals (CC0) and excerpts of the two listing pages, the
-    -- same files the cds.eip spec reads in ../cds
+    -- same files the cds.eip spec reads in ../cds-lua
     eip1 = "eip-1.md",
     eip1559 = "eip-1559.md",
     erc20 = "erc-20.md",
@@ -35,10 +35,10 @@ local M = {
     simd_related = "simd-0268-raise-cpi-nesting-limit.md",
     simd_listing = "simd-proposals.json",
     -- the RFC subject tags: the same eleven rows of the RFC Editor's
-    -- published build the cds.subjects spec reads in ../cds
+    -- published build the cds.subjects spec reads in ../cds-lua
     rfc_tags = "rfc-tags.csv",
     -- W3C technical reports (W3C Document License): the same excerpts the
-    -- cds.html and cds.w3c specs read in ../cds
+    -- cds.html and cds.w3c specs read in ../cds-lua
     w3c_td = "w3c-wot-thing-description11.html",
     w3c_grid = "w3c-css-grid-2.html",
     w3c_tr = "w3c-tr.html",

@@ -1,3 +1,45 @@
+2026-10-24  The subjects document filtered to one status of the lifecycle
+
+  lua/rfc/sources.lua, lua/rfc/status.lua
+    Every source declares its lifecycle in order, and its index places
+    each entry in it: an RFC's category as the index prints it (PROPOSED
+    STANDARD through UNKNOWN), an EIP's status (Draft, Review, Last Call,
+    Final, Living, Stagnant, Withdrawn), a BIP's (Draft, Complete,
+    Deployed, Closed), a W3C report's maturity (Draft Standard through
+    Statement). A SIMD's status is in its text, read once the text is
+    cached. status.counts tallies the statuses present in that order, any
+    other after it by name; status.next is the cycle through them; the
+    status chosen for each source this session is the module's one model.
+
+  lua/rfc/init.lua, lua/rfc/subjects.lua
+    `:Eip status` offers All and the statuses with their counts; the
+    chosen one renders eip-subjects.txt again with only the entries
+    standing there, every heading's count following, the title line
+    reading `[Status: Final]` and the footer's render version carrying
+    the status, so a document rendered under another renders again. The
+    document opens at the section the reader was in, or at its top when
+    that section has nothing left. `:Eip status final` goes straight
+    there, case aside; `:Eip status all` is every entry; `:Eip status
+    <Tab>` completes the names. In a subjects document, gs cycles the
+    status. The choice holds for the session, from All or from the status
+    setup() names. A document shown in windows is reloaded there when it
+    is rendered again, through cds.redraw: every window keeps the section
+    its cursor was in (the document's top when that section is gone), the
+    windows stay the document's, and a contents sidebar beside one reads
+    the new rows. A status chosen from another window takes the reader to
+    the document's.
+
+  lua/cds/redraw.lua
+    Vendored: a buffer drawn again in every window showing it, each put
+    back on its place.
+
+  lua/rfc/config.lua
+    `status = { eip = "Final" }`: the status each source's subjects
+    document opens on before a choice is made.
+
+  lua/cds/rfc.lua
+    An index entry carries its status.
+
 2026-10-24  An ERC the EIPs repository never held is fetched from ERCs
 
   lua/rfc/sources.lua

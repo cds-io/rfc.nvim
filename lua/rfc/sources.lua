@@ -27,6 +27,7 @@ local M = {}
 ---@field text boolean      -- whether the source has a text to render (an RFC published as PDF only has none)
 ---@field date string|nil   -- YYYY-MM-DD, when the index dates the document (a W3C report's publication)
 ---@field file string|nil   -- the document's file as the index spells it (a proposal's path, a report's URL), for a source that is `located`
+---@field status string|nil -- where the document stands in its lifecycle (Draft, Final), for a source with `status`
 
 ---@class rfc.Subjects
 ---@field index_file string|nil   -- the cache file the subjects index is stored as; the source's own index file when the index carries the subjects
@@ -52,6 +53,8 @@ local M = {}
 ---@field render fun(id: string, lines: string[]): rfc.HelpDoc  -- pure, total
 ---@field placeholder nil|fun(lines: string[]): boolean  -- pure: whether a stored text stands in for the document rather than being it
 ---@field subjects nil|rfc.Subjects   -- the source's taxonomy, for a source that has one
+---@field status nil|string[]    -- the lifecycle, in order, as the source's process lays it out; a status outside the list follows by name
+---@field status_of nil|fun(lines: string[]): string|nil  -- pure: a document's status read from its text, for a source whose index carries none; known once the text is cached
 
 ---@type rfc.Source
 M.rfc = {
@@ -71,9 +74,21 @@ M.rfc = {
             local text = fp.any(e.formats, function(f)
                 return f == "TXT"
             end)
-            return { id = e.number, label = e.label, text = text }
+            return { id = e.number, label = e.label, text = text, status = e.status }
         end)
     end,
+    -- the standards track as RFC 2026 lays it out, then the other
+    -- categories, as the index prints them
+    status = {
+        "PROPOSED STANDARD",
+        "DRAFT STANDARD",
+        "INTERNET STANDARD",
+        "BEST CURRENT PRACTICE",
+        "INFORMATIONAL",
+        "EXPERIMENTAL",
+        "HISTORIC",
+        "UNKNOWN",
+    },
     render = help.render,
     -- the RFC Editor's subject tags: a tree of 19 roots, four levels at
     -- most, published daily as a CSV by rfc-editor/rfc-subject-tags
@@ -159,10 +174,12 @@ M.eip = {
     index = eip_index,
     entries = function(lines)
         return fp.map(eip_entries(lines), function(e)
-            return { id = e.id, label = e.title .. " (" .. e.status .. ")", text = true }
+            return { id = e.id, label = e.title .. " (" .. e.status .. ")", text = true, status = e.status }
         end)
     end,
     render = help_eip.render,
+    -- the lifecycle EIP-1 lays out, then the two ways out of it
+    status = { "Draft", "Review", "Last Call", "Final", "Living", "Stagnant", "Withdrawn" },
     -- two roots: the category (the page a row came from), with the
     -- hardfork meta EIPs one level down since their titles file them so
     -- ("Hardfork Meta - Pectra"), and the status, so Last Call and Review
@@ -203,10 +220,12 @@ M.bip = {
     end,
     entries = function(lines)
         return fp.map(bip.index(lines), function(e)
-            return { id = e.id, label = e.title .. " (" .. e.status .. ")", text = true }
+            return { id = e.id, label = e.title .. " (" .. e.status .. ")", text = true, status = e.status }
         end)
     end,
     render = help_bip.render,
+    -- the README's four statuses, in the order a BIP passes through them
+    status = { "Draft", "Complete", "Deployed", "Closed" },
     -- the README's Layer and Type columns, each a root; a Process BIP has
     -- no layer and sits under Type alone
     subjects = {
@@ -251,6 +270,13 @@ M.simd = {
         end)
     end,
     render = help_simd.render,
+    -- the directory names no status; each proposal's frontmatter does, and
+    -- SIMD-0001 lays the lifecycle out as idea to activation, living beside
+    -- it, stagnant and withdrawn out of it
+    status = { "Idea", "Draft", "Review", "Accepted", "Implemented", "Activated", "Living", "Stagnant", "Withdrawn" },
+    status_of = function(lines)
+        return eip.frontmatter(lines).status
+    end,
     -- each proposal's status, from its frontmatter, so the subjects' inputs
     -- are the proposals' own texts; the category and the type are one
     -- value for near every proposal, so they say nothing
@@ -296,10 +322,30 @@ M.w3c = {
     end,
     entries = function(lines)
         return fp.map(w3c.index(lines), function(e)
-            return { id = e.id, label = report_label(e), text = true, date = e.date, file = e.url }
+            return {
+                id = e.id,
+                label = report_label(e),
+                text = true,
+                date = e.date,
+                file = e.url,
+                status = e.maturity ~= "" and e.maturity or nil,
+            }
         end)
     end,
     render = help_w3c.render,
+    -- the maturities as the TR page names them: the Recommendation track,
+    -- then the Note track, the Registry track and Statements
+    status = {
+        "Draft Standard",
+        "Candidate Standard",
+        "Standard",
+        "Draft Note",
+        "Note",
+        "Draft Registry",
+        "Candidate Registry",
+        "Registry",
+        "Statement",
+    },
     -- three roots: the maturity, the tags, the groups by their short names
     -- (WG, IG), since 133 of 135 end in Working Group or Interest Group
     subjects = {

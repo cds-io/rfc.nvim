@@ -8,6 +8,7 @@ local M = {}
 ---@field sources table<string, boolean>  -- rfc (the RFC Editor, :Rfc), eip (Ethereum's EIPs and ERCs, :Eip), bip (Bitcoin's BIPs, :Bip), simd (Solana's SIMDs, :Simd), w3c (the W3C's technical reports, :W3c)
 ---@field view "rich"|"plain"   -- how a document opens: with rules above its headings, or as written
 ---@field toc { width: integer } -- the contents sidebar
+---@field status table<string, string>  -- the status a source's bare command opens its picker on, by prefix: { eip = "Final" }; every entry when unset
 
 M.defaults = {
     cache_dir = nil,
@@ -15,6 +16,7 @@ M.defaults = {
     sources = { rfc = true, eip = false, bip = false, simd = false, w3c = false },
     view = "rich",
     toc = { width = 44 },
+    status = {},
 }
 
 local current = vim.deepcopy(M.defaults)
@@ -31,6 +33,7 @@ function M.set(opts)
     end, "rich or plain")
     vim.validate("toc", current.toc, "table")
     vim.validate("toc.width", current.toc.width, "number")
+    vim.validate("status", current.status, "table")
     return current
 end
 

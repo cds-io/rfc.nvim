@@ -12,6 +12,8 @@ local subjects = require("rfc.subjects")
 local cds_subjects = require("cds.subjects")
 local w3c = require("cds.w3c")
 local cache = require("rfc.cache")
+local redraw = require("cds.redraw")
+local lifecycle = require("rfc.status")
 local fp = require("cds.fp")
 local Task = require("cds.task")
 
@@ -60,6 +62,8 @@ end
 function M.setup(opts)
     help.set_render(store.render_version(plugin_root()))
     local ok, err = store.register(config.set(opts))
+    -- a session's status choices start over with its settings
+    lifecycle.chosen = {}
     configured = true
     if not ok then
         M.notify(err, vim.log.levels.ERROR)
@@ -206,16 +210,51 @@ local function document_of(source, id)
     })
 end
 
+--- The entries with their statuses: as the index gives them, or, for a
+--- source whose index carries none, read from each cached text (an entry
+--- whose text is not on disk has none yet).
+---@param source rfc.Source
+---@param entries rfc.Entry[]
+---@return rfc.Entry[]
+local function with_status(source, entries)
+    if not source.status_of then
+        return entries
+    end
+    return fp.map(entries, function(e)
+        local copy = vim.deepcopy(e)
+        copy.status = raw_of(source, e.id):memo("status", source.status_of)
+        return copy
+    end)
+end
+
+--- The statuses a source's cached index places its entries in, with
+--- counts, in lifecycle order; none before the index is on disk.
+---@param source rfc.Source
+---@return { name: string, count: integer }[]
+local function statuses_of(source)
+    local entries = index_of(source):memo("entries", source.entries)
+    return entries and lifecycle.counts(source.status, with_status(source, entries)) or {}
+end
+
 --- A source's subjects document as a cache entry: over its subjects
 --- index, or, for a source whose subjects are in its documents' texts,
 --- over the text of every document the cached index names (none cached:
 --- no inputs, and the document is not current until the index is).
+--- Filtered to the status chosen for the source (the reader's default
+--- before any choice): only the entries standing there are filed, the
+--- title line says so, and the render version carries the status, so a
+--- document rendered under another is rendered again. The source's index
+--- says where each entry stands, so it joins the inputs when a status
+--- filters.
 ---@param source rfc.Source
 ---@return rfc.Derived
 local function subjects_of(source)
     local s = source.subjects
-    local doc = { prefix = source.prefix, title = s.title, about = s.about, key = source.key }
+    local status =
+        lifecycle.named(source.status or {}, lifecycle.get(source.prefix, config.get().status[source.prefix]))
+    local doc = { prefix = source.prefix, title = s.title, about = s.about, key = source.key, status = status }
     local name = source.prefix .. "-subjects"
+    local version = help.RENDER .. subjects.suffix(status)
     if s.texts then
         local listed = index_of(source):memo("entries", source.entries) or {}
         return cache.derived(config.get(), {
@@ -223,25 +262,44 @@ local function subjects_of(source)
             from = fp.map(listed, function(e)
                 return raw_of(source, e.id)
             end),
-            version = help.RENDER,
+            version = version,
             limit = 8,
             produce = function(...)
                 local texts = { ... }
-                local entries = fp.map(listed, function(e, i)
-                    return s.entry(e.id, texts[i])
+                local entries = fp.filter_map(listed, function(e, i)
+                    if not status or source.status_of(texts[i]) == status then
+                        return s.entry(e.id, texts[i])
+                    end
                 end)
                 return subjects.render(doc, cds_subjects.tree(entries, s.roots))
             end,
         })
     end
+    local from = { subjects_index_of(source) }
+    if status then
+        table.insert(from, index_of(source))
+    end
     return cache.derived(config.get(), {
         name = name,
-        from = { subjects_index_of(source) },
-        version = help.RENDER,
-        produce = function(lines)
+        from = from,
+        version = version,
+        produce = function(lines, index_lines)
             local entries, err = s.entries(lines)
             if not entries then
                 return nil, err
+            end
+            if status then
+                local standing = fp.set(
+                    fp.filter(with_status(source, source.entries(index_lines)), function(e)
+                        return e.status == status
+                    end),
+                    function(e)
+                        return e.id
+                    end
+                )
+                entries = fp.filter(entries, function(e)
+                    return standing[e.id] == true
+                end)
             end
             return subjects.render(doc, cds_subjects.tree(entries, s.roots))
         end,
@@ -278,6 +336,52 @@ end
 ---@param label string
 ---@param done fun(value: any, err: any)
 local with_subjects
+
+--- A document window's place across a redraw: the section its cursor is
+--- in, by tag, since the lines move; :help on that tag after, and on the
+--- document's own tag (its top) when the section is gone, both in that
+--- window, which :help reuses as it is a help window.
+---@param file_tag string  -- eip-subjects, rfc9110
+---@return cds.redraw.Keep
+local function section_of(file_tag)
+    return {
+        key = function(win)
+            local headings = view.headings(vim.api.nvim_win_get_buf(win))
+            local at = outline.at(headings, vim.api.nvim_win_get_cursor(win)[1])
+            return at and headings[at].tag or file_tag
+        end,
+        seek = function(win, tag)
+            return vim.api.nvim_win_call(win, function()
+                return pcall(vim.cmd.help, tag) or pcall(vim.cmd.help, file_tag)
+            end)
+        end,
+    }
+end
+
+--- The buffer holding a document's earlier render, once the file is
+--- written anew: reloaded from disk in every window showing it, each
+--- window kept in its section, so a help window stays one (and :help
+--- reuses it) and the sidebar beside it reads the new rows; deleted when
+--- no window shows it, so :help reads the file rather than what the
+--- buffer loaded.
+---@param path string
+local function refresh(path)
+    local buf = vim.fn.bufnr(path)
+    if buf == -1 then
+        return
+    end
+    if #vim.fn.win_findbuf(buf) == 0 then
+        vim.api.nvim_buf_delete(buf, { force = true })
+        return
+    end
+    local wins = redraw.windows(buf, function(showing)
+        -- one :edit reloads the buffer for every window
+        vim.api.nvim_win_call(showing[1], function()
+            vim.cmd("silent edit")
+        end)
+    end, section_of(vim.fn.fnamemodify(path, ":t:r")))
+    fp.each(wins, toc.reload)
+end
 
 local function run(task, label, done)
     local handle = task:on_main():run()
@@ -334,10 +438,7 @@ with_subjects = function(source, done)
             M.notify(err, vim.log.levels.ERROR)
             return
         end
-        local stale = vim.fn.bufnr(store.doc_path(cfg, name))
-        if stale ~= -1 then
-            vim.api.nvim_buf_delete(stale, { force = true })
-        end
+        refresh(store.doc_path(cfg, name))
         done()
     end)
 end
@@ -410,14 +511,11 @@ function M.open(source, id, tag)
             M.notify(err, vim.log.levels.ERROR)
             return
         end
-        -- a buffer still holding the document's earlier render goes, so :help
-        -- reads the file written just now rather than showing what it loaded;
-        -- then straight to :help, since asking jump again would ask the
-        -- store again
-        local stale = vim.fn.bufnr(store.doc_path(config.get(), name))
-        if stale ~= -1 then
-            vim.api.nvim_buf_delete(stale, { force = true })
-        end
+        -- a buffer still holding the document's earlier render is refreshed,
+        -- so :help reads the file written just now rather than showing what
+        -- it loaded; then straight to :help, since asking jump again would
+        -- ask the store again
+        refresh(store.doc_path(config.get(), name))
         help_tag(tag, source)
     end)
 end
@@ -553,6 +651,83 @@ function M.pick(query, from)
     end)
 end
 
+--- Filters the source's subjects document to one status: `name` empty
+--- offers every status the index holds, with its count and All first;
+--- otherwise the status it names, case aside, or All. The document is
+--- rendered again with the entries standing there and opened, at the
+--- section the reader was in when it was the document shown.
+---@param source rfc.Source
+---@param name string
+function M.status(source, name)
+    ensure_setup()
+    run(M.index_lines(source), source.label .. " index", function(_, err)
+        if err then
+            M.notify(err, vim.log.levels.ERROR)
+            return
+        end
+        local counts = statuses_of(source)
+        if #counts == 0 and source.status_of then
+            M.notify(
+                ("%s statuses are in the proposals' texts; :%s subjects fetches every one"):format(
+                    source.label,
+                    source.label:sub(1, 1) .. source.label:sub(2):lower()
+                ),
+                vim.log.levels.INFO
+            )
+        end
+        --- The choice recorded, the document rendered again. A window
+        --- showing it is kept in its section by the redraw; the reader is
+        --- taken to one when elsewhere, and the document opened when none.
+        local function apply(status)
+            lifecycle.set(source.prefix, status)
+            with_subjects(source, function()
+                local file_tag = source.prefix .. "-subjects"
+                local buf = vim.fn.bufnr(store.doc_path(config.get(), file_tag))
+                if buf == vim.api.nvim_get_current_buf() then
+                    return
+                end
+                local wins = buf ~= -1 and vim.fn.win_findbuf(buf) or {}
+                if #wins > 0 then
+                    vim.api.nvim_set_current_win(wins[1])
+                    return
+                end
+                help_tag(file_tag, source)
+            end)
+        end
+        if name ~= "" then
+            if name:lower() == "all" then
+                apply(nil)
+                return
+            end
+            local hit = fp.find(counts, function(c)
+                return c.name:lower() == name:lower()
+            end)
+            if not hit then
+                M.notify(("%s has no status %s"):format(source.label, name), vim.log.levels.WARN)
+                return
+            end
+            apply(hit.name)
+            return
+        end
+        local total = #(index_of(source):memo("entries", source.entries) or {})
+        local items = fp.map(counts, function(c)
+            return { name = c.name, text = ("%s  (%d)"):format(c.name, c.count) }
+        end)
+        table.insert(items, 1, { name = nil, text = ("All  (%d)"):format(total) })
+        vim.ui.select(items, {
+            kind = "rfc",
+            prompt = source.label .. " status",
+            format_item = function(item)
+                return item.text
+            end,
+        }, function(item)
+            if item then
+                apply(item.name)
+            end
+        end)
+    end)
+end
+
 --- The nodes of a source's subjects, read from the subjects document in
 --- the store (completion cannot wait on the network), once per version
 --- of the file; none before the document exists.
@@ -635,6 +810,11 @@ function M.candidates(from)
     local any_subjects = fp.any(from, function(source)
         return enabled(source) and source.subjects ~= nil
     end)
+    if fp.any(from, function(source)
+        return enabled(source) and source.status ~= nil
+    end) then
+        table.insert(out, "status")
+    end
     if any_subjects then
         table.insert(out, "subjects")
     end
@@ -673,8 +853,9 @@ function M.complete(from, arglead)
 end
 
 --- The command for a source: a number, a tag (the source's own or an
---- alias), `subjects` with a node after it or not, words to search its
---- index, or nothing for its picker. A completed item carries its title
+--- alias), `subjects` with a node after it or not, `status` with a status
+--- after it or not, words to search its index, or nothing for its picker
+--- (on the configured status, when one is set). A completed item carries its title
 --- after the tag, so only the first word is the tag. After `subjects`,
 --- completion is over the nodes of the cached subjects index.
 ---@param source rfc.Source
@@ -691,6 +872,8 @@ function M.command(source)
             M.jump(source.prefix .. (first:gsub("^0+(%d)", "%1")))
         elseif first == "subjects" and source.subjects then
             M.subjects(source, vim.trim(arg:sub(#first + 1)))
+        elseif first == "status" and source.status then
+            M.status(source, vim.trim(arg:sub(#first + 1)))
         elseif sources.of(first) == source then
             M.jump(first)
         elseif source.key == "shortname" and arg == first then
@@ -708,6 +891,13 @@ function M.command(source)
                     return n.slug
                 end)
                 return arglead == "" and slugs or vim.fn.matchfuzzy(slugs, arglead)
+            end
+            if source.status and cmdline:match("^%S+%s+status%s") then
+                local names = fp.map(statuses_of(source), function(c)
+                    return c.name
+                end)
+                table.insert(names, 1, "All")
+                return arglead == "" and names or vim.fn.matchfuzzy(names, arglead)
             end
             return M.complete(from, arglead)
         end
@@ -764,18 +954,28 @@ function M.attach(buf)
     vim.keymap.set("n", "gO", function()
         toc.toggle(vim.api.nvim_get_current_win())
     end, { buffer = buf, desc = "rfc: the contents beside the document" })
+    local subjects_source = sources.of(vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buf), ":t:r"))
+    if subjects_source and vim.api.nvim_buf_get_name(buf):match("%-subjects%.txt$") then
+        vim.keymap.set("n", "gs", function()
+            local order = fp.map(statuses_of(subjects_source), function(c)
+                return c.name
+            end)
+            local current = lifecycle.get(subjects_source.prefix, config.get().status[subjects_source.prefix])
+            M.status(subjects_source, lifecycle.next(order, current) or "all")
+        end, { buffer = buf, desc = "rfc: the subjects on the next status of the lifecycle" })
+    end
     vim.keymap.set("n", "<leader>tv", function()
         view.toggle(buf)
     end, { buffer = buf, desc = "rfc: [T]oggle the rich [v]iew" })
     -- a rendered document keeps its source's line breaks, so a paragraph
     -- can run far past the help width; the window wraps it at word
     -- boundaries, continuations indented and list items hanging
-    for _, win in ipairs(vim.fn.win_findbuf(buf)) do
+    fp.each(vim.fn.win_findbuf(buf), function(win)
         vim.wo[win].wrap = true
         vim.wo[win].linebreak = true
         vim.wo[win].breakindent = true
         vim.wo[win].breakindentopt = "list:-1"
-    end
+    end)
     if config.get().view == "rich" then
         -- :help sets the filetype before it reads the file, so the view is
         -- drawn now for a buffer that has its text and after the read otherwise

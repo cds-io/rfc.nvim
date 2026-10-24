@@ -38,8 +38,8 @@ A short explainer:
 
 ## Finding a document
 
-One command per source, each with the same four forms, and a fifth,
-`subjects`, for a source that has them:
+One command per source, each with the same four forms, a fifth, `status`,
+and a sixth, `subjects`, for a source that has them:
 
 ```
 :Rfc                     the RFC index in vim.ui.select
@@ -49,6 +49,9 @@ One command per source, each with the same four forms, and a fifth,
 :Rfc rfc2616-14.4        a tag
 :Rfc sem<Tab>            completion by number or title over the cached
                          index and the tags of cached RFCs
+:Rfc status              the subjects on one status: the standards track
+                         and the other categories, each with its count
+:Rfc status internet standard   straight to the subjects filtered so
 :Rfc subjects            the RFCs by subject, as one help document
 :Rfc subjects dns        a subject by its slug or its name, else a search
                          over the subjects
@@ -58,6 +61,9 @@ One command per source, each with the same four forms, and a fifth,
 :Eip 20                  ERC-20: the EIP and ERC numbers are one space
 :Eip erc20               a tag, by either name
 :Eip tok<Tab>            completion
+:Eip status              Draft, Review, Last Call, Final, Living, Stagnant,
+                         Withdrawn, each with its count; All first
+:Eip status final        the subjects filtered to the Final proposals
 :Eip subjects            the EIPs by category
 
 :Bip                     the BIP index, the repository's README
@@ -87,6 +93,40 @@ taxonomy is one Enter away (a picker's own typed filter may hide it once
 the typed text stops matching). Completion cannot wait on the network, so
 it offers what the last picker or search left in the cache; those fetch
 an index that is missing or a day old.
+
+## By status
+
+Every source's documents move through a lifecycle, and its index says
+where each stands: an RFC's category (PROPOSED STANDARD, INTERNET
+STANDARD, INFORMATIONAL), an EIP's status (Draft, Review, Last Call,
+Final, Living, Stagnant, Withdrawn), a BIP's (Draft, Complete, Deployed,
+Closed), a W3C report's maturity (Draft Standard, Candidate Standard,
+Standard, Note). The status cuts across the subjects: a Core EIP and an
+ERC are each Draft or Final, so the filter is the subjects document's.
+
+`:Eip status` offers the statuses in the lifecycle's order, each with its
+count and `All` first. Choosing one renders `eip-subjects.txt` again with
+only the proposals standing there: every category keeps its heading with
+the count of what remains (`Core  (448)` reads `Core  (131)` under Final),
+the `Status` root has that one child, and the title line reads
+`*eip-subjects.txt*  EIPs by subject  [Status: Final]`. The document
+opens at the section you were in, or at its top when that section has
+nothing left. `:Eip status final` goes straight there, case aside,
+`:Eip status all` puts everything back, and `:Eip status <Tab>` completes
+the names. In the document, `gs` cycles the status: All, then each in
+order, then All again; every window showing the document keeps its
+section, and the contents sidebar follows.
+
+The choice holds for the session and starts from `All`, or from the
+status `setup()` names for the source:
+
+```lua
+require("rfc").setup({ sources = { eip = true }, status = { eip = "Final" } })
+```
+
+The SIMDs keep their status in each proposal's text, so theirs are known
+once `:Simd subjects` has fetched the texts; `:Simd status` says so until
+then.
 
 ## By subject
 
