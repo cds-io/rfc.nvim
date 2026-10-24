@@ -1,3 +1,0 @@
-# lua/cds/ is vendored from ../cds in that repository's two-space style,
-# so it stays byte-comparable to its source.
-lua/cds/

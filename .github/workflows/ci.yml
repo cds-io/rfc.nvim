@@ -23,6 +23,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          path: rfc.nvim
+      # the house library beside the plugin, at its main as lazy.lua
+      # tracks it, where .busted looks for it
+      - uses: actions/checkout@v7
+        with:
+          repository: cds-io/cds-lua
+          path: cds-lua
       - uses: leafo/gh-actions-lua@v13
         with:
           luaVersion: "5.1"
@@ -31,6 +39,7 @@ jobs:
         run: luarocks install busted
       - name: Test
         run: make test
+        working-directory: rfc.nvim
 
   selene:
     runs-on: ubuntu-latest

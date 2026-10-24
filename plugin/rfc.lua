@@ -4,7 +4,24 @@
 -- :Simd is Solana's SIMDs; :W3c is the W3C's technical reports, which go
 -- by shortname. Each takes a number (or shortname), a tag, `subjects` for
 -- the source's taxonomy, words to search its index, or nothing for its
--- picker, and completes by number or title over what is cached.
+-- picker, and completes by number or title over what is cached. Nothing is
+-- defined until the cds-lua on the runtimepath is seen to provide what the
+-- plugin uses.
+
+-- the one check kept here: a cds-lua too old to carry cds.needs fails this
+-- require, which is the answer
+local ok, needs = pcall(require, "cds.needs")
+local problem
+if ok then
+    problem = needs.check("rfc.nvim", require("rfc.needs"))
+else
+    problem = "rfc.nvim needs cds-lua with cds.needs: install or update cds-io/cds-lua"
+end
+if problem then
+    vim.notify(problem, vim.log.levels.ERROR)
+    return
+end
+
 local function define(name, prefix, desc)
     vim.api.nvim_create_user_command(name, function(cmd)
         local run, _ = require("rfc").command(require("rfc.sources")[prefix])

@@ -1,3 +1,20 @@
+2026-10-24  cds-lua is a dependency, tracked at its main, and checked at startup
+
+  lazy.lua, lua/rfc/needs.lua, plugin/rfc.lua
+    lazy.lua names the plugin, keeps it eager with `rfc` as the module
+    opts go to, and depends on cds-io/cds-lua, tracking its main, loaded on its
+    first require, so one copy of the house library serves every plugin of
+    the family on the runtimepath. rfc.needs declares the cds names the
+    plugin uses, by module; the entry asks cds.needs.check before defining
+    anything and, on a gap or on a cds-lua too old to carry cds.needs,
+    says so in words and defines nothing.
+
+  .busted, spec/strict.lua, Makefile, .github/workflows/ci.yml
+    The specs find the library in ../cds-lua, the checkout beside this
+    one, and run with each declared cds module behind cds.needs.strict, so
+    an undeclared use fails a spec. CI checks cds-lua out there. `make check` is test, test-nvim, lint and fmt-check;
+    lua/cds/ is gone.
+
 2026-10-24  The subjects document filtered to one status of the lifecycle
 
   lua/rfc/sources.lua, lua/rfc/status.lua
