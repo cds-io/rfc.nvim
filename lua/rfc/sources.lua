@@ -131,14 +131,27 @@ M.eip = {
     label = "EIP",
     raw_ext = "md",
     index_file = "eip-categories.html",
-    -- the EIPs repository first; a moved stub means the text lives in ERCs
+    -- the EIPs repository first, then ERCs: a moved stub says the text is
+    -- there, and an ERC filed since the repositories split has no stub at
+    -- all, so a number EIPs refuses is asked of ERCs too, the first refusal
+    -- being the one reported when both refuse
     fetch = function(id)
-        return fetch.proposal(EIPS.repo, EIPS.dir, EIPS.prefix, id):bind(function(text)
-            if moved(help.clean(text)) then
-                return fetch.proposal(ERCS.repo, ERCS.dir, ERCS.prefix, id)
-            end
-            return Task.of(text)
-        end)
+        local function from_ercs()
+            return fetch.proposal(ERCS.repo, ERCS.dir, ERCS.prefix, id)
+        end
+        return fetch
+            .proposal(EIPS.repo, EIPS.dir, EIPS.prefix, id)
+            :recover(function(err)
+                return from_ercs():map_err(function()
+                    return err
+                end)
+            end)
+            :bind(function(text)
+                if moved(help.clean(text)) then
+                    return from_ercs()
+                end
+                return Task.of(text)
+            end)
     end,
     -- a stub stored by a fetch that did not yet follow the move is no text to
     -- render again; the document is fetched

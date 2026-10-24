@@ -1,3 +1,11 @@
+2026-10-24  An ERC the EIPs repository never held is fetched from ERCs
+
+  lua/rfc/sources.lua
+    The eip source asks the EIPs repository first and the ERCs repository
+    second, on a moved stub and on a refusal alike, since an ERC filed
+    after the repositories split (ERC-7994, ERC-8001) has no stub in EIPs.
+    A number neither holds is reported as the EIP.
+
 2026-10-23  A document's window soft-wraps at word boundaries
 
   lua/rfc/init.lua

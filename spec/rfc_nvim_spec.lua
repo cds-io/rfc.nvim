@@ -514,6 +514,26 @@ describe("rfc", function()
             assert.are.same({ "eip20", "erc20" }, case.fetched)
             assert.is_truthy(vim.api.nvim_get_current_line():match("%*eip20%* %*erc20%*$"))
         end)
+
+        it("asks the ERCs repository for an ERC the EIPs repository never held", function()
+            vim.cmd("Eip 1123")
+            assert.is_true(editor.wait_help("eip1123"))
+            assert.are.same({ "eip1123", "erc1123" }, case.fetched)
+            assert.is_truthy(
+                vim.api
+                    .nvim_get_current_line()
+                    :match("^%*eip1123%.txt%*  Revised Ethereum Smart Contract Packaging Standard.*%*erc1123%*$")
+            )
+        end)
+
+        it("names the EIP when neither repository holds the number", function()
+            vim.cmd("Eip 2718")
+            assert.is_true(vim.wait(2000, function()
+                return #case.notices == 2
+            end))
+            assert.are.same({ "eip2718", "erc2718" }, case.fetched)
+            assert.are.equal("EIP 2718 does not exist", case.notices[2].msg)
+        end)
     end)
 
     describe(":Bip, its own", function()

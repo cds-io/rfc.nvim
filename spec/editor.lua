@@ -74,8 +74,14 @@ function M.start()
     fetch.index = function()
         return answer("index", fixtures.rfc_index)
     end
-    local proposals =
-        { eip1 = fixtures.eip1, eip1559 = fixtures.eip1559, eip20 = fixtures.eip20_moved, erc20 = fixtures.erc20 }
+    local proposals = {
+        eip1 = fixtures.eip1,
+        eip1559 = fixtures.eip1559,
+        eip20 = fixtures.eip20_moved,
+        erc20 = fixtures.erc20,
+        -- an ERC filed since the repositories split: ERCs holds it, EIPs has no stub
+        erc1123 = fixtures.erc1123,
+    }
     fetch.proposal = function(_, _, prefix, id)
         return answer(prefix .. id, proposals[prefix .. id], prefix:upper() .. " " .. id .. " does not exist")
     end
