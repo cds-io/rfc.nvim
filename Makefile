@@ -12,9 +12,9 @@ STYLUA ?= stylua
 # mini.nvim lazy installed, which carries it.
 MINIDOC ?= $(firstword $(wildcard ../mini.doc $(HOME)/.local/share/nvim/lazy/mini.doc $(HOME)/.local/share/nvim/lazy/mini.nvim))
 
-.PHONY: check test test-nvim lint fmt fmt-check doc doc-check
+.PHONY: check test test-nvim lint typecheck fmt fmt-check doc doc-check
 
-check: test test-nvim lint fmt-check doc-check
+check: test test-nvim lint typecheck fmt-check doc-check
 
 # The house library, cds-lua, is a dependency: lazy.lua names the dependency the
 # editor loads, and .busted finds the same modules in ../cds-lua, the
@@ -46,6 +46,12 @@ test-nvim:
 # lua/neovim std library does not model.
 lint:
 	$(SELENE) lua plugin
+
+# lua-language-server over lua/ and plugin/, with Neovim's runtime types and
+# ../cds-lua in the library (the script asks the running Neovim for the
+# runtime). LUALS names the binary when it is not on PATH, as Mason's is not.
+typecheck:
+	nvim --headless -u NONE -i NONE -l scripts/typecheck.lua
 
 # Formats the Lua tree with stylua (stylua.toml).
 fmt:

@@ -1,3 +1,22 @@
+2026-10-24  The language server's type check is a gate
+
+  scripts/typecheck.lua, Makefile, .github/workflows/ci.yml
+    `make typecheck` runs lua-language-server --check over lua/ and plugin/
+    with Neovim's runtime types and ../cds-lua in the library, and fails on
+    a warning; `make check` and a CI job run it. The script writes the
+    server's configuration from the running Neovim's VIMRUNTIME, resolves
+    `require("rfc")` to lua/rfc/init.lua alone (the loose default also
+    matches plugin/rfc.lua by its name), and takes LUALS as the binary when
+    it is not on PATH.
+
+  lua/rfc/init.lua, lua/rfc/cache.lua, lua/rfc/fetch.lua, lua/rfc/proposal.lua,
+  lua/rfc/sources.lua
+    The check passes clean: the doc blocks for raw_of and run sit on their
+    functions, the cache specs' function types are parenthesised so the
+    fields after them parse, rfc.Source.render takes the entry's file as an
+    optional third argument, and the Result convention's err, a heading's
+    level and a source's subjects are asserted where they are read.
+
 2026-10-24  The manual as :help rfc.nvim, generated from the source
 
   lua/rfc/init.lua, lua/rfc/config.lua, doc/rfc.txt

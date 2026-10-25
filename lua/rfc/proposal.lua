@@ -212,7 +212,8 @@ function M.body(blocks, file_tag, link)
     local tag_of, used, top = {}, {}, nil
     for _, b in ipairs(blocks) do
         if b.kind == "heading" then
-            top = math.min(top or b.level, b.level)
+            local level = assert(b.level, "a heading carries its level")
+            top = math.min(top or level, level)
             local name = file_tag .. "-" .. help.slug(b.title)
             if used[name] then
                 used[name] = used[name] + 1

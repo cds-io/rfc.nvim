@@ -264,7 +264,7 @@ function M.setup(opts)
     lifecycle.chosen = {}
     configured = true
     if not ok then
-        M.notify(err, vim.log.levels.ERROR)
+        M.notify(assert(err, "a refused registration carries its error"), vim.log.levels.ERROR)
     end
 end
 
@@ -348,7 +348,7 @@ end
 ---@param source rfc.Source
 ---@return rfc.Fetched
 local function subjects_index_of(source)
-    local s = source.subjects
+    local s = assert(source.subjects, "a source with a subjects document declares its subjects")
     return cache.fetched(config.get(), {
         file = s.index_file,
         produce = s.index,
@@ -358,11 +358,6 @@ local function subjects_index_of(source)
     })
 end
 
---- A document's text as a cache entry: it never ages, and a placeholder
---- (the stub a moved proposal leaves) is fetched again.
----@param source rfc.Source
----@param id string
----@return rfc.Fetched
 --- The index's entry for a document, from the cached index, parsed once
 --- per copy; nil without.
 ---@param source rfc.Source
@@ -375,6 +370,11 @@ entry_of = function(source, id)
     end)
 end
 
+--- A document's text as a cache entry: it never ages, and a placeholder
+--- (the stub a moved proposal leaves) is fetched again.
+---@param source rfc.Source
+---@param id string
+---@return rfc.Fetched
 local function raw_of(source, id)
     local entry = source.key == "shortname" and entry_of(source, id) or nil
     return cache.fetched(config.get(), {
@@ -447,7 +447,7 @@ end
 ---@param source rfc.Source
 ---@return rfc.Derived
 local function subjects_of(source)
-    local s = source.subjects
+    local s = assert(source.subjects, "a source with a subjects document declares its subjects")
     local status =
         lifecycle.named(source.status or {}, lifecycle.get(source.prefix, config.get().status[source.prefix]))
     local doc = { prefix = source.prefix, title = s.title, about = s.about, key = source.key, status = status }
@@ -528,11 +528,6 @@ function M.ensure(source, id)
     return document_of(source, id):ensure()
 end
 
---- Runs a Task on the main loop, tracked in the activity segment, and hands
---- `done(value, err)` its outcome; a thrown error arrives as the err.
----@param task cds.Task
----@param label string
----@param done fun(value: any, err: any)
 local with_subjects
 
 --- A document window's place across a redraw: the section its cursor is
@@ -581,6 +576,11 @@ local function refresh(path)
     fp.each(wins, toc.reload)
 end
 
+--- Runs a Task on the main loop, tracked in the activity segment, and hands
+--- `done(value, err)` its outcome; a thrown error arrives as the err.
+---@param task cds.Task
+---@param label string
+---@param done fun(value: any, err: any)
 local function run(task, label, done)
     local handle = task:on_main():run()
     M._activity:track("fetch", label, handle)
@@ -721,7 +721,7 @@ end
 --- The tag under the cursor, through jump.
 function M.follow()
     local ok, word = pcall(vim.fn.expand, "<cword>")
-    if not ok or word == "" then
+    if not ok or type(word) ~= "string" or word == "" then
         M.notify("nothing under the cursor", vim.log.levels.WARN)
         return
     end

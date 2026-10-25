@@ -20,6 +20,7 @@ M.github_raw = "https://raw.githubusercontent.com/"
 local function get(url)
     local res, err = http.request({ method = "GET", url = url, timeout = 30 })
     if not res then
+        assert(err, "a refused request carries its error")
         return nil, err.message
     end
     if res.status ~= status.OK then
@@ -140,6 +141,7 @@ function M.w3c(url, shortname, since)
         local headers = since and { ["If-Modified-Since"] = w3c.http_time(since) } or nil
         local res, err = http.request({ method = "GET", url = url, headers = headers, timeout = 30 })
         if not res then
+            assert(err, "a refused request carries its error")
             return nil, ("W3C %s: %s"):format(shortname, err.message)
         end
         if res.status == status.NOT_MODIFIED then

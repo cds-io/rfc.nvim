@@ -50,7 +50,7 @@ local M = {}
 ---@field located boolean|nil  -- the index names each document's file (its entries carry `file`), so a fetch goes through the index the rim keeps
 ---@field index fun(): cds.Task                    -- of the index text as one string
 ---@field entries fun(lines: string[]): rfc.Entry[]  -- pure
----@field render fun(id: string, lines: string[]): rfc.HelpDoc  -- pure, total
+---@field render fun(id: string, lines: string[], file?: string): rfc.HelpDoc  -- pure, total; `file` is the entry's, for a located source
 ---@field placeholder nil|fun(lines: string[]): boolean  -- pure: whether a stored text stands in for the document rather than being it
 ---@field subjects nil|rfc.Subjects   -- the source's taxonomy, for a source that has one
 ---@field status nil|string[]    -- the lifecycle, in order, as the source's process lays it out; a status outside the list follows by name

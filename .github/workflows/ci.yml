@@ -60,6 +60,27 @@ jobs:
         run: make doc-check
         working-directory: rfc.nvim
 
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: rfc.nvim
+      - uses: actions/checkout@v7
+        with:
+          repository: cds-io/cds-lua
+          path: cds-lua
+      - uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: nightly # the runtime types the plugin is written against (vim.async is 0.13+)
+      - run: |
+          curl -fsSL https://github.com/LuaLS/lua-language-server/releases/download/3.19.2/lua-language-server-3.19.2-linux-x64.tar.gz | tar xz -C "$HOME"
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+      - name: Type check
+        run: make typecheck
+        working-directory: rfc.nvim
+
   selene:
     runs-on: ubuntu-latest
     steps:
