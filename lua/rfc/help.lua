@@ -3,7 +3,7 @@
 -- `:help rfc9110-3.1`, follow |links| with CTRL-] and come back with CTRL-T.
 -- Nothing here touches the editor; the store writes the document and the
 -- tags file, and `:help` does the rest.
-local rfc = require("cds.rfc")
+local rfc = require("rfc.source.rfc")
 local fp = require("cds.fp")
 
 local M = {}
@@ -152,7 +152,7 @@ end
 --- section links only when its heading was found, since a link to nothing
 --- is a dead end; a citation only when the references list it, and never
 --- the one a reference entry is defining on that line.
----@param m cds.rfc.Mention
+---@param m rfc.source.rfc.Mention
 ---@param ctx rfc.help.Context
 ---@param own? string   -- the citation the line defines, if it is a reference entry
 ---@return string|nil
@@ -172,7 +172,7 @@ end
 
 --- A block's text with every mention replaced by its link, last to first
 --- so the earlier spans stay where the reader found them.
----@param b cds.rfc.Block
+---@param b rfc.source.rfc.Block
 ---@param ctx rfc.help.Context
 ---@return string
 local function link(b, ctx)

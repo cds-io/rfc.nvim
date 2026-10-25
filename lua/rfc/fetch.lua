@@ -5,7 +5,7 @@
 local Task = require("cds.task")
 local http = require("cds.http")
 local status = http.status
-local w3c = require("cds.w3c")
+local w3c = require("rfc.source.w3c")
 
 local M = {}
 

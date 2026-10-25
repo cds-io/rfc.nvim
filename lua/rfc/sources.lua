@@ -10,12 +10,12 @@ local help_eip = require("rfc.help_eip")
 local help_bip = require("rfc.help_bip")
 local help_simd = require("rfc.help_simd")
 local help_w3c = require("rfc.help_w3c")
-local rfc = require("cds.rfc")
-local eip = require("cds.eip")
-local bip = require("cds.bip")
-local simd = require("cds.simd")
-local w3c = require("cds.w3c")
-local subjects = require("cds.subjects")
+local rfc = require("rfc.source.rfc")
+local eip = require("rfc.source.eip")
+local bip = require("rfc.source.bip")
+local simd = require("rfc.source.simd")
+local w3c = require("rfc.source.w3c")
+local subjects = require("rfc.source.subjects")
 local Task = require("cds.task")
 local fp = require("cds.fp")
 
@@ -32,9 +32,9 @@ local M = {}
 ---@class rfc.Subjects
 ---@field index_file string|nil   -- the cache file the subjects index is stored as; the source's own index file when the index carries the subjects
 ---@field index nil|fun(): cds.Task   -- of the index text as one string
----@field entries nil|fun(lines: string[]): cds.subjects.Entry[]|nil, string|nil  -- pure: the subjects from the index
+---@field entries nil|fun(lines: string[]): rfc.source.subjects.Entry[]|nil, string|nil  -- pure: the subjects from the index
 ---@field texts boolean|nil       -- the subjects come from the documents' own texts, every one the index names
----@field entry nil|fun(id: string, lines: string[]): cds.subjects.Entry  -- pure: a document's subjects from its text
+---@field entry nil|fun(id: string, lines: string[]): rfc.source.subjects.Entry  -- pure: a document's subjects from its text
 ---@field title string            -- the document's title: RFCs by subject
 ---@field about string            -- the line naming the data
 ---@field roots string[]|nil      -- the roots first, in this order; the rest follow by name
@@ -113,7 +113,7 @@ local EIP_CATEGORIES = { "core", "networking", "interface", "erc", "meta", "info
 
 --- The listing's entries with each number once; the first listing wins.
 ---@param lines string[]
----@return cds.eip.Entry[]
+---@return rfc.source.eip.Entry[]
 local function eip_entries(lines)
     return fp.unique(eip.listing(lines), function(e)
         return e.id
@@ -295,7 +295,7 @@ M.simd = {
 
 --- A report's picker label: its title, with the maturity when the index
 --- gives one.
----@param e cds.w3c.Entry
+---@param e rfc.source.w3c.Entry
 ---@return string
 local function report_label(e)
     return e.maturity ~= "" and (e.title .. " (" .. e.maturity .. ")") or e.title
@@ -304,7 +304,7 @@ end
 --- The W3C's technical reports, by shortname: the TR page is the index,
 --- a report is fetched at the URL the page spells (89 shortnames carry
 --- uppercase letters, and the lowercased URL only redirects), asked
---- conditionally when a copy is on disk, and rendered through cds.html.
+--- conditionally when a copy is on disk, and rendered through rfc.source.html.
 ---@type rfc.Source
 M.w3c = {
     prefix = "w3c",

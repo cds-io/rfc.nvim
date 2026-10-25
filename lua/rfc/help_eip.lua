@@ -3,7 +3,7 @@
 -- proposal in the ERC category carries its ERC name as a second tag,
 -- since the texts of other proposals use both, and one that moved says
 -- where. Nothing here touches the editor.
-local eip = require("cds.eip")
+local eip = require("rfc.source.eip")
 local proposal = require("rfc.proposal")
 
 local M = {}

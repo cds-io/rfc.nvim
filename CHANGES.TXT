@@ -1,3 +1,15 @@
+2026-10-25  The document readers are the plugin's own, under rfc.source
+
+  lua/rfc/source/, spec/source_*_spec.lua, spec/fixtures.lua, lua/rfc/needs.lua
+    The readers for RFC text, EIPs, BIPs, SIMDs and W3C reports (with the
+    html reader's four modules), mentions, subjects and CSV sit in
+    lua/rfc/source/ as the plugin's pure core, named rfc.source.<name>, their
+    classes likewise; each returns its table outright, since the module and
+    its callers ship together. Their specs run in the plain tier over the
+    plugin's fixtures, which carry the two listing pages and a finder.
+    needs.lua declares what cds-lua carries: activity, async, fp, http,
+    images, redraw, result and task.
+
 2026-10-25  The vocabulary comes from the cds-lua-fp rock
 
   .busted, scripts/typecheck.lua, .github/workflows/ci.yml, plugin/rfc.lua

@@ -166,7 +166,7 @@ default.
   `w3c`    tags `w3c-wcag22`, `w3c-css-grid-2#5.3` (the `#` splits the
          shortname from the section, since shortnames carry dashes); the
          HTML from www.w3.org/TR/<shortname>/ as ReSpec or Bikeshed writes
-         it, read by `cds.html`; the index is www.w3.org/TR. A report is
+         it, read by `rfc.source.html`; the index is www.w3.org/TR. A report is
          asked for again with `If-Modified-Since` when the index dates it
          after the copy, so a republished draft follows its publication.
 

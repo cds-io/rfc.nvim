@@ -25,7 +25,7 @@ local M = {}
 ---@field header string[]                              -- the fields the header line carries, in order
 ---@field rows (rfc.ProposalRow|fun(fields: table<string, string>, id: string): string|nil)[]  -- lines after the header, each when its field is set
 ---@field tags nil|fun(fields: table<string, string>, id: string): string[]  -- other names the file is tagged by: erc20 for an ERC
----@field mentions fun(line: string): cds.Mention[]    -- what the text names
+---@field mentions fun(line: string): rfc.source.Mention[]    -- what the text names
 
 ---@param key string
 ---@return string

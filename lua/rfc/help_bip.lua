@@ -1,10 +1,10 @@
 -- A Bitcoin proposal as a Vim help document: the declaration the proposal
 -- render takes. The preamble becomes the header block; the body is read by
--- cds.bip, or by cds.eip for a proposal written in markdown, and the
+-- rfc.source.bip, or by rfc.source.eip for a proposal written in markdown, and the
 -- preamble's own lines are left out of it. Nothing here touches the
 -- editor.
-local bip = require("cds.bip")
-local eip = require("cds.eip")
+local bip = require("rfc.source.bip")
+local eip = require("rfc.source.eip")
 local proposal = require("rfc.proposal")
 
 local M = {}

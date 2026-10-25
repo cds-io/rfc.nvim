@@ -1,5 +1,5 @@
 local subjects = require("rfc.subjects")
-local cds = require("cds.subjects")
+local source = require("rfc.source.subjects")
 local help = require("rfc.help")
 local outline = require("rfc.outline")
 local fixtures = require("spec.fixtures")
@@ -33,7 +33,7 @@ end)
 describe("render", function()
     local doc
     before_each(function()
-        doc = subjects.render(DOC, cds.tree(cds.rfc(fixtures.read(fixtures.rfc_tags))))
+        doc = subjects.render(DOC, source.tree(source.rfc(fixtures.read(fixtures.rfc_tags))))
     end)
     it("writes the title line, the about line, the contents block, one section per node, then the footer", function()
         assert.are.same({
@@ -91,9 +91,9 @@ describe("render", function()
         assert.are.equal("ASCII  (1)", headings[5].text)
     end)
     it("numbers a repeated tag so the tags file never holds two", function()
-        local forest = cds.tree({
-            cds.entry("1", "A (2000)", { { "naming", "WHOIS" } }),
-            cds.entry("2", "B (2001)", { { "naming", "WHOIS++" } }),
+        local forest = source.tree({
+            source.entry("1", "A (2000)", { { "naming", "WHOIS" } }),
+            source.entry("2", "B (2001)", { { "naming", "WHOIS++" } }),
         })
         local d = subjects.render(DOC, forest)
         local names = {}
@@ -104,9 +104,9 @@ describe("render", function()
         assert.are.equal(1, names["rfc-subjects-naming-whois-2"])
     end)
     it("counts a document once under a node, however many of its paths lie there", function()
-        local forest = cds.tree({
-            cds.entry("1", "A (2000)", { { "web" }, { "web", "HTTP" }, { "web", "URI" } }),
-            cds.entry("2", "B (2001)", { { "web", "HTTP" } }),
+        local forest = source.tree({
+            source.entry("1", "A (2000)", { { "web" }, { "web", "HTTP" }, { "web", "URI" } }),
+            source.entry("2", "B (2001)", { { "web", "HTTP" } }),
         })
         assert.are.equal(2, subjects.total(forest[1]))
         assert.are.equal(2, subjects.total(forest[1].children[1]))
@@ -128,7 +128,8 @@ describe("render", function()
         }, nodes[5])
     end)
     it("reads a name with its own parentheses, and nothing from a document with no contents", function()
-        local forest = cds.tree({ cds.entry("341", "Taproot (Deployed)", { { "Layer", "Consensus (soft fork)" } }) })
+        local forest =
+            source.tree({ source.entry("341", "Taproot (Deployed)", { { "Layer", "Consensus (soft fork)" } }) })
         local nodes = subjects.read_nodes(subjects.render({ prefix = "bip", title = "t", about = "a" }, forest).lines)
         assert.are.same({
             tag = "bip-subjects-layer-consensus-soft-fork",

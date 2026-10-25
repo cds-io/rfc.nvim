@@ -161,7 +161,7 @@
 ---   `w3c`    tags `w3c-wcag22`, `w3c-css-grid-2#5.3` (the `#` splits the
 ---          shortname from the section, since shortnames carry dashes); the
 ---          HTML from www.w3.org/TR/<shortname>/ as ReSpec or Bikeshed writes
----          it, read by `cds.html`; the index is www.w3.org/TR. A report is
+---          it, read by `rfc.source.html`; the index is www.w3.org/TR. A report is
 ---          asked for again with `If-Modified-Since` when the index dates it
 ---          after the copy, so a republished draft follows its publication.
 ---
@@ -198,8 +198,8 @@ local outline = require("rfc.outline")
 local view = require("rfc.view")
 local toc = require("rfc.toc")
 local subjects = require("rfc.subjects")
-local cds_subjects = require("cds.subjects")
-local w3c = require("cds.w3c")
+local cds_subjects = require("rfc.source.subjects")
+local w3c = require("rfc.source.w3c")
 local cache = require("rfc.cache")
 local redraw = require("cds.redraw")
 local lifecycle = require("rfc.status")
