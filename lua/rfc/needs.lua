@@ -8,6 +8,9 @@
 ---@type table<string, string[]>
 return {
     activity = { "new" },
+    companion = { "new" },
+    command = { "register" },
+    persist = { "write_lines" },
     async = { "semaphore" },
     fp = { "all", "any", "each", "filter", "filter_map", "find", "find_map", "map", "reduce", "set", "unique" },
     http = { "request", "status" },

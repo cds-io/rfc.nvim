@@ -93,6 +93,25 @@ describe("cache", function()
             assert.are.equal(1, produced)
             assert.are.same({ "a", "b" }, e:cached())
         end)
+
+        it("keeps the stale copy when atomic persistence refuses a refresh", function()
+            local persist = require("cds.persist")
+            local e = fetched({ max_age = 60, body = "replacement\n" })
+            vim.fn.writefile({ "old" }, e:path())
+            touch(e:path(), os.time() - 61)
+            local real_write = persist.write_lines
+            persist.write_lines = function()
+                return nil, "disk full"
+            end
+            local called, lines, err = pcall(wait, e:lines())
+            persist.write_lines = real_write
+            assert.is_true(called)
+            assert.is_nil(err)
+            assert.are.same({ "old" }, lines)
+            assert.are.same({ "old" }, vim.fn.readfile(e:path()))
+            assert.are.equal(1, #notices)
+            assert.is_truthy(notices[1].msg:find("disk full", 1, true))
+        end)
         it("warns and answers the stale copy when producing fails", function()
             local e = fetched({ max_age = 60, err = "boom" })
             vim.fn.writefile({ "old" }, e:path())

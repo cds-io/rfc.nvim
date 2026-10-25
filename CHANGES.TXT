@@ -1,3 +1,18 @@
+2026-10-25  Persistence, commands and the contents sidebar come from cds-lua
+
+  lua/rfc/cache.lua, lua/rfc/store.lua, lua/rfc/toc.lua, plugin/rfc.lua, lua/rfc/needs.lua
+    cds.persist.write_lines writes each cache document and the tags file
+    atomically, so a refresh that fails mid-write leaves the stale copy
+    readable; freshness, fallback, server timestamps and tag generation
+    stay the cache and store's decisions. cds.command.register defines the
+    source commands, and an exception inside one reaches the reader once,
+    through the configured notifier. cds.companion owns the contents
+    sidebar's split, buffer, autocmds and teardown, keyed by document
+    window, so two windows on one RFC each have a sidebar with its own
+    selection; rfc.toc supplies the heading rows, section tracking, and
+    :help on Enter so CTRL-T comes back. needs.lua declares companion,
+    command and persist.
+
 2026-10-25  A versioned W3C shortname's tag opens its report
 
   lua/rfc/init.lua, spec/rfc_nvim_spec.lua, spec/editor.lua

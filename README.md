@@ -273,6 +273,18 @@ completion redoes only when the file changes. A new source or a new
 derived document declares its entry in a few lines and reimplements none
 of this.
 
+File writes go through `cds.persist.write_lines`, which atomically replaces
+each cache document and tags file. Freshness, stale-copy fallback, server
+timestamps, and tag generation remain the cache and store's decisions.
+`cds.command` registers the source commands and routes unexpected failures
+through the configured notifier.
+
+The contents sidebar uses `cds.companion`: each document window owns its
+own sidebar, even when two windows show the same document. The library
+owns the split, buffer, subscriptions, and teardown; RFC supplies heading
+rows, section tracking, and help-tag navigation. Closing a document releases
+its sidebar safely on the next editor turn.
+
 ## Installation
 
 With lazy.nvim:

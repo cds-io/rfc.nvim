@@ -116,10 +116,7 @@ end
 ---@param lines string[]
 ---@return true|nil, string|nil
 local function write(path, lines)
-    if vim.fn.writefile(lines, path) == -1 then
-        return nil, "could not write " .. path
-    end
-    return true
+    return require("cds.persist").write_lines(path, lines)
 end
 
 --- Rebuilds doc/tags from every document in the directory.
