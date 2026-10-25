@@ -26,7 +26,25 @@ vim.fn.writefile({
         ["diagnostics.globals"] = { "vim", "MiniDoc" },
     }),
 }, config)
-local server = vim.env.LUALS or "lua-language-server"
+-- The binary: LUALS when set, else the first of PATH and Mason's install
+-- (Neovim's data directory, where :MasonInstall puts it) that has one.
+local function find_server()
+    local mason = vim.fn.stdpath("data") .. "/mason/bin/lua-language-server"
+    for _, candidate in ipairs({ vim.env.LUALS or "", vim.fn.exepath("lua-language-server"), mason }) do
+        if candidate ~= "" and vim.fn.executable(candidate) == 1 then
+            return candidate
+        end
+    end
+    io.stderr:write(
+        "no lua-language-server: LUALS is "
+            .. (vim.env.LUALS or "unset")
+            .. ", PATH has none, and Mason's "
+            .. mason
+            .. " is not there\n"
+    )
+    os.exit(1)
+end
+local server = find_server()
 local result = vim.system({ server, "--check", root, "--configpath", config, "--checklevel", "Warning" }):wait()
 io.stdout:write(result.stdout or "")
 io.stderr:write(result.stderr or "")

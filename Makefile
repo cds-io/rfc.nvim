@@ -49,7 +49,8 @@ lint:
 
 # lua-language-server over lua/ and plugin/, with Neovim's runtime types and
 # ../cds-lua in the library (the script asks the running Neovim for the
-# runtime). LUALS names the binary when it is not on PATH, as Mason's is not.
+# runtime). The binary is LUALS, or the first of PATH and Mason's
+# install that has one.
 typecheck:
 	nvim --headless -u NONE -i NONE -l scripts/typecheck.lua
 

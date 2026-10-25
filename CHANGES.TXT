@@ -6,8 +6,8 @@
     a warning; `make check` and a CI job run it. The script writes the
     server's configuration from the running Neovim's VIMRUNTIME, resolves
     `require("rfc")` to lua/rfc/init.lua alone (the loose default also
-    matches plugin/rfc.lua by its name), and takes LUALS as the binary when
-    it is not on PATH.
+    matches plugin/rfc.lua by its name), and runs the binary LUALS names, or
+    the first of PATH and Mason's install that has one.
 
   lua/rfc/init.lua, lua/rfc/cache.lua, lua/rfc/fetch.lua, lua/rfc/proposal.lua,
   lua/rfc/sources.lua
