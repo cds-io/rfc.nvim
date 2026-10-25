@@ -118,6 +118,7 @@ function M.start()
         ["wot-thing-description11"] = fixtures.w3c_td,
         ["css-grid-2"] = fixtures.w3c_grid,
         WCAG22 = fixtures.w3c_grid,
+        ["dx-prof-0.9"] = fixtures.w3c_grid,
     }
     fetch.w3c = function(url, shortname)
         table.insert(case.urls, url)

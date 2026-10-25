@@ -1293,6 +1293,12 @@ describe("rfc", function()
             assert.are.equal(sources.eip, sources.of("erc20"))
         end)
 
+        it("follows the tag of a versioned shortname, the dot kept", function()
+            require("rfc").jump("w3c-dx-prof-0.9")
+            assert.is_true(editor.wait_help("w3c-dx-prof-0.9"))
+            assert.are.same({ "w3c-index", "w3c-dx-prof-0.9" }, case.fetched)
+        end)
+
         it("opens a report by shortname, writing text and document, tags at the sections", function()
             vim.cmd("W3c wot-thing-description11")
             assert.is_true(editor.wait_help("w3c-wot-thing-description11"))

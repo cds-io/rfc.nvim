@@ -291,7 +291,9 @@ local function tag_of(source, id)
 end
 
 --- The id a tag of the source carries, or nil for a subjects tag: the
---- number after the prefix, or the shortname before the section's #.
+--- number after the prefix, or the shortname before the section's #. A
+--- file tag (w3c-wcag22.txt) names its document; a versioned shortname
+--- keeps its dot (did-resolution-1.0).
 ---@param source rfc.Source
 ---@param tag string
 ---@return string|nil
@@ -300,7 +302,7 @@ local function id_of(source, tag)
         return nil
     end
     if source.key == "shortname" then
-        return tag:match("^" .. source.prefix .. "%-([^#%.]+)")
+        return (tag:gsub("%.txt$", "")):match("^" .. source.prefix .. "%-([^#]+)")
     end
     return tag:match("^%l+0*(%d+)")
 end

@@ -1,3 +1,12 @@
+2026-10-25  A versioned W3C shortname's tag opens its report
+
+  lua/rfc/init.lua, spec/rfc_nvim_spec.lua, spec/editor.lua
+    The shortname a w3c tag carries runs to the section's #, so
+    w3c-did-resolution-1.0 and the other dotted shortnames (did-1.1,
+    accname-1.2, dx-prof-0.9) fetch and open from the subjects document and
+    CTRL-]; a title line's file tag (w3c-wcag22.txt) still names its own
+    document. The editor fixture answers dx-prof-0.9 with a report.
+
 2026-10-25  The document readers are the plugin's own, under rfc.source
 
   lua/rfc/source/, spec/source_*_spec.lua, spec/fixtures.lua, lua/rfc/needs.lua
