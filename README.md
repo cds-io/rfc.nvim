@@ -32,6 +32,16 @@ one row per heading indented by level, its cursor on the section yours is
 in; Enter there is `:help` on that section, so CTRL-T returns, and `q`
 closes it.
 
+Two demos, documenting typical (for me) workflows. A ticket drafted against RFC
+5841.
+
+![Drafting a ticket beside RFC 5841](assets/rfc5841-jira-demo.gif)
+
+A note on Glamsterdam's gas repricings written over the hardfork meta,
+EIP-7773, following its links into each scheduled proposal's abstract:
+
+![A Glamsterdam note written over EIP-7773](assets/glamsterdam-eip-demo.gif)
+
 A short explainer:
 
 [![RFC viewer: rfc.nvim in use](https://img.youtube.com/vi/ivWq0YfZ8Dk/maxresdefault.jpg)](https://www.youtube.com/watch?v=ivWq0YfZ8Dk)
