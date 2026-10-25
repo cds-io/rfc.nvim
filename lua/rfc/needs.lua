@@ -1,7 +1,7 @@
--- What the plugin needs from cds-lua, by module and name. lazy.lua names the
+-- What the plugin needs from the cds libraries, by module and name. lazy.lua names the
 -- dependency; this names what has to be there for
--- it to run, whichever commit is installed, since one cds-lua serves every
--- plugin of the family and cds-lua grows by addition. cds.needs checks it at
+-- it to run, whichever commit is installed, since one copy of each serves every
+-- plugin of the family and the libraries grow by addition. cds.needs checks it at
 -- startup, and the spec harness holds the plugin to the same list. A Task's
 -- methods are reached through its instances, not this table, so only the
 -- constructors are named.

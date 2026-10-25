@@ -281,10 +281,12 @@ With lazy.nvim:
 { "cds-io/rfc.nvim" }
 ```
 
-The plugin's `lazy.lua` declares its one dependency,
+The plugin's `lazy.lua` declares its dependency,
 [cds-lua](https://github.com/cds-io/cds-lua), the family's house library,
-tracking its main; lazy.nvim 11 and later installs it with the plugin. With
-another plugin manager, install `cds-io/cds-lua` alongside. At startup the
+tracking its main, which brings the vocabulary rock
+[cds-lua-fp](https://github.com/cds-io/cds-lua-fp) with it; lazy.nvim 11 and
+later installs both with the plugin. With another plugin manager, install
+`cds-io/cds-lua` and `cds-io/cds-lua-fp` alongside. At startup the
 plugin checks that the cds-lua present provides what it uses (`rfc.needs`)
 and, when something is missing, says so and what to install instead of
 failing later.

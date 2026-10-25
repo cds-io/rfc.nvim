@@ -15,8 +15,8 @@
 --- <
 --- A link to a document not cached yet (`|rfc2616|` in RFC 9110's text)
 --- fetches it on CTRL-] and then jumps. Requires Neovim 0.13 (`vim.async`)
---- and `curl`; the house library cds-lua comes with the plugin as its one
---- dependency (|rfc.nvim-setup|).
+--- and `curl`; the house library cds-lua, and the vocabulary rock it brings,
+--- come with the plugin as its dependencies (|rfc.nvim-setup|).
 ---
 ---@toc
 

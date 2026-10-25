@@ -1,3 +1,11 @@
+2026-10-25  The vocabulary comes from the cds-lua-fp rock
+
+  .busted, scripts/typecheck.lua, .github/workflows/ci.yml, plugin/rfc.lua
+    cds-lua, the dependency lazy.lua declares, brings cds-lua-fp with it:
+    cds.fp, cds.result and cds.needs. The specs, the type check and CI find
+    the rock in ../cds-lua-fp beside ../cds-lua, and the refusal for a
+    missing cds.needs names the rock.
+
 2026-10-24  The language server's type check is a gate
 
   scripts/typecheck.lua, Makefile, .github/workflows/ci.yml

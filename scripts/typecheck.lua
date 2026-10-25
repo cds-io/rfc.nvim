@@ -5,11 +5,14 @@
 -- committed. The exit code is the server's: 1 when anything at Warning or
 -- above is found.
 local root = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":p:h:h")
--- the checkout beside this one, where .busted and CI put it
+-- the checkouts beside this one, where .busted and CI put them
 local cds = vim.fn.fnamemodify(root .. "/../cds-lua/lua", ":p")
-if vim.fn.isdirectory(cds) == 0 then
-    io.stderr:write("cds-lua is not checked out beside this plugin: " .. cds .. "\n")
-    os.exit(1)
+local rock = vim.fn.fnamemodify(root .. "/../cds-lua-fp/lua", ":p")
+for _, dir in ipairs({ cds, rock }) do
+    if vim.fn.isdirectory(dir) == 0 then
+        io.stderr:write("not checked out beside this plugin: " .. dir .. "\n")
+        os.exit(1)
+    end
 end
 local config = vim.fn.tempname() .. ".luarc.json"
 vim.fn.writefile({
@@ -20,7 +23,7 @@ vim.fn.writefile({
         -- is undefined on that one
         ["runtime.pathStrict"] = true,
         ["runtime.path"] = { "lua/?.lua", "lua/?/init.lua" },
-        ["workspace.library"] = { vim.env.VIMRUNTIME .. "/lua", "${3rd}/luv/library", cds },
+        ["workspace.library"] = { vim.env.VIMRUNTIME .. "/lua", "${3rd}/luv/library", cds, rock },
         ["workspace.ignoreDir"] = { "spec", "doc", ".git" },
         ["workspace.checkThirdParty"] = false,
         ["diagnostics.globals"] = { "vim", "MiniDoc" },

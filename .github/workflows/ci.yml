@@ -31,6 +31,10 @@ jobs:
         with:
           repository: cds-io/cds-lua
           path: cds-lua
+      - uses: actions/checkout@v7
+        with:
+          repository: cds-io/cds-lua-fp
+          path: cds-lua-fp
       - uses: leafo/gh-actions-lua@v13
         with:
           luaVersion: "5.1"
@@ -70,6 +74,10 @@ jobs:
         with:
           repository: cds-io/cds-lua
           path: cds-lua
+      - uses: actions/checkout@v7
+        with:
+          repository: cds-io/cds-lua-fp
+          path: cds-lua-fp
       - uses: rhysd/action-setup-vim@v1
         with:
           neovim: true

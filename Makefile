@@ -17,8 +17,9 @@ MINIDOC ?= $(firstword $(wildcard ../mini.doc $(HOME)/.local/share/nvim/lazy/min
 check: test test-nvim lint typecheck fmt-check doc-check
 
 # The house library, cds-lua, is a dependency: lazy.lua names the dependency the
-# editor loads, and .busted finds the same modules in ../cds-lua, the
-# checkout beside this one, for both spec tiers (CI checks it out there).
+# editor loads, which brings the vocabulary rock cds-lua-fp with it, and .busted
+# finds the same modules in ../cds-lua and ../cds-lua-fp, the checkouts beside
+# this one, for both spec tiers (CI checks them out there).
 test:
 	$(BUSTED)
 
