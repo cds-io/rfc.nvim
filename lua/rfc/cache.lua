@@ -207,7 +207,7 @@ function Fetched:memo(name, parse)
 end
 
 ---@param cfg rfc.Config
----@param spec { file: string, produce: fun(since: integer|nil): cds.Task, max_age?: integer, modified?: integer, label: string, notify?: fun(msg: string, level: integer), placeholder?: fun(lines: string[]): boolean }
+---@param spec { file: string, produce: (fun(since: integer|nil): cds.Task), max_age?: integer, modified?: integer, label: string, notify?: fun(msg: string, level: integer), placeholder?: fun(lines: string[]): boolean }
 ---@return rfc.Fetched
 function M.fetched(cfg, spec)
     return setmetatable({
@@ -288,7 +288,7 @@ function Derived:memo(name, parse)
 end
 
 ---@param cfg rfc.Config
----@param spec { name: string, from: rfc.Fetched[], version: string, produce: fun(...: string[]): rfc.HelpDoc|nil, string|nil, limit?: integer }
+---@param spec { name: string, from: rfc.Fetched[], version: string, produce: (fun(...: string[]): rfc.HelpDoc|nil, string|nil), limit?: integer }
 ---@return rfc.Derived
 function M.derived(cfg, spec)
     return setmetatable({

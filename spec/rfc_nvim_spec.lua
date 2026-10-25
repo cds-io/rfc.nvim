@@ -1362,7 +1362,7 @@ describe("rfc", function()
         end)
 
         it("parses the index once for an open by shortname", function()
-            local w3c = require("cds.w3c")
+            local w3c = require("rfc.source.w3c")
             local index, parses = w3c.index, 0
             w3c.index = function(...)
                 parses = parses + 1
@@ -1383,14 +1383,14 @@ describe("rfc", function()
             local cfg = config.get()
             local raw = store.raw_path(cfg, "w3c-wot-thing-description11", "html")
             -- a copy from before the index's date: the report is asked for again
-            local old = require("cds.w3c").date_time("2023-01-01")
+            local old = require("rfc.source.w3c").date_time("2023-01-01")
             vim.uv.fs_utime(raw, old, old)
             case.w3c_modified = false
             vim.cmd("W3c wot-thing-description11")
             assert.is_true(editor.wait_help("w3c-wot-thing-description11"))
             assert.are.same({ "w3c-index", "w3c-wot-thing-description11", "w3c-wot-thing-description11" }, case.fetched)
             -- unchanged: the copy carries the index's date now
-            assert.are.equal(require("cds.w3c").date_time("2023-12-05"), vim.uv.fs_stat(raw).mtime.sec)
+            assert.are.equal(require("rfc.source.w3c").date_time("2023-12-05"), vim.uv.fs_stat(raw).mtime.sec)
         end)
 
         it("says when a word names no report", function()

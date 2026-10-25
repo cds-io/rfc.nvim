@@ -7,13 +7,19 @@ LUAROCKS ?= luarocks
 SELENE ?= selene
 STYLUA ?= stylua
 
-.PHONY: check test test-nvim lint fmt fmt-check
+# mini.doc generates doc/rfc.txt from the annotation blocks scripts/minidoc.lua
+# names: the standalone nvim-mini/mini.doc beside this checkout (CI), or the
+# mini.nvim lazy installed, which carries it.
+MINIDOC ?= $(firstword $(wildcard ../mini.doc $(HOME)/.local/share/nvim/lazy/mini.doc $(HOME)/.local/share/nvim/lazy/mini.nvim))
 
-check: test test-nvim lint fmt-check
+.PHONY: check test test-nvim lint typecheck fmt fmt-check doc doc-check
+
+check: test test-nvim lint typecheck fmt-check doc-check
 
 # The house library, cds-lua, is a dependency: lazy.lua names the dependency the
-# editor loads, and .busted finds the same modules in ../cds-lua, the
-# checkout beside this one, for both spec tiers (CI checks it out there).
+# editor loads, which brings the vocabulary rock cds-lua-fp with it, and .busted
+# finds the same modules in ../cds-lua and ../cds-lua-fp, the checkouts beside
+# this one, for both spec tiers (CI checks them out there).
 test:
 	$(BUSTED)
 
@@ -42,9 +48,25 @@ test-nvim:
 lint:
 	$(SELENE) lua plugin
 
+# lua-language-server over lua/ and plugin/, with Neovim's runtime types and
+# ../cds-lua in the library (the script asks the running Neovim for the
+# runtime). The binary is LUALS, or the first of PATH and Mason's
+# install that has one.
+typecheck:
+	nvim --headless -u NONE -i NONE -l scripts/typecheck.lua
+
 # Formats the Lua tree with stylua (stylua.toml).
 fmt:
-	$(STYLUA) lua plugin spec
+	$(STYLUA) lua plugin spec scripts
 
 fmt-check:
-	$(STYLUA) --check lua plugin spec
+	$(STYLUA) --check lua plugin spec scripts
+
+# The help file, generated in place; the tags file it leaves behind is
+# ignored, since the plugin manager builds it on install.
+doc:
+	nvim --headless -u NONE -i NONE --cmd "set rtp+=$(MINIDOC)" -l scripts/minidoc.lua
+
+# A stale help file fails: regenerate and commit it.
+doc-check: doc
+	git diff --exit-code -- doc/rfc.txt

@@ -8,14 +8,14 @@
 -- defined until the cds-lua on the runtimepath is seen to provide what the
 -- plugin uses.
 
--- the one check kept here: a cds-lua too old to carry cds.needs fails this
+-- the one check kept here: a cds-lua-fp too old to carry cds.needs fails this
 -- require, which is the answer
 local ok, needs = pcall(require, "cds.needs")
 local problem
 if ok then
     problem = needs.check("rfc.nvim", require("rfc.needs"))
 else
-    problem = "rfc.nvim needs cds-lua with cds.needs: install or update cds-io/cds-lua"
+    problem = "rfc.nvim needs cds-lua-fp with cds.needs: install or update cds-io/cds-lua-fp"
 end
 if problem then
     vim.notify(problem, vim.log.levels.ERROR)

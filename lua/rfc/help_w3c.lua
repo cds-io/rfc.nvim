@@ -5,7 +5,7 @@
 -- lists indented, figures as caption, alt and URL, callouts as a labelled
 -- block. Sections, other reports and reference entries link. Nothing here
 -- touches the editor; render is pure and total.
-local html = require("cds.html")
+local html = require("rfc.source.html")
 local help = require("rfc.help")
 local proposal = require("rfc.proposal")
 local fp = require("cds.fp")
@@ -56,7 +56,7 @@ end
 
 --- The text with its mentions as links, last to first so the earlier
 --- spans stay where they were.
----@param t cds.html.Text
+---@param t rfc.source.html.Text
 ---@param ctx table
 ---@return string
 local function link(t, ctx)
@@ -83,7 +83,7 @@ end
 --- gives both, and links target the section's). A number that is words
 --- (WCAG's "Success Criterion 1.1.1") is slugged, since a tag has no
 --- spaces.
----@param blocks cds.html.Block[]
+---@param blocks rfc.source.html.Block[]
 ---@param file_tag string
 ---@return table<table, string> tag_of
 ---@return table<string, string> sections   -- id -> tag
@@ -114,7 +114,7 @@ end
 
 --- The reference entries: every term of a definition list under a
 --- "References" heading, keyed lowercase without its brackets.
----@param blocks cds.html.Block[]
+---@param blocks rfc.source.html.Block[]
 ---@param file_tag string
 ---@return table<string, string> refs       -- key -> tag
 ---@return table<string, string> ref_tag    -- term as written -> tag
@@ -141,7 +141,7 @@ end
 
 --- The blocks rendered under an indent, appended to `out`, with the tags
 --- they declare appended to `tags`.
----@param blocks cds.html.Block[]
+---@param blocks rfc.source.html.Block[]
 ---@param indent string
 ---@param ctx table
 local function render_blocks(blocks, indent, ctx)
