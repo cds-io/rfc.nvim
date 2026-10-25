@@ -305,3 +305,9 @@ require("rfc").setup({
 `require("rfc").activity()` is a statusline segment naming the fetches
 out, with their seconds; `User RfcActivity` fires when one starts or ends.
 
+`:help rfc.nvim` is the manual: the commands, the keys, the status and
+subject filters, each source, the cache and `setup`'s settings. It is
+generated from the annotation blocks in `lua/rfc/init.lua` and
+`lua/rfc/config.lua` by [mini.doc](https://github.com/nvim-mini/mini.doc)
+(`make doc`), and `make check` refuses a stale copy.
+

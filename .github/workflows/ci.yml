@@ -41,6 +41,25 @@ jobs:
         run: make test
         working-directory: rfc.nvim
 
+  doc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: rfc.nvim
+      # mini.doc beside the plugin, where the Makefile looks first
+      - uses: actions/checkout@v7
+        with:
+          repository: nvim-mini/mini.doc
+          path: mini.doc
+      - uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: stable
+      - name: Help file is current
+        run: make doc-check
+        working-directory: rfc.nvim
+
   selene:
     runs-on: ubuntu-latest
     steps:

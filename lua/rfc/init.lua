@@ -1,3 +1,192 @@
+---@tag rfc.nvim
+---@text RFCs, Ethereum's EIPs and ERCs, Bitcoin's BIPs, Solana's SIMDs and the
+--- W3C's technical reports, as Neovim help.
+---
+--- `:Rfc 9110` fetches the RFC's text from the RFC Editor, renders it as a
+--- help document and opens it with |:help|; `:Eip 1559`, `:Bip 32`,
+--- `:Simd 64` and `:W3c wcag22` do the same from each proposal's source.
+--- From then on the editor's own help navigation is the whole interface: >
+---
+---   :help rfc9110         the RFC
+---   :help rfc9110-3.1     a section, completed over every cached document
+---   CTRL-]                follow a link: a section, a cited RFC, a reference
+---   CTRL-T                back through the tag stack, across documents
+---   :helpgrep MUST NOT    search every cached document into the quickfix
+--- <
+--- A link to a document not cached yet (`|rfc2616|` in RFC 9110's text)
+--- fetches it on CTRL-] and then jumps. Requires Neovim 0.13 (`vim.async`)
+--- and `curl`; the house library cds-lua comes with the plugin as its one
+--- dependency (|rfc.nvim-setup|).
+---
+---@toc
+
+---@tag rfc.nvim-commands
+---@toc_entry Commands
+---@text One command per source, each with the same forms: a number (or a
+--- shortname), a tag, words to search the index, nothing for the picker, and
+--- `status` and `subjects` for a source that has them. >
+---
+---   :Rfc                  the RFC index in vim.ui.select
+---   :Rfc http semantics   the entries whose number or title match, fuzzily;
+---                         one match opens at once, several are offered
+---   :Rfc 9110             an RFC by number
+---   :Rfc rfc2616-14.4     a tag
+---   :Rfc sem<Tab>         completion by number or title over the cached
+---                         index and the tags of cached RFCs
+---   :Rfc status           the statuses of the lifecycle, each with its count
+---   :Rfc status internet standard   the subjects filtered to that status
+---   :Rfc subjects         the RFCs by subject, as one help document
+---   :Rfc subjects dns     a subject by slug or name, else a search over them
+--- <
+--- The five commands: >
+---
+---   :Rfc    the RFC Editor's RFCs
+---   :Eip    Ethereum's EIPs and ERCs, one number space: `:Eip 20` is ERC-20
+---   :Bip    Bitcoin's BIPs; `:Bip 0032` and `:Bip 32` are the same one
+---   :Simd   Solana's SIMDs
+---   :W3c    the W3C's technical reports, by shortname: `:W3c wcag22`
+--- <
+--- A picked or completed item reads `eip20  Token Standard (Final)`: the tag,
+--- then the title; the command takes the first word. The first item a picker
+--- offers is the source's subjects document, above the index and above a
+--- search's matches alike. Completion cannot wait on the network, so it
+--- offers what the last picker or search left in the cache; those fetch an
+--- index that is missing or a day old. |rfc.nvim-sources| has each source.
+
+---@tag rfc.nvim-keys
+---@toc_entry Keys
+---@text In a document's window: >
+---
+---   CTRL-]       follow the tag under the cursor; an uncached target fetches
+---   CTRL-T       back through the tag stack, across documents
+---   <CR>         follow the first link on the line: Enter on a ToC row
+---   ]]  [[       the next and the previous section, with a count
+---   gO           the contents beside the document
+---   gs           in a subjects document, the next status of the lifecycle
+---   <Leader>tv   the rich view on and off
+---   zo           unfold a wide table laid out under its caption
+--- <
+--- `gO` opens the contents beside the document: one row per heading,
+--- indented by level, the cursor on the section yours is in. There `<CR>` is
+--- |:help| on that section in the document's window, so CTRL-T returns, and
+--- `q` or `gO` closes it.
+---
+--- A document opens in the rich view: a rule above every heading and the
+--- heading highlighted, drawn over the text as extmarks, so `<Leader>tv` puts
+--- the text back as written in place; the file on disk is the text plus its
+--- tags and links either way. The requirement words of RFC 2119 (MUST,
+--- SHOULD NOT, MAY) are bold. In a W3C report, a figure's image is drawn
+--- below its URL line where an image plugin is loaded and the terminal can
+--- draw (image.nvim under kitty or ghostty); otherwise the caption, alt text
+--- and URL read as text, and |gx| on the URL opens it.
+
+---@tag rfc.nvim-status
+---@toc_entry By status
+---@text Every source's documents move through a lifecycle, and its index says
+--- where each stands: an RFC's category (PROPOSED STANDARD, INTERNET
+--- STANDARD, INFORMATIONAL), an EIP's status (Draft, Review, Last Call,
+--- Final, Living, Stagnant, Withdrawn), a BIP's (Draft, Complete, Deployed,
+--- Closed), a W3C report's maturity (Draft Standard, Candidate Standard,
+--- Standard, Note). The status cuts across the subjects: a Core EIP and an
+--- ERC are each Draft or Final, so the filter is the subjects document's
+--- (|rfc.nvim-subjects|).
+---
+--- `:Eip status` offers the statuses in the lifecycle's order, each with its
+--- count and `All` first. Choosing one renders the subjects document again
+--- with only the proposals standing there: every category keeps its heading
+--- with the count of what remains, the `Status` root has that one child, and
+--- the title line reads `[Status: Final]`. The document opens at the section
+--- you were in, or at its top when that section has nothing left.
+--- `:Eip status final` goes straight there, case aside, `:Eip status all`
+--- puts everything back, and `:Eip status <Tab>` completes the names. In the
+--- document `gs` cycles the status: All, each in order, All again; every
+--- window showing the document keeps its section, and the contents sidebar
+--- follows.
+---
+--- The choice holds for the session and starts from `All`, or from the
+--- status `setup` names for the source: `status = { eip = "Final" }`. The
+--- SIMDs keep their status in each proposal's text, so theirs are known once
+--- `:Simd subjects` has fetched the texts; `:Simd status` says so until then.
+
+---@tag rfc.nvim-subjects
+---@toc_entry By subject
+---@text `:Rfc subjects` opens the RFCs by subject as one help document: a
+--- contents block of every subject, indented by level, then one section per
+--- subject listing the RFCs filed there as links. Everything a document has,
+--- this one has too: `gO` is the tree as a sidebar, `<CR>` or CTRL-] on a
+--- listed RFC fetches and opens it, `]]` walks the subjects, |:helpgrep|
+--- searches them, and `:help rfc-subjects-naming-dns` lands on a subject by
+--- its tag (the path slugged, level by level). `:Rfc subjects dns` lands
+--- there too, and a word that names no subject is a search over them.
+---
+--- Where each source's subjects come from:
+---
+---   `:Rfc subjects`    the RFC Editor's subject tags (the rfc-subject-tags
+---                    repository, in beta): a curated tree of 19 roots, four
+---                    levels at most, that their pipeline assigns to every
+---                    RFC and publishes daily as a CSV. An RFC sits under its
+---                    deepest tags; the count beside a subject is every RFC
+---                    under it, each counted once.
+---   `:Eip subjects`    two roots: the site's six categories (Core, Networking,
+---                    Interface, ERC, Meta, Informational), with the hardfork
+---                    meta EIPs under `Meta / Hardforks` since their titles
+---                    say so, and Status, so `Status / Last Call` is what is
+---                    about to be final across the categories.
+---   `:Bip subjects`    the README's two columns, Layer and Type, each a root.
+---   `:Simd subjects`   each proposal's status, read from its frontmatter: the
+---                    first open fetches every proposal once, eight at a
+---                    time, and keeps the texts.
+---   `:W3c subjects`    Maturity, Tags and Deliverers (the working groups), so
+---                    `:W3c subjects wot` lands on the Web of Things reports.
+
+---@tag rfc.nvim-sources
+---@toc_entry Sources
+---@text Five sources, chosen in |rfc.nvim-setup|; only the RFC Editor is on by
+--- default.
+---
+---   `rfc`    tags `rfc9110`, `rfc9110-3.1`; the text from rfc-editor.org, the
+---          index from rfc-index.txt.
+---   `eip`    tags `eip1559`, `eip1559-specification`, `eip20` with `erc20` as
+---          its alias; the text from github.com/ethereum/EIPs, then from
+---          ethereum/ERCs when the EIPs repository says the proposal moved
+---          or never had it; the index is the site's six category pages read
+---          as one, each number once, which is also where a proposal's
+---          category comes from.
+---   `bip`    tags `bip32`, `bip32-conventions`; the text from
+---          github.com/bitcoin/bips, MediaWiki or markdown, the index the
+---          repository's README.
+---   `simd`   tags `simd64`, `simd64-summary`; the text from the proposals
+---          directory of solana-foundation/solana-improvement-documents,
+---          which, listed through the GitHub API, is also the index.
+---   `w3c`    tags `w3c-wcag22`, `w3c-css-grid-2#5.3` (the `#` splits the
+---          shortname from the section, since shortnames carry dashes); the
+---          HTML from www.w3.org/TR/<shortname>/ as ReSpec or Bikeshed writes
+---          it, read by `cds.html`; the index is www.w3.org/TR. A report is
+---          asked for again with `If-Modified-Since` when the index dates it
+---          after the copy, so a republished draft follows its publication.
+---
+--- Every index is kept a day. A text is rendered once and kept: the
+--- frontmatter or preamble becomes a header block, headings get tags and a
+--- table of contents of links, fenced code becomes a help code block, tables
+--- are aligned, and every cited RFC, EIP, section or reference becomes a
+--- link.
+
+---@tag rfc.nvim-cache
+---@toc_entry The cache
+---@text Everything lives under `stdpath("cache")/rfc/`, or `cache_dir`: each
+--- text as fetched (`rfc9110.txt`, `eip1559.md`), its document
+--- (`doc/rfc9110.txt`), the tags file, each source's index and its subjects
+--- document. That `doc/` directory is appended to the runtimepath, which is
+--- how |:help| finds a document; the tags file is the plugin's own, since
+--- |:helptags| would read the `*/*` media ranges in an RFC's text as tags.
+--- An index is fetched again when more than a day old, and a stale copy
+--- stands in with a warning when the fetch fails; a document is rendered
+--- again when the render that wrote it is older than the plugin's or its
+--- text is newer. Delete the directory to start over.
+---
+--- `require("rfc").activity()` is a statusline segment naming the fetches
+--- out, with their seconds; `User RfcActivity` fires when one starts or ends.
+
 -- The dispatch rim: :Rfc, the keys in a document's help buffer, and the
 -- pipeline that fetches a document from its source, renders it and hands
 -- it to :help.
@@ -52,13 +241,22 @@ end
 
 local configured = false
 
----@param opts? rfc.Config
 --- The checkout this module was loaded from.
 ---@return string
 local function plugin_root()
     return vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":h:h:h")
 end
 
+---@tag rfc.nvim-setup rfc.setup()
+---@toc_entry Setup
+---@signature rfc.setup(opts)
+---@text The reader's settings (|rfc.Config|) merged over the defaults, and the
+--- cache's `doc/` directory put on the runtimepath. Optional: the first
+--- command runs it with the defaults. >lua
+---
+---   require("rfc").setup({ sources = { eip = true }, status = { eip = "Final" } })
+--- <
+---@param opts? rfc.Config   -- the settings; what is left out keeps its default
 function M.setup(opts)
     help.set_render(store.render_version(plugin_root()))
     local ok, err = store.register(config.set(opts))

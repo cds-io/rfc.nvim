@@ -1,3 +1,21 @@
+2026-10-24  The manual as :help rfc.nvim, generated from the source
+
+  lua/rfc/init.lua, lua/rfc/config.lua, doc/rfc.txt
+    The manual is a run of annotation blocks at the head of init.lua, one
+    per tag (rfc.nvim, -commands, -keys, -status, -subjects, -sources,
+    -cache), the setup block above M.setup, and the rfc.Config class with
+    its defaults in config.lua, each field's note on the line. mini.doc
+    renders them as doc/rfc.txt with a table of contents; `:help rfc.nvim`
+    opens it, and `:help rfc.Config` the settings.
+
+  scripts/minidoc.lua, Makefile, .github/workflows/ci.yml, .gitignore
+    `make doc` runs the script under Neovim with mini.doc on the runtimepath
+    (the standalone nvim-mini/mini.doc beside the checkout, or mini.nvim
+    where lazy installed it); a block is kept when it carries a tag, a
+    class, the contents or an eval, so the doc comments on the rims'
+    functions stay in the code. `make doc-check` regenerates and fails on a
+    difference; it is part of `make check` and a CI job. doc/tags is ignored.
+
 2026-10-24  cds-lua is a dependency, tracked at its main, and checked at startup
 
   lazy.lua, lua/rfc/needs.lua, plugin/rfc.lua
