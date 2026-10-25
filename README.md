@@ -285,7 +285,6 @@ owns the split, buffer, subscriptions, and teardown; RFC supplies heading
 rows, section tracking, and help-tag navigation. Closing a document releases
 its sidebar safely on the next editor turn.
 
-
 ## Installation
 
 With lazy.nvim:
