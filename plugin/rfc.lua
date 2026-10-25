@@ -23,16 +23,23 @@ if problem then
 end
 
 local function define(name, prefix, desc)
-    vim.api.nvim_create_user_command(name, function(cmd)
-        local run, _ = require("rfc").command(require("rfc.sources")[prefix])
-        run(cmd)
-    end, {
-        nargs = "*",
-        complete = function(arglead, cmdline)
-            local _, complete = require("rfc").command(require("rfc.sources")[prefix])
-            return complete(arglead, cmdline)
-        end,
-        desc = desc,
+    require("cds.command").register({
+        {
+            name = name,
+            run = function(cmd)
+                local run, _ = require("rfc").command(require("rfc.sources")[prefix])
+                run(cmd)
+            end,
+            nargs = "*",
+            complete = function(arglead, cmdline)
+                local _, complete = require("rfc").command(require("rfc.sources")[prefix])
+                return complete(arglead, cmdline)
+            end,
+            desc = desc,
+            notify = function(message, level)
+                require("rfc").notify(message, level)
+            end,
+        },
     })
 end
 
