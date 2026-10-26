@@ -41,6 +41,7 @@ function M.start()
         require("rfc").setup(vim.tbl_extend("force", {
             cache_dir = case.dir,
             sources = sources,
+            view = "rich", -- legacy help regressions explicitly exercise the help backend
             notify = function(msg, level, opts)
                 table.insert(case.notices, { msg = msg, level = level, title = opts.title })
             end,
@@ -158,7 +159,10 @@ function M.start()
         require("rfc.toc").close_all()
         pcall(vim.cmd, "helpclose")
         for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-            if vim.startswith(vim.api.nvim_buf_get_name(buf), vim.fn.resolve(case.dir)) then
+            if
+                vim.startswith(vim.api.nvim_buf_get_name(buf), vim.fn.resolve(case.dir))
+                or vim.startswith(vim.api.nvim_buf_get_name(buf), "rfc://document/")
+            then
                 vim.api.nvim_buf_delete(buf, { force = true })
             end
         end

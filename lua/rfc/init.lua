@@ -1,22 +1,24 @@
 ---@tag rfc.nvim
 ---@text RFCs, Ethereum's EIPs and ERCs, Bitcoin's BIPs, Solana's SIMDs and the
---- W3C's technical reports, as Neovim help.
+--- W3C's technical reports, through shared Markdown/vellum documents.
 ---
---- `:Rfc 9110` fetches the RFC's text from the RFC Editor, renders it as a
---- help document and opens it with |:help|; `:Eip 1559`, `:Bip 32`,
---- `:Simd 64` and `:W3c wcag22` do the same from each proposal's source.
---- From then on the editor's own help navigation is the whole interface: >
+--- Commands open `rfc://document/<tag>` buffers by default. cds-lua owns
+--- the document contract, HTML conversion, optional vellum adapter and
+--- navigation; rfc.nvim resolves source tags, aliases, citations and caches.
+--- Without vellum the same document displays as Markdown. CTRL-] follows
+--- links, CTRL-T restores the previous view, and gO opens the contents.
+--- W3C HTML IDs survive alongside the exported numbered section tags.
 ---
----   :help rfc9110         the RFC
----   :help rfc9110-3.1     a section, completed over every cached document
----   CTRL-]                follow a link: a section, a cited RFC, a reference
----   CTRL-T                back through the tag stack, across documents
----   :helpgrep MUST NOT    search every cached document into the quickfix
+--- Help documents and tags remain on disk: >
+---   :help rfc9110
+---   :help rfc9110-3.1
+---   :helpgrep MUST NOT
 --- <
---- A link to a document not cached yet (`|rfc2616|` in RFC 9110's text)
---- fetches it on CTRL-] and then jumps. Requires Neovim 0.13 (`vim.async`)
---- and `curl`; the house library cds-lua, and the vocabulary rock it brings,
---- come with the plugin as its dependencies (|rfc.nvim-setup|).
+--- Direct :help retains native help/tag-stack navigation. Set view="rich"
+--- or view="plain" for commands to use the legacy help backend too.
+--- The default view="document" uses shared document rendering and history.
+--- Vellum is an optional dependency of this plugin; cds-lua never requires it.
+--- Requires Neovim 0.13 (vim.async), curl, and the house cds-lua libraries.
 ---
 ---@toc
 
@@ -63,22 +65,18 @@
 ---   ]]  [[       the next and the previous section, with a count
 ---   gO           the contents beside the document
 ---   gs           in a subjects document, the next status of the lifecycle
----   <Leader>tv   the rich view on and off
----   zo           unfold a wide table laid out under its caption
+---   <Leader>tv   legacy help: the rich view on and off
+---   q            close the shared document window
 --- <
 --- `gO` opens the contents beside the document: one row per heading,
 --- indented by level, the cursor on the section yours is in. There `<CR>` is
---- |:help| on that section in the document's window, so CTRL-T returns, and
+--- a jump to that section in the document's window, so CTRL-T returns, and
 --- `q` or `gO` closes it.
 ---
---- A document opens in the rich view: a rule above every heading and the
---- heading highlighted, drawn over the text as extmarks, so `<Leader>tv` puts
---- the text back as written in place; the file on disk is the text plus its
---- tags and links either way. The requirement words of RFC 2119 (MUST,
---- SHOULD NOT, MAY) are bold. In a W3C report, a figure's image is drawn
---- below its URL line where an image plugin is loaded and the terminal can
---- draw (image.nvim under kitty or ghostty); otherwise the caption, alt text
---- and URL read as text, and |gx| on the URL opens it.
+--- Document mode uses shared Markdown/vellum rendering, with redraws on
+--- resize and colorscheme changes and bounded retries for pending images.
+--- The rich/plain help modes retain the original help layout and its
+--- requirement-keyword highlighting, figure adapter and table folds.
 
 ---@tag rfc.nvim-status
 ---@toc_entry By status
@@ -238,6 +236,8 @@ function M.notify(msg, level)
         deliver()
     end
 end
+
+local reader
 
 local configured = false
 
@@ -561,6 +561,9 @@ end
 --- buffer loaded.
 ---@param path string
 local function refresh(path)
+    if reader then
+        reader.reload(vim.fn.fnamemodify(path, ":t:r"))
+    end
     local buf = vim.fn.bufnr(path)
     if buf == -1 then
         return
@@ -643,11 +646,91 @@ with_subjects = function(source, done)
     end)
 end
 
+-- The shared reader delegates source resolution and cache production here.
+reader = require("rfc.reader").new({
+    attach = function(buf)
+        M.attach(buf)
+    end,
+    notify = function(...)
+        M.notify(...)
+    end,
+    toc = toc,
+    resolve = function(tag, done)
+        local source = sources.of(tag)
+        if not source then
+            done(nil, "unknown document tag: " .. tag)
+            return
+        end
+        if not enabled(source) then
+            done(nil, ("%s is %s; enable sources.%s in setup()"):format(tag, source.label, source.prefix))
+            return
+        end
+        local id = id_of(source, tag)
+        local function destination(name)
+            local lines = vim.fn.readfile(store.doc_path(config.get(), name))
+            local doc
+            if source.prefix == "w3c" and id then
+                local entry = entry_of(source, id)
+                local url = entry and entry.file or "https://www.w3.org/TR/" .. id .. "/"
+                doc = require("rfc.document").report(
+                    id,
+                    vim.fn.readfile(store.raw_path(config.get(), name, source.raw_ext)),
+                    url
+                )
+            else
+                doc = require("rfc.document").from_help(lines)
+            end
+            done({ name = name, document = doc })
+        end
+        if not id then
+            if not source.subjects then
+                done(nil, "no subjects for " .. source.label)
+                return
+            end
+            if subjects_of(source):current() then
+                destination(source.prefix .. "-subjects")
+            else
+                if not subjects_fresh(source) then
+                    M.notify("fetching the " .. source.label .. " subjects")
+                end
+                run(M.ensure_subjects(source), source.label .. " subjects", function(_, err)
+                    if err then
+                        done(nil, err)
+                    else
+                        destination(source.prefix .. "-subjects")
+                    end
+                end)
+            end
+            return
+        end
+        if not raw_of(source, id):cached() then
+            M.notify("fetching " .. source.label .. " " .. id)
+        end
+        run(M.ensure(source, id), source.label .. " " .. id, function(name, err)
+            if err then
+                done(nil, err)
+            else
+                destination(name)
+            end
+        end)
+    end,
+})
+
+M.read_document = reader.read
+M.document_model = reader.model
+M.document_headings = reader.headings
+M.document_window = reader.attach_window
+M.document_forget = reader.forget
+
 --- `:help tag`, with a refusal in words: a tag of a source the reader has
 --- not enabled says so; any other refusal is shown as :help would show it.
 ---@param tag string
 ---@param source rfc.Source|nil
 local function help_tag(tag, source)
+    if config.get().view == "document" then
+        reader.jump(tag)
+        return
+    end
     local ok, err = pcall(vim.cmd.help, tag)
     if ok then
         return
@@ -672,6 +755,10 @@ end
 ---@param tag string
 function M.jump(tag)
     ensure_setup()
+    if config.get().view == "document" then
+        reader.jump(tag)
+        return
+    end
     local source = sources.of(tag)
     local id = source and id_of(source, tag)
     if source and id and enabled(source) and not document_of(source, id):current() then
@@ -699,6 +786,10 @@ end
 function M.open(source, id, tag)
     ensure_setup()
     tag = tag or tag_of(source, id)
+    if config.get().view == "document" then
+        reader.jump(tag)
+        return
+    end
     if document_of(source, id):current() then
         M.jump(tag)
         return
@@ -722,6 +813,10 @@ end
 
 --- The tag under the cursor, through jump.
 function M.follow()
+    if reader.model(vim.api.nvim_get_current_buf()) then
+        reader.follow(false)
+        return
+    end
     local ok, word = pcall(vim.fn.expand, "<cword>")
     if not ok or type(word) ~= "string" or word == "" then
         M.notify("nothing under the cursor", vim.log.levels.WARN)
@@ -732,6 +827,10 @@ end
 
 --- The first link on the cursor line, through jump: Enter on a ToC row.
 function M.follow_line()
+    if reader.model(vim.api.nvim_get_current_buf()) then
+        reader.follow(true)
+        return
+    end
     local tag = vim.api.nvim_get_current_line():match("|([^|%s]+)|")
     if not tag then
         M.notify("no link on this line", vim.log.levels.WARN)
@@ -1117,15 +1216,22 @@ local REQUIREMENTS = {
 ---@param buf integer
 ---@return boolean
 function M.owns(buf)
+    if vim.api.nvim_buf_get_name(buf):match("^rfc://document/") then
+        return true
+    end
     local name = vim.fn.resolve(vim.api.nvim_buf_get_name(buf))
     local dir = vim.fn.fnamemodify(vim.fn.resolve(store.doc_dir(config.get())), ":p")
-    return vim.startswith(name, dir)
+    return name:match("^rfc://document/") ~= nil or vim.startswith(name, dir)
 end
 
 --- The cursor to the heading `count` headings away (back for a negative
 --- count), on the jumplist; nothing when none lies that way.
 ---@param count integer
 function M.step(count)
+    if reader.model(vim.api.nvim_get_current_buf()) then
+        reader.step(count)
+        return
+    end
     local buf = vim.api.nvim_get_current_buf()
     local headings = view.headings(buf)
     local i = outline.step(headings, vim.api.nvim_win_get_cursor(0)[1], count)
@@ -1136,10 +1242,31 @@ function M.step(count)
     vim.api.nvim_win_set_cursor(0, { headings[i].line, 0 })
 end
 
+local function subject_keys(buf, source)
+    if not source then
+        return
+    end
+    vim.keymap.set("n", "gs", function()
+        local order = fp.map(statuses_of(source), function(c)
+            return c.name
+        end)
+        local selected = lifecycle.get(source.prefix, config.get().status[source.prefix])
+        M.status(source, lifecycle.next(order, selected) or "all")
+    end, { buffer = buf, desc = "rfc: the subjects on the next status of the lifecycle" })
+end
+
 --- The keys and highlights of a document's help buffer; a no-op for any other.
 ---@param buf integer
 function M.attach(buf)
     ensure_setup()
+    if reader.model(buf) then
+        reader.attach(buf)
+        local name = reader.model(buf).name
+        if name and name:match("%-subjects$") then
+            subject_keys(buf, sources.of(name))
+        end
+        return
+    end
     if not M.owns(buf) then
         return
     end
@@ -1156,13 +1283,7 @@ function M.attach(buf)
     end, { buffer = buf, desc = "rfc: the contents beside the document" })
     local subjects_source = sources.of(vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buf), ":t:r"))
     if subjects_source and vim.api.nvim_buf_get_name(buf):match("%-subjects%.txt$") then
-        vim.keymap.set("n", "gs", function()
-            local order = fp.map(statuses_of(subjects_source), function(c)
-                return c.name
-            end)
-            local current = lifecycle.get(subjects_source.prefix, config.get().status[subjects_source.prefix])
-            M.status(subjects_source, lifecycle.next(order, current) or "all")
-        end, { buffer = buf, desc = "rfc: the subjects on the next status of the lifecycle" })
+        subject_keys(buf, subjects_source)
     end
     vim.keymap.set("n", "<leader>tv", function()
         view.toggle(buf)

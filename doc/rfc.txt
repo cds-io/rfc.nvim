@@ -1,22 +1,24 @@
                                                                       *rfc.nvim*
 RFCs, Ethereum's EIPs and ERCs, Bitcoin's BIPs, Solana's SIMDs and the
-W3C's technical reports, as Neovim help.
+W3C's technical reports, through shared Markdown/vellum documents.
 
-`:Rfc 9110` fetches the RFC's text from the RFC Editor, renders it as a
-help document and opens it with |:help|; `:Eip 1559`, `:Bip 32`,
-`:Simd 64` and `:W3c wcag22` do the same from each proposal's source.
-From then on the editor's own help navigation is the whole interface: >
+Commands open `rfc://document/<tag>` buffers by default. cds-lua owns
+the document contract, HTML conversion, optional vellum adapter and
+navigation; rfc.nvim resolves source tags, aliases, citations and caches.
+Without vellum the same document displays as Markdown. CTRL-] follows
+links, CTRL-T restores the previous view, and gO opens the contents.
+W3C HTML IDs survive alongside the exported numbered section tags.
 
-  :help rfc9110         the RFC
-  :help rfc9110-3.1     a section, completed over every cached document
-  CTRL-]                follow a link: a section, a cited RFC, a reference
-  CTRL-T                back through the tag stack, across documents
-  :helpgrep MUST NOT    search every cached document into the quickfix
+Help documents and tags remain on disk: >
+  :help rfc9110
+  :help rfc9110-3.1
+  :helpgrep MUST NOT
 <
-A link to a document not cached yet (`|rfc2616|` in RFC 9110's text)
-fetches it on CTRL-] and then jumps. Requires Neovim 0.13 (`vim.async`)
-and `curl`; the house library cds-lua, and the vocabulary rock it brings,
-come with the plugin as its dependencies (|rfc.nvim-setup|).
+Direct :help retains native help/tag-stack navigation. Set view="rich"
+or view="plain" for commands to use the legacy help backend too.
+The default view="document" uses shared document rendering and history.
+Vellum is an optional dependency of this plugin; cds-lua never requires it.
+Requires Neovim 0.13 (vim.async), curl, and the house cds-lua libraries.
 
   Commands ............................................... |rfc.nvim-commands|
   Keys ....................................................... |rfc.nvim-keys|
@@ -68,22 +70,18 @@ In a document's window: >
   ]]  [[       the next and the previous section, with a count
   gO           the contents beside the document
   gs           in a subjects document, the next status of the lifecycle
-  <Leader>tv   the rich view on and off
-  zo           unfold a wide table laid out under its caption
+  <Leader>tv   legacy help: the rich view on and off
+  q            close the shared document window
 <
 `gO` opens the contents beside the document: one row per heading,
 indented by level, the cursor on the section yours is in. There `<CR>` is
-|:help| on that section in the document's window, so CTRL-T returns, and
+a jump to that section in the document's window, so CTRL-T returns, and
 `q` or `gO` closes it.
 
-A document opens in the rich view: a rule above every heading and the
-heading highlighted, drawn over the text as extmarks, so `<Leader>tv` puts
-the text back as written in place; the file on disk is the text plus its
-tags and links either way. The requirement words of RFC 2119 (MUST,
-SHOULD NOT, MAY) are bold. In a W3C report, a figure's image is drawn
-below its URL line where an image plugin is loaded and the terminal can
-draw (image.nvim under kitty or ghostty); otherwise the caption, alt text
-and URL read as text, and |gx| on the URL opens it.
+Document mode uses shared Markdown/vellum rendering, with redraws on
+resize and colorscheme changes and bounded retries for pending images.
+The rich/plain help modes retain the original help layout and its
+requirement-keyword highlighting, figure adapter and table folds.
 
 ------------------------------------------------------------------------------
                                                                *rfc.nvim-status*
@@ -218,8 +216,8 @@ Fields ~
 {sources} `(table<string, boolean>)` which commands are defined, by prefix: rfc (the RFC
   Editor, :Rfc), eip (Ethereum's EIPs and ERCs, :Eip), bip (Bitcoin's BIPs, :Bip), simd
   (Solana's SIMDs, :Simd), w3c (the W3C's technical reports, :W3c)
-{view} `(rfc.View)` how a document opens: "rich", with rules above its headings, or
-  "plain", as written
+{view} `(rfc.View)` how a document opens: "document" through Markdown/vellum; legacy "rich" rules or
+  "plain" help, as written
 {toc} `({ width: integer })` the contents sidebar
 {status} `(table<string, string>)` the status a source's subjects document opens filtered to,
   by prefix: { eip = "Final" }; every entry when unset
@@ -229,7 +227,7 @@ The defaults, which `setup` merges its argument over:
       cache_dir = nil,
       notify = nil,
       sources = { rfc = true, eip = false, bip = false, simd = false, w3c = false },
-      view = "rich",
+      view = "document",
       toc = { width = 44 },
       status = {},
   }

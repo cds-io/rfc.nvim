@@ -87,7 +87,7 @@ end
 ---@param file_tag string
 ---@return table<table, string> tag_of
 ---@return table<string, string> sections   -- id -> tag
-local function heading_tags(blocks, file_tag)
+function M.heading_tags(blocks, file_tag)
     local tag_of, sections, used = {}, {}, {}
     for _, b in ipairs(blocks) do
         if b.kind == "heading" then
@@ -258,7 +258,7 @@ function M.render(id, lines, url)
     local head = html.head(lines)
     local blocks = html.blocks(lines)
     local file_tag = "w3c-" .. id
-    local tag_of, sections = heading_tags(blocks, file_tag)
+    local tag_of, sections = M.heading_tags(blocks, file_tag)
     local refs, ref_tag = reference_tags(blocks, file_tag)
     local out = {}
     local tags = { { name = file_tag, line = 1 }, { name = file_tag .. ".txt", line = 1 } }

@@ -7,6 +7,11 @@
 -- constructors are named.
 ---@type table<string, string[]>
 return {
+    document = { "new", "anchor", "link_at" },
+    document_view = { "new" },
+    html = { "document", "escape" },
+    navigator = { "new" },
+    vellum = { "render", "restyle", "forget" },
     activity = { "new" },
     companion = { "new" },
     command = { "register" },

@@ -130,6 +130,10 @@ end
 ---@param buf integer
 ---@return rfc.Heading[]
 function M.headings(buf)
+    local document_headings = require("rfc").document_headings(buf)
+    if document_headings then
+        return document_headings
+    end
     local tick = vim.api.nvim_buf_get_changedtick(buf)
     if not cache[buf] then
         vim.api.nvim_create_autocmd("BufWipeout", {
