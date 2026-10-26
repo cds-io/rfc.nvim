@@ -1,3 +1,10 @@
+---@class rfc.SubjectsModel
+---@field kind "subjects"
+---@field name string
+---@field title string
+---@field doc rfc.SubjectsDoc
+---@field nodes { node: rfc.source.subjects.Node, tag: string, count: integer }[]
+
 -- A source's subjects as a help document: the forest rfc.source.subjects builds,
 -- written as a contents block (one row per node, indented two spaces per
 -- level, which is where the outline reads a heading's level) and then one
@@ -128,9 +135,32 @@ end
 --- direct entries still has its heading, since the sidebar lists it.
 ---@param doc rfc.SubjectsDoc
 ---@param forest rfc.source.subjects.Node[]
+---@return rfc.SubjectsModel
+function M.model(doc, forest)
+    local nodes = fp.map(M.nodes(doc.prefix, forest), function(n)
+        return { node = n.node, tag = n.tag, count = M.total(n.node) }
+    end)
+    return {
+        kind = "subjects",
+        name = doc.prefix .. "-subjects",
+        doc = doc,
+        nodes = nodes,
+        title = doc.title .. (doc.status and ("  [Status: " .. doc.status .. "]") or ""),
+    }
+end
+
+---@param doc rfc.SubjectsDoc
+---@param forest rfc.source.subjects.Node[]
 ---@return rfc.HelpDoc
 function M.render(doc, forest)
-    local file_tag = doc.prefix .. "-subjects"
+    return M.render_model(M.model(doc, forest))
+end
+
+---@param model rfc.SubjectsModel
+---@return rfc.HelpDoc
+function M.render_model(model)
+    local doc = model.doc
+    local file_tag = model.name
     local title = "*"
         .. file_tag
         .. ".txt*  "
@@ -138,14 +168,14 @@ function M.render(doc, forest)
         .. (doc.status and ("  [Status: " .. doc.status .. "]") or "")
     local out = { help.with_tag(title, file_tag), doc.about, "" }
     local tags = { { name = file_tag, line = 1 }, { name = file_tag .. ".txt", line = 1 } }
-    local nodes = M.nodes(doc.prefix, forest)
+    local nodes = model.nodes
     for _, n in ipairs(nodes) do
         local indent = ("  "):rep(#n.node.path - 1)
-        table.insert(out, ("%s|%s|  %s (%d)"):format(indent, n.tag, n.node.name, M.total(n.node)))
+        table.insert(out, ("%s|%s|  %s (%d)"):format(indent, n.tag, n.node.name, n.count))
     end
     table.insert(out, "")
     for _, n in ipairs(nodes) do
-        local heading = ("%s  (%d)"):format(n.node.name, M.total(n.node))
+        local heading = ("%s  (%d)"):format(n.node.name, n.count)
         table.insert(out, help.with_tag(heading, n.tag))
         table.insert(tags, { name = n.tag, line = #out })
         for _, e in ipairs(n.node.entries) do
@@ -158,7 +188,7 @@ function M.render(doc, forest)
     -- the footer names the render and the status, so a document rendered
     -- under another status reads as another version
     table.insert(out, help.FOOTER .. M.suffix(doc.status))
-    return { lines = out, tags = tags }
+    return { lines = out, tags = tags, model = model }
 end
 
 return M

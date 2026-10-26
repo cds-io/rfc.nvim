@@ -401,6 +401,14 @@ local function document_of(source, id)
         name = tag_of(source, id),
         from = { raw_of(source, id) },
         version = help.RENDER,
+        prepare = function(lines)
+            local entry = source.located and entry_of(source, id) or nil
+            return assert(source.prepare, "document source supplies a source plan")(
+                id,
+                lines,
+                entry and entry.file or nil
+            )
+        end,
         produce = function(lines)
             -- a render that needs the document's file (a report's URL, for
             -- its figures) gets it as a third argument; the others ignore it
@@ -457,6 +465,15 @@ local function subjects_of(source)
     local version = help.RENDER .. subjects.suffix(status)
     if s.texts then
         local listed = index_of(source):memo("entries", source.entries) or {}
+        local function prepare(...)
+            local texts = { ... }
+            local entries = fp.filter_map(listed, function(e, i)
+                if not status or source.status_of(texts[i]) == status then
+                    return s.entry(e.id, texts[i])
+                end
+            end)
+            return subjects.model(doc, cds_subjects.tree(entries, s.roots))
+        end
         return cache.derived(config.get(), {
             name = name,
             from = fp.map(listed, function(e)
@@ -464,14 +481,9 @@ local function subjects_of(source)
             end),
             version = version,
             limit = 8,
+            prepare = prepare,
             produce = function(...)
-                local texts = { ... }
-                local entries = fp.filter_map(listed, function(e, i)
-                    if not status or source.status_of(texts[i]) == status then
-                        return s.entry(e.id, texts[i])
-                    end
-                end)
-                return subjects.render(doc, cds_subjects.tree(entries, s.roots))
+                return subjects.render_model(prepare(...))
             end,
         })
     end
@@ -479,29 +491,37 @@ local function subjects_of(source)
     if status then
         table.insert(from, index_of(source))
     end
+    local function prepare(lines, index_lines)
+        local entries, err = s.entries(lines)
+        if not entries then
+            return nil, err
+        end
+        if status then
+            local standing = fp.set(
+                fp.filter(with_status(source, source.entries(index_lines)), function(e)
+                    return e.status == status
+                end),
+                function(e)
+                    return e.id
+                end
+            )
+            entries = fp.filter(entries, function(e)
+                return standing[e.id] == true
+            end)
+        end
+        return subjects.model(doc, cds_subjects.tree(entries, s.roots))
+    end
     return cache.derived(config.get(), {
         name = name,
         from = from,
         version = version,
-        produce = function(lines, index_lines)
-            local entries, err = s.entries(lines)
-            if not entries then
+        prepare = prepare,
+        produce = function(...)
+            local model, err = prepare(...)
+            if not model then
                 return nil, err
             end
-            if status then
-                local standing = fp.set(
-                    fp.filter(with_status(source, source.entries(index_lines)), function(e)
-                        return e.status == status
-                    end),
-                    function(e)
-                        return e.id
-                    end
-                )
-                entries = fp.filter(entries, function(e)
-                    return standing[e.id] == true
-                end)
-            end
-            return subjects.render(doc, cds_subjects.tree(entries, s.roots))
+            return subjects.render_model(model)
         end,
     })
 end
@@ -667,19 +687,13 @@ reader = require("rfc.reader").new({
         end
         local id = id_of(source, tag)
         local function destination(name)
-            local lines = vim.fn.readfile(store.doc_path(config.get(), name))
-            local doc
-            if source.prefix == "w3c" and id then
-                local entry = entry_of(source, id)
-                local url = entry and entry.file or "https://www.w3.org/TR/" .. id .. "/"
-                doc = require("rfc.document").report(
-                    id,
-                    vim.fn.readfile(store.raw_path(config.get(), name, source.raw_ext)),
-                    url
-                )
-            else
-                doc = require("rfc.document").from_help(lines)
+            local derived = id and document_of(source, id) or subjects_of(source)
+            local model, err = derived:source_model()
+            if not model then
+                done(nil, err)
+                return
             end
+            local doc = require("rfc.document").from_model(model)
             done({ name = name, document = doc })
         end
         if not id then

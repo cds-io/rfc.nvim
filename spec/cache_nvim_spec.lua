@@ -333,3 +333,30 @@ describe("cache", function()
         end)
     end)
 end)
+
+describe("derived source plans", function()
+    it("prepares Markdown input without formatting help or modifying cached source", function()
+        local lines = { "source" }
+        local plan = { kind = "subjects", name = "test-subjects" }
+        local derived = require("rfc.cache").derived({}, {
+            name = "test",
+            version = "test",
+            from = {
+                {
+                    cached = function()
+                        return lines
+                    end,
+                },
+            },
+            prepare = function(input)
+                assert.is_true(input == lines)
+                return plan
+            end,
+            produce = function()
+                error("the help renderer is not needed")
+            end,
+        })
+        assert.is_true(derived:source_model() == plan)
+        assert.same({ "source" }, lines)
+    end)
+end)

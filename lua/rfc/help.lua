@@ -1,3 +1,13 @@
+---@alias rfc.SourceModel rfc.RfcModel|rfc.ProposalModel|rfc.SubjectsModel|rfc.ReportModel
+
+---@class rfc.RfcModel
+---@field kind "rfc"
+---@field name string
+---@field title string
+---@field blocks rfc.source.rfc.Block[]
+---@field tag_of table<rfc.source.rfc.Block, string>
+---@field context rfc.help.Context
+
 -- The RFC as a Vim help document. render is total: whatever the text, it
 -- answers a document and the tags that name its headings, so a reader can
 -- `:help rfc9110-3.1`, follow |links| with CTRL-] and come back with CTRL-T.
@@ -15,6 +25,7 @@ local M = {}
 ---@class rfc.HelpDoc
 ---@field lines string[]
 ---@field tags rfc.HelpTag[]
+---@field model? rfc.SourceModel -- immutable source plan shared with the Markdown renderer
 
 -- Help files wrap at 78; the tag on a heading ends there when the heading
 -- leaves room, and sits one space after it otherwise.
@@ -156,7 +167,7 @@ end
 ---@param ctx rfc.help.Context
 ---@param own? string   -- the citation the line defines, if it is a reference entry
 ---@return string|nil
-local function tag_for(m, ctx, own)
+function M.target(m, ctx, own)
     if m.kind == "rfc" then
         return "rfc" .. m.rfc
     elseif m.kind == "citation" then
@@ -179,7 +190,7 @@ local function link(b, ctx)
     local line = b.text
     for i = #b.mentions, 1, -1 do
         local m = b.mentions[i]
-        local tag = tag_for(m, ctx, b.citation)
+        local tag = M.target(m, ctx, b.citation)
         if tag then
             line = line:sub(1, m.first - 1) .. "|" .. tag .. "|" .. line:sub(m.last + 1)
         end
@@ -193,8 +204,8 @@ end
 --- page header is left as written.
 ---@param rfc_num string
 ---@param lines string[]
----@return rfc.HelpDoc
-function M.render(rfc_num, lines)
+---@return rfc.RfcModel
+function M.model(rfc_num, lines)
     local blocks = rfc.blocks(lines)
     local file_tag = "rfc" .. rfc_num
     local tag_of, known, ref_tags, entry_at = {}, {}, {}, {}
@@ -220,6 +231,22 @@ function M.render(rfc_num, lines)
         end,
     }
 
+    return {
+        kind = "rfc",
+        name = file_tag,
+        title = M.title(lines) or ("RFC " .. rfc_num),
+        blocks = blocks,
+        tag_of = tag_of,
+        context = ctx,
+    }
+end
+
+---@param rfc_num string
+---@param lines string[]
+---@return rfc.HelpDoc
+function M.render(rfc_num, lines)
+    local model = M.model(rfc_num, lines)
+    local blocks, tag_of, ctx, file_tag = model.blocks, model.tag_of, model.context, model.name
     local decorate = {
         header = function(b)
             return b.text
@@ -240,7 +267,7 @@ function M.render(rfc_num, lines)
         end,
     }
 
-    local title = M.title(lines) or ("RFC " .. rfc_num)
+    local title = model.title
     local out = { with_tag("*" .. file_tag .. ".txt*  " .. title, file_tag) }
     local tags = { { name = file_tag, line = 1 }, { name = file_tag .. ".txt", line = 1 } }
     for _, b in ipairs(blocks) do
@@ -252,7 +279,7 @@ function M.render(rfc_num, lines)
     table.insert(out, "")
     table.insert(out, MODELINE)
     table.insert(out, M.FOOTER)
-    return { lines = out, tags = tags }
+    return { lines = out, tags = tags, model = model }
 end
 
 -- What a tag looks like: a source prefix (three or four letters) and a

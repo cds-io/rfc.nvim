@@ -224,6 +224,7 @@ end
 ---@field from rfc.Fetched[]      -- the inputs, in the order produce receives them
 ---@field version string          -- the render the document must carry
 ---@field produce fun(...: string[]): rfc.HelpDoc|nil, string|nil
+---@field prepare nil|fun(...: string[]): rfc.SourceModel|nil, string|nil
 ---@field limit integer|nil       -- how many inputs are produced at once; all without
 local Derived = {}
 Derived.__index = Derived
@@ -274,6 +275,25 @@ function Derived:ensure()
     end)
 end
 
+--- Rebuild the pure source plan from the inputs already ensured on disk.
+--- This never parses the generated help file or performs network work.
+---@return rfc.SourceModel|nil, string|nil
+function Derived:source_model()
+    local inputs = {}
+    for _, input in ipairs(self.from) do
+        local lines = input:cached()
+        if not lines then
+            return nil, "missing source input: " .. input.file
+        end
+        table.insert(inputs, lines)
+    end
+    if self.prepare then
+        return self.prepare(unpack(inputs))
+    end
+    local doc, err = self.produce(unpack(inputs))
+    return doc and doc.model or nil, err or (not (doc and doc.model) and "source model not available" or nil)
+end
+
 --- `parse` over the document's lines, once per mtime of the document
 --- under `name`; nil before it exists.
 ---@param name string
@@ -284,7 +304,7 @@ function Derived:memo(name, parse)
 end
 
 ---@param cfg rfc.Config
----@param spec { name: string, from: rfc.Fetched[], version: string, produce: (fun(...: string[]): rfc.HelpDoc|nil, string|nil), limit?: integer }
+---@param spec { name: string, from: rfc.Fetched[], version: string, produce: (fun(...: string[]): rfc.HelpDoc|nil, string|nil), prepare?: (fun(...: string[]): rfc.SourceModel|nil, string|nil), limit?: integer }
 ---@return rfc.Derived
 function M.derived(cfg, spec)
     return setmetatable({
@@ -293,6 +313,7 @@ function M.derived(cfg, spec)
         from = spec.from,
         version = spec.version,
         produce = spec.produce,
+        prepare = spec.prepare,
         limit = spec.limit,
     }, Derived)
 end

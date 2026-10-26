@@ -134,6 +134,14 @@ function Reader.new(deps)
                 return
             end
             show(model, destination)
+            for win, saved in pairs(model.restore_views or {}) do
+                if vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) == buf then
+                    vim.api.nvim_win_call(win, function()
+                        vim.fn.winrestview(saved)
+                    end)
+                end
+            end
+            model.restore_views = nil
             if after then
                 after(model)
             end
@@ -185,7 +193,13 @@ function Reader.new(deps)
         else
             vim.cmd.edit(vim.fn.fnameescape(entry.name))
         end
-        vim.fn.winrestview(entry.view)
+        local model = models[vim.api.nvim_get_current_buf()]
+        if model and not model.doc then
+            model.restore_views = model.restore_views or {}
+            model.restore_views[win] = entry.view
+        else
+            vim.fn.winrestview(entry.view)
+        end
     end
 
     local function link_under_cursor(first)
@@ -194,25 +208,13 @@ function Reader.new(deps)
             return nil
         end
         local row, col = unpack(vim.api.nvim_win_get_cursor(0))
-        if not model.doc.styled then
-            if first then
-                for _, link in ipairs(model.document.links) do
-                    if link.lnum == row then
-                        return link.target
-                    end
-                end
-            end
-            return document.link_at(vim.api.nvim_get_current_line(), col)
-        end
-        local best
-        for _, mark in ipairs(model.doc.marks) do
-            if mark.link and mark.lnum == row and (first or mark.col <= col and col < mark.end_col) then
-                if not best or mark.end_col - mark.col < best.end_col - best.col then
-                    best = mark
-                end
-            end
-        end
-        return best and best.link
+        return document.target(
+            model.document,
+            model.doc,
+            row,
+            col,
+            { first = first, line = vim.api.nvim_get_current_line() }
+        )
     end
 
     local function follow(target)
@@ -234,6 +236,7 @@ function Reader.new(deps)
             M.jump("w3c-" .. report:lower() .. (fragment and "#" .. fragment or ""))
             return
         end
+        nav.cancel(vim.api.nvim_get_current_win())
         local scheme = (target:match("^(%a[%w+.-]*):") or ""):lower()
         if scheme == "javascript" or scheme == "data" then
             deps.notify("not followed: " .. target)
@@ -295,6 +298,7 @@ function Reader.new(deps)
             deps.toc.toggle(vim.api.nvim_get_current_win())
         end)
         map("q", function()
+            nav.cancel(vim.api.nvim_get_current_win())
             if #vim.api.nvim_tabpage_list_wins(0) > 1 then
                 vim.cmd.close()
             else

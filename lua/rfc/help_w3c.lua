@@ -1,3 +1,16 @@
+---@class rfc.ReportModel
+---@field kind "html"
+---@field name string
+---@field id string
+---@field lines string[]
+---@field url string
+---@field head table
+---@field blocks rfc.source.html.Block[]
+---@field tag_of table<rfc.source.html.Block, string>
+---@field sections table<string, string>
+---@field refs table<string, string>
+---@field ref_tag table<string, string>
+
 -- A W3C technical report as a Vim help document: the head (title,
 -- subtitle, metadata), a contents block of links, then the body's blocks
 -- folded into help form: numbered headings with tags, prose wrapped at 78,
@@ -253,13 +266,36 @@ end
 ---@param id string       -- the lowercased shortname
 ---@param lines string[]  -- the report's HTML
 ---@param url string      -- the report's URL, for the figures
----@return rfc.HelpDoc
-function M.render(id, lines, url)
+---@return rfc.ReportModel
+function M.model(id, lines, url)
     local head = html.head(lines)
     local blocks = html.blocks(lines)
     local file_tag = "w3c-" .. id
     local tag_of, sections = M.heading_tags(blocks, file_tag)
     local refs, ref_tag = reference_tags(blocks, file_tag)
+    return {
+        kind = "html",
+        name = file_tag,
+        id = id,
+        lines = lines,
+        url = url,
+        head = head,
+        blocks = blocks,
+        tag_of = tag_of,
+        sections = sections,
+        refs = refs,
+        ref_tag = ref_tag,
+    }
+end
+
+---@param id string
+---@param lines string[]
+---@param url string
+---@return rfc.HelpDoc
+function M.render(id, lines, url)
+    local model = M.model(id, lines, url)
+    local head, blocks, file_tag = model.head, model.blocks, model.name
+    local tag_of, sections, refs, ref_tag = model.tag_of, model.sections, model.refs, model.ref_tag
     local out = {}
     local tags = { { name = file_tag, line = 1 }, { name = file_tag .. ".txt", line = 1 } }
     local ctx =
@@ -294,7 +330,7 @@ function M.render(id, lines, url)
     end
     table.insert(out, help.MODELINE)
     table.insert(out, help.FOOTER)
-    return { lines = out, tags = tags }
+    return { lines = out, tags = tags, model = model }
 end
 
 return M
