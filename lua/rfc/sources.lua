@@ -50,6 +50,7 @@ local M = {}
 ---@field located boolean|nil  -- the index names each document's file (its entries carry `file`), so a fetch goes through the index the rim keeps
 ---@field index fun(): cds.Task                    -- of the index text as one string
 ---@field entries fun(lines: string[]): rfc.Entry[]  -- pure
+---@field prepare nil|fun(id: string, lines: string[], file?: string): rfc.SourceModel -- pure source plan
 ---@field render fun(id: string, lines: string[], file?: string): rfc.HelpDoc  -- pure, total; `file` is the entry's, for a located source
 ---@field placeholder nil|fun(lines: string[]): boolean  -- pure: whether a stored text stands in for the document rather than being it
 ---@field subjects nil|rfc.Subjects   -- the source's taxonomy, for a source that has one
@@ -398,5 +399,18 @@ function M.of(tag)
         end)
     )
 end
+
+-- Both output formats consume these source plans; no help-file round trip.
+M.rfc.prepare = help.model
+M.eip.prepare = function(id, lines)
+    return require("rfc.proposal").model(help_eip.spec, id, lines)
+end
+M.bip.prepare = function(id, lines)
+    return require("rfc.proposal").model(help_bip.spec, id, lines)
+end
+M.simd.prepare = function(id, lines)
+    return require("rfc.proposal").model(help_simd.spec, id, lines)
+end
+M.w3c.prepare = help_w3c.model
 
 return M

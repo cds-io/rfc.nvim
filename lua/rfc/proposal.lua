@@ -1,3 +1,20 @@
+---@class rfc.ProposalPlan
+---@field tags table<rfc.ProposalBlock, string>
+---@field texts table<rfc.ProposalBlock, string>
+---@field top integer
+
+---@class rfc.ProposalModel
+---@field kind "proposal"
+---@field name string
+---@field title string
+---@field id string
+---@field spec rfc.ProposalSpec
+---@field fields table<string, string>
+---@field blocks rfc.ProposalBlock[]
+---@field aliases string[]
+---@field header string[]
+---@field body rfc.ProposalPlan
+
 -- The proposal render, over a declaration of what a source's proposals
 -- look like: how the text reads into its fields and blocks, which fields
 -- make the header and which name other proposals, how the text names a
@@ -95,10 +112,48 @@ end
 ---@param spec rfc.ProposalSpec
 ---@param id string
 ---@param lines string[]
+---@return rfc.ProposalModel
+function M.model(spec, id, lines)
+    local fields, blocks = spec.read(lines)
+    local name = spec.prefix .. id
+    local header = fp.map(
+        fp.filter(spec.header, function(key)
+            return fields[key] ~= nil and fields[key] ~= ""
+        end),
+        function(key)
+            return label(key) .. ": " .. fields[key]
+        end
+    )
+    table.insert(header, 1, spec.number(fields, id))
+    local rows = { table.concat(header, "  ") }
+    for _, row in ipairs(spec.rows) do
+        local line = type(row) == "function" and row(fields, id)
+            or type(row) == "table" and M.row(spec.prefix, fields, row)
+        if line then
+            table.insert(rows, line)
+        end
+    end
+    return {
+        kind = "proposal",
+        name = name,
+        id = id,
+        spec = spec,
+        blocks = blocks,
+        title = fields.title or (spec.label(fields) .. " " .. id),
+        fields = fields,
+        aliases = spec.tags and spec.tags(fields, id) or {},
+        header = rows,
+        body = M.plan_body(blocks, name),
+    }
+end
+
+---@param spec rfc.ProposalSpec
+---@param id string
+---@param lines string[]
 ---@return rfc.HelpDoc
 function M.render(spec, id, lines)
-    local fields, blocks = spec.read(lines)
-    local file_tag = spec.prefix .. id
+    local model = M.model(spec, id, lines)
+    local blocks, file_tag = model.blocks, model.name
     local out, tags = {}, {}
     local function put(line)
         table.insert(out, line)
@@ -107,35 +162,19 @@ function M.render(spec, id, lines)
         table.insert(tags, { name = name, line = #out })
     end
 
-    put(help.with_tag("*" .. file_tag .. ".txt*  " .. (fields.title or (spec.label(fields) .. " " .. id)), file_tag))
+    put(help.with_tag("*" .. file_tag .. ".txt*  " .. model.title, file_tag))
     tag(file_tag)
     tag(file_tag .. ".txt")
-    for _, name in ipairs(spec.tags and spec.tags(fields, id) or {}) do
+    for _, name in ipairs(model.aliases) do
         out[1] = out[1] .. " *" .. name .. "*"
         tag(name)
     end
-    local set = fp.filter(spec.header, function(key)
-        return fields[key] ~= nil and fields[key] ~= ""
-    end)
-    local header = fp.map(set, function(key)
-        return label(key) .. ": " .. fields[key]
-    end)
-    table.insert(header, 1, spec.number(fields, id))
-    put(table.concat(header, "  "))
-    for _, row in ipairs(spec.rows) do
-        local line
-        if type(row) == "function" then
-            line = row(fields, id)
-        else
-            line = M.row(spec.prefix, fields, row)
-        end
-        if line then
-            put(line)
-        end
+    for _, line in ipairs(model.header) do
+        put(line)
     end
     put("")
 
-    local body, body_tags = M.body(blocks, file_tag, M.linker(spec, id))
+    local body, body_tags = M.body(blocks, file_tag, M.linker(spec, id), model.body)
     local offset = #out
     for _, line in ipairs(body) do
         put(line)
@@ -146,7 +185,7 @@ function M.render(spec, id, lines)
     put("")
     put(help.MODELINE)
     put(help.FOOTER)
-    return { lines = out, tags = tags }
+    return { lines = out, tags = tags, model = model }
 end
 
 --- A table as aligned columns: its caption on a line of its own, cells
@@ -190,26 +229,18 @@ end
 ---@field title string|nil
 ---@field lang string|nil
 ---@field code string[]|nil
+---@field caption string|nil
 ---@field header boolean|nil
 ---@field rows string[][]|nil
 ---@field notes { n: integer, text: string }[]|nil
 ---@field text string|nil
 
---- The body: a CONTENTS block of the headings as links, indented by level
---- from the shallowest heading, then every block rendered. Level one and
---- two headings are written in capitals. Answers the lines and the tags
---- they carry, each tag's line counted from 1 within the lines answered.
+--- Heading identity is planned once for both renderers.
 ---@param blocks rfc.ProposalBlock[]
 ---@param file_tag string
----@param link fun(text: string): string   -- the render's link pass over a line
----@return string[] lines
----@return rfc.HelpTag[] tags
-function M.body(blocks, file_tag, link)
-    local out, tags = {}, {}
-    local function put(line)
-        table.insert(out, line)
-    end
-    local tag_of, used, top = {}, {}, nil
+---@return rfc.ProposalPlan
+function M.plan_body(blocks, file_tag)
+    local tag_of, used, texts, top = {}, {}, {}, nil
     for _, b in ipairs(blocks) do
         if b.kind == "heading" then
             local level = assert(b.level, "a heading carries its level")
@@ -222,8 +253,29 @@ function M.body(blocks, file_tag, link)
                 used[name] = 1
             end
             tag_of[b] = name
+            texts[b] = b.level <= 2 and b.title:upper() or b.title
         end
     end
+    return { tags = tag_of, texts = texts, top = top or 1 }
+end
+
+--- The body: a CONTENTS block of the headings as links, indented by level
+--- from the shallowest heading, then every block rendered. Level one and
+--- two headings are written in capitals. Answers the lines and the tags
+--- they carry, each tag's line counted from 1 within the lines answered.
+---@param blocks rfc.ProposalBlock[]
+---@param file_tag string
+---@param link fun(text: string): string   -- the render's link pass over a line
+---@param plan? rfc.ProposalPlan
+---@return string[] lines
+---@return rfc.HelpTag[] tags
+function M.body(blocks, file_tag, link, plan)
+    local out, tags = {}, {}
+    local function put(line)
+        table.insert(out, line)
+    end
+    local prepared = plan or M.plan_body(blocks, file_tag)
+    local tag_of, top = prepared.tags, prepared.top
     if next(tag_of) then
         put("CONTENTS")
         for _, b in ipairs(blocks) do
@@ -236,7 +288,7 @@ function M.body(blocks, file_tag, link)
 
     local render = {
         heading = function(b)
-            return { help.with_tag(b.level <= 2 and b.title:upper() or b.title, tag_of[b]) }
+            return { help.with_tag(prepared.texts[b], tag_of[b]) }
         end,
         fence = function(b)
             local block = fp.map(b.code, function(code)

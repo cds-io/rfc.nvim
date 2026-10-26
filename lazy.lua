@@ -11,5 +11,6 @@ return {
     main = "rfc",
     dependencies = {
         { "cds-io/cds-lua", lazy = true },
+        { "blackhat-7/vellum.nvim", optional = true },
     },
 }

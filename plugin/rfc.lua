@@ -56,3 +56,32 @@ vim.api.nvim_create_autocmd("FileType", {
         require("rfc").attach(args.buf)
     end,
 })
+
+-- Shared document buffers keep plugin-owned source resolution and mappings.
+local documents = vim.api.nvim_create_augroup("rfc.documents", { clear = true })
+vim.api.nvim_create_autocmd("BufReadCmd", {
+    group = documents,
+    pattern = "rfc://document/*",
+    callback = function(args)
+        require("rfc").read_document(args.buf, vim.api.nvim_buf_get_name(args.buf))
+    end,
+})
+vim.api.nvim_create_autocmd("BufWinEnter", {
+    group = documents,
+    pattern = "rfc://document/*",
+    callback = function()
+        require("rfc").document_window(vim.api.nvim_get_current_win())
+    end,
+})
+vim.api.nvim_create_autocmd("WinClosed", {
+    group = documents,
+    callback = function(args)
+        require("rfc").document_forget(tonumber(args.match))
+    end,
+})
+vim.api.nvim_create_autocmd("ColorScheme", {
+    group = documents,
+    callback = function()
+        require("cds.vellum").restyle()
+    end,
+})

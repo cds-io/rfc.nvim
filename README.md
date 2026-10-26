@@ -1,36 +1,37 @@
 # rfc.nvim
 
 RFCs, Ethereum's EIPs and ERCs, Bitcoin's BIPs, Solana's SIMDs and the
-W3C's technical reports, as Neovim help. `:Rfc 9110` fetches the RFC's text from the RFC Editor;
-`:Eip 1559`, `:Bip 32` and `:Simd 64` fetch a proposal's from its
-repository; each is rendered as a help document and opened with `:help`,
-so from then on the editor's own help navigation is the whole interface:
+W3C's technical reports in Neovim. `:Rfc 9110`, `:Eip 1559`, `:Bip 32`,
+`:Simd 64` and `:W3c wcag22` fetch and open a shared Markdown document.
+When optional vellum.nvim is installed it renders headings, code, tables
+and images; otherwise the buffer displays Markdown. `cds-lua` supplies
+the document contract, HTML conversion, rendering lifecycle and navigation.
+rfc.nvim supplies source resolution, aliases, citation tags and caching.
 
 ```
-:help rfc9110            the RFC
-:help rfc9110-3.1        a section, with completion over every cached document
-:help eip1559-specification   a section of an EIP
-CTRL-]                   follow a link: a section, a cited RFC or EIP, a reference entry
-CTRL-T                   back through the tag stack, across documents
-<CR>                     follow the first link on the line: Enter on a ToC row
-]]  [[                   the next and the previous section, with a count
-gO                       the contents beside the document; Enter opens a section, q closes
-,tv                      the rich view on and off
-:helpgrep MUST NOT       search every cached document into the quickfix list
+CTRL-]                   follow a link, fetching an uncached specification
+CTRL-T                   return to the previous document or section and view
+<CR>                     follow the first link on the line
+]]  [[                   the next and previous section, with a count
+gO                       contents sidebar; Enter opens a section, q closes it
+gs                       next lifecycle status in a subjects document
+q                        close the document window, or show an empty buffer
+:help rfc9110             the exported Vim help document
+:help rfc9110-3.1         an exported section, with tag completion
+:helpgrep MUST NOT        search cached help exports
 ```
 
-A link to a document that is not cached yet (`|rfc2616|` in RFC 9110's
-text, `|eip2718|` in EIP-1559's) fetches it on `CTRL-]` and then jumps.
-The requirement keywords of RFC 2119 (MUST, SHOULD NOT, MAY) are
-highlighted in bold.
+Commands open `rfc://document/<tag>` buffers. They retain explicit W3C HTML
+IDs alongside numbered section tags, so both `w3c-wcag22#intro` and its
+numbered tag navigate to the same source heading when the report defines
+it. Rendered links and anchors map through vellum's source blocks. Fetches
+are guarded per window, and a late answer cannot replace a newer follow.
 
-A document opens in the rich view: a rule above every heading and the
-heading highlighted, drawn over the text as extmarks, so `,tv` puts the
-text back as written in place and the file on disk is the RFC plus its
-tags and links either way. `gO` opens the contents beside the document,
-one row per heading indented by level, its cursor on the section yours is
-in; Enter there is `:help` on that section, so CTRL-T returns, and `q`
-closes it.
+Help documents and tags are still exported to disk. Direct `:help` uses
+Neovim's help/tag stack. To make commands use that backend too, configure
+`view = "rich"` (heading rules and the existing `,tv` toggle) or
+`view = "plain"` (unadorned help). The default is `view = "document"`.
+The demos below show the legacy help backend.
 
 Two demos, documenting typical (for me) workflows. A ticket drafted against RFC
 5841.
@@ -319,7 +320,7 @@ failing later.
 require("rfc").setup({
     sources = { rfc = true, eip = false, bip = false, simd = false, w3c = false },
     cache_dir = nil, -- stdpath("cache") .. "/rfc"
-    view = "rich", -- or "plain": a document as written
+    view = "document", -- Markdown/vellum; "rich" or "plain" for legacy help
     toc = { width = 44 }, -- the contents sidebar
     -- where messages go; vim.notify with an "rfc: " prefix by default
     notify = function(msg, level, opts) end,
@@ -335,3 +336,17 @@ generated from the annotation blocks in `lua/rfc/init.lua` and
 `lua/rfc/config.lua` by [mini.doc](https://github.com/nvim-mini/mini.doc)
 (`make doc`), and `make check` refuses a stale copy.
 
+
+Vellum belongs to the consuming plugin's optional dependency list, not
+cds-lua's. The plugin's `lazy.lua` includes an `optional = true` vellum
+entry: it is used when you also declare vellum in your configuration.
+Without vellum, document mode falls back to Markdown. The shared library
+remains usable by plugins that never render documents.
+
+The help and Markdown renderers share pure source plans: RFC sections and
+citations, proposal headings and aliases, subject trees and counts, and W3C
+section identities are planned once per render. Markdown is rendered from these
+plans rather than recovered from formatted help files. Cached-source preparation
+never needs a help-file import or a network request. The old `from_help` adapter
+is retained for compatibility imports. W3C plans select the full report body so
+abstract/status anchors outside main remain available.

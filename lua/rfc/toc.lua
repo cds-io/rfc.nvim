@@ -47,7 +47,8 @@ contents = require("cds.companion").new({
         if vim.bo[buf].filetype == "" and vim.api.nvim_buf_get_name(buf) == "" then
             return nil
         end
-        return vim.bo[buf].filetype == "help" and require("rfc").owns(buf)
+        return require("rfc").owns(buf)
+            and (vim.bo[buf].filetype == "help" or require("rfc").document_model(buf) ~= nil)
     end,
     on_update = load,
     on_track = place,
