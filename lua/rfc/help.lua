@@ -245,7 +245,12 @@ end
 ---@param lines string[]
 ---@return rfc.HelpDoc
 function M.render(rfc_num, lines)
-    local model = M.model(rfc_num, lines)
+    return M.render_model(M.model(rfc_num, lines))
+end
+
+---@param model rfc.RfcModel
+---@return rfc.HelpDoc
+function M.render_model(model)
     local blocks, tag_of, ctx, file_tag = model.blocks, model.tag_of, model.context, model.name
     local decorate = {
         header = function(b)

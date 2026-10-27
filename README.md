@@ -345,8 +345,24 @@ remains usable by plugins that never render documents.
 
 The help and Markdown renderers share pure source plans: RFC sections and
 citations, proposal headings and aliases, subject trees and counts, and W3C
-section identities are planned once per render. Markdown is rendered from these
+section identities are prepared once per source revision. Markdown is rendered from these
 plans rather than recovered from formatted help files. Cached-source preparation
 never needs a help-file import or a network request. The old `from_help` adapter
 is retained for compatibility imports. W3C plans select the full report body so
 abstract/status anchors outside main remain available.
+
+Proposal plans carry literal text and resolved tag targets, including their
+metadata rows. The help and Markdown renderers format those parts independently;
+literal pipes in metadata are never interpreted as Markdown links. Proposal
+mention scanning runs during preparation, rather than again for each renderer.
+
+Derived cache entries pair `prepare(inputs...)` with `render_model(model)`.
+The immutable model is reused across help export, Markdown rendering and later
+opens, including newly created cache-entry descriptors. Reuse checks the cache
+root, render version, preparation context (such as the report URL), and the
+ordered input paths and file identities. Nanosecond modification/change times,
+size and inode detect same-second replacements. Missing inputs and preparation
+errors discard stale models; a status or report-URL change also invalidates reuse.
+Custom preparations with extra dependencies declare them through `context`, a
+string or a function returning the current string. Legacy `produce(inputs...)`
+entries remain supported.

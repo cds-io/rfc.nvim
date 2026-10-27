@@ -248,6 +248,165 @@ describe("cache", function()
                 end,
             })
         end
+
+        it("reuses one prepared model across help and Markdown and new entry descriptors", function()
+            local input, parses, reads = fetched({}), 0, 0
+            local cached = input.cached
+            input.cached = function(self)
+                reads = reads + 1
+                return cached(self)
+            end
+            local function entry(version, context)
+                return cache.derived(cfg, {
+                    name = "rfc7",
+                    from = { input },
+                    version = version or help.RENDER,
+                    context = context,
+                    prepare = function(lines)
+                        parses = parses + 1
+                        return help.model("7", lines)
+                    end,
+                    render_model = help.render_model,
+                })
+            end
+            local d = entry()
+            assert.equals("rfc7", wait(d:ensure()))
+            local before = reads
+            local model = d:source_model()
+            assert.is_true(model == entry():source_model())
+            assert.equals(1, parses)
+            assert.equals(before, reads)
+            assert.same(help.render_model(model).lines, vim.fn.readfile(d:path()))
+            assert.is_not_nil(require("rfc.document").from_model(model).anchors.rfc7)
+            assert.is_not_nil(entry("next-version"):source_model())
+            assert.equals(2, parses)
+            assert.is_not_nil(entry("next-version", "another-url"):source_model())
+            assert.equals(3, parses)
+        end)
+
+        it("prepares a warm disk export once and reevaluates dynamic source context", function()
+            local input, parses = fetched({}), 0
+            assert.equals("rfc7", wait(derived(input):ensure()))
+            local url = "https://example.org/first/"
+            local function entry()
+                return cache.derived(cfg, {
+                    name = "rfc7",
+                    from = { input },
+                    version = help.RENDER,
+                    context = function()
+                        return url
+                    end,
+                    prepare = function(lines)
+                        parses = parses + 1
+                        return help.model("7", lines)
+                    end,
+                    render_model = help.render_model,
+                })
+            end
+            local d = entry()
+            assert.equals("rfc7", wait(d:ensure()))
+            assert.equals(0, parses)
+            local first = d:source_model()
+            assert.is_true(first == entry():source_model())
+            assert.equals(1, parses)
+            url = "https://example.org/second/"
+            assert.is_false(d:current())
+            assert.equals("rfc7", wait(d:ensure()))
+            assert.equals(2, parses)
+            assert.is_false(first == d:source_model())
+            assert.is_true(d:current())
+        end)
+
+        it("invalidates a source plan when the ordered input set changes", function()
+            local a = fetched({ file = "a.txt", body = "a" })
+            local b = fetched({ file = "b.txt", body = "b" })
+            assert.is_not_nil(wait(a:lines()))
+            assert.is_not_nil(wait(b:lines()))
+            local parses = 0
+            local function entry(inputs)
+                return cache.derived(cfg, {
+                    name = "rfc7",
+                    from = inputs,
+                    version = help.RENDER,
+                    prepare = function(first, second)
+                        parses = parses + 1
+                        return help.model("7", { first[1], second[1] })
+                    end,
+                    render_model = help.render_model,
+                })
+            end
+            local first = entry({ a, b }):source_model()
+            local reordered = entry({ b, a }):source_model()
+            assert.is_false(first == reordered)
+            assert.equals("a", first.blocks[1].text)
+            assert.equals("b", reordered.blocks[1].text)
+            assert.equals(2, parses)
+        end)
+
+        it("invalidates prepared models after same-second source replacement and removal", function()
+            local input, parses = fetched({}), 0
+            local d = cache.derived(cfg, {
+                name = "rfc7",
+                from = { input },
+                version = help.RENDER,
+                prepare = function(lines)
+                    parses = parses + 1
+                    return help.model("7", lines)
+                end,
+                render_model = help.render_model,
+            })
+            assert.equals("rfc7", wait(d:ensure()))
+            local previous = d:source_model()
+            local stamp = vim.uv.fs_stat(input:path()).mtime
+            vim.wait(2)
+            vim.fn.writefile({ "z", "b" }, input:path())
+            vim.uv.fs_utime(input:path(), stamp.sec + stamp.nsec / 1e9, stamp.sec + stamp.nsec / 1e9)
+            assert.is_false(previous == d:source_model())
+            assert.is_false(d:current())
+            assert.equals("rfc7", wait(d:ensure()))
+            assert.is_false(previous == d:source_model())
+            assert.equals(2, parses)
+            assert.equals("z", vim.fn.readfile(d:path())[2])
+            vim.fn.delete(input:path())
+            local missing, err = d:source_model()
+            assert.is_nil(missing)
+            assert.matches("missing source input", err)
+            assert.equals("rfc7", wait(d:ensure()))
+            assert.equals(3, parses)
+        end)
+
+        it("does not retain failed preparations and isolates cache roots", function()
+            local input, parses = fetched({}), 0
+            assert.is_not_nil(wait(input:lines()))
+            local function prepare(lines)
+                parses = parses + 1
+                if parses == 1 then
+                    return nil, "try again"
+                end
+                return help.model("7", lines)
+            end
+            local d = cache.derived(cfg, {
+                name = "rfc7",
+                from = { input },
+                version = help.RENDER,
+                prepare = prepare,
+                render_model = help.render_model,
+            })
+            local model, err = d:source_model()
+            assert.is_nil(model)
+            assert.equals("try again", err)
+            assert.is_not_nil(d:source_model())
+            assert.equals(2, parses)
+            local other = cache.derived({ cache_dir = cfg.cache_dir .. "/other" }, {
+                name = "rfc7",
+                from = { input },
+                version = help.RENDER,
+                prepare = prepare,
+                render_model = help.render_model,
+            })
+            assert.is_not_nil(other:source_model())
+            assert.equals(3, parses)
+        end)
         it("produces when the document is missing, then is current", function()
             local d = derived(fetched({}))
             assert.is_false(d:current())

@@ -397,24 +397,19 @@ end
 ---@param id string
 ---@return rfc.Derived
 local function document_of(source, id)
+    local function url()
+        local entry = source.located and entry_of(source, id) or nil
+        return entry and entry.file or nil
+    end
     return cache.derived(config.get(), {
         name = tag_of(source, id),
         from = { raw_of(source, id) },
         version = help.RENDER,
+        context = url,
         prepare = function(lines)
-            local entry = source.located and entry_of(source, id) or nil
-            return assert(source.prepare, "document source supplies a source plan")(
-                id,
-                lines,
-                entry and entry.file or nil
-            )
+            return assert(source.prepare, "document source supplies a source plan")(id, lines, url())
         end,
-        produce = function(lines)
-            -- a render that needs the document's file (a report's URL, for
-            -- its figures) gets it as a third argument; the others ignore it
-            local entry = source.located and entry_of(source, id) or nil
-            return source.render(id, lines, entry and entry.file or nil)
-        end,
+        render_model = source.render_model,
     })
 end
 
@@ -482,9 +477,7 @@ local function subjects_of(source)
             version = version,
             limit = 8,
             prepare = prepare,
-            produce = function(...)
-                return subjects.render_model(prepare(...))
-            end,
+            render_model = subjects.render_model,
         })
     end
     local from = { subjects_index_of(source) }
@@ -516,13 +509,7 @@ local function subjects_of(source)
         from = from,
         version = version,
         prepare = prepare,
-        produce = function(...)
-            local model, err = prepare(...)
-            if not model then
-                return nil, err
-            end
-            return subjects.render_model(model)
-        end,
+        render_model = subjects.render_model,
     })
 end
 

@@ -8,11 +8,11 @@
 ---@field name string
 ---@field title string
 ---@field id string
----@field spec rfc.ProposalSpec
 ---@field fields table<string, string>
 ---@field blocks rfc.ProposalBlock[]
 ---@field aliases string[]
----@field header string[]
+---@field header rfc.Inline[]
+---@field inlines table<string, rfc.Inline>
 ---@field body rfc.ProposalPlan
 
 -- The proposal render, over a declaration of what a source's proposals
@@ -40,7 +40,7 @@ local M = {}
 ---@field number fun(fields: table<string, string>, id: string): string  -- the header's first cell: EIP-1559, SIMD-0064
 ---@field read fun(lines: string[]): table<string, string>, rfc.ProposalBlock[]  -- the fields and the body's blocks
 ---@field header string[]                              -- the fields the header line carries, in order
----@field rows (rfc.ProposalRow|fun(fields: table<string, string>, id: string): string|nil)[]  -- lines after the header, each when its field is set
+---@field rows (rfc.ProposalRow|fun(fields: table<string, string>, id: string): rfc.Inline|string|nil)[]  -- lines after the header, each when its field is set
 ---@field tags nil|fun(fields: table<string, string>, id: string): string[]  -- other names the file is tagged by: erc20 for an ERC
 ---@field mentions fun(line: string): rfc.source.Mention[]    -- what the text names
 
@@ -50,60 +50,132 @@ local function label(key)
     return key:sub(1, 1):upper() .. key:sub(2)
 end
 
---- The numbers a field names, as links; nil when none.
----@param prefix string
----@param value string
----@return string|nil
-function M.links(prefix, value)
+---@class rfc.InlinePart
+---@field text string
+---@field target? string -- application tag, without help or Markdown delimiters
+
+---@alias rfc.Inline rfc.InlinePart[]
+
+--- Render resolved text/link parts without interpreting literal text as markup.
+--- Plain text is transformed as one string, keeping inline code spans intact.
+---@param parts rfc.Inline
+---@param link fun(target: string): string
+---@param plain? fun(text: string): string
+---@return string
+function M.format(parts, link, plain)
     local out = {}
-    for n in value:gmatch("%d+") do
-        table.insert(out, "|" .. prefix .. n:gsub("^0+(%d)", "%1") .. "|")
+    for i, part in ipairs(parts) do
+        out[i] = part.target and ("\1" .. i .. "\2") or part.text
     end
-    return #out > 0 and table.concat(out, ", ") or nil
+    local text = table.concat(out)
+    text = plain and plain(text) or text
+    return (text:gsub("\1(%d+)\2", function(index)
+        return link(parts[tonumber(index)].target)
+    end))
 end
 
---- A row after the header: the field's label and its value in the form
---- asked; nil when the field is empty or names nothing.
+---@param target string
+---@return string
+local function help_link(target)
+    return "|" .. target .. "|"
+end
+
+--- The tag a source mention names, resolved once while preparing the model.
+---@param spec rfc.ProposalSpec
+---@param id string
+---@param mention rfc.source.Mention
+---@return string
+local function target(spec, id, mention)
+    local tag = (mention.kind or spec.prefix) .. (mention.id or id)
+    return mention.section and (tag .. "-" .. help.slug(mention.section)) or tag
+end
+
+--- Literal text and resolved links, in source order.
+---@param spec rfc.ProposalSpec
+---@param id string
+---@param text string
+---@return rfc.Inline
+function M.inline(spec, id, text)
+    local out, from = {}, 1
+    for _, mention in ipairs(spec.mentions(text)) do
+        if mention.first > from then
+            out[#out + 1] = { text = text:sub(from, mention.first - 1) }
+        end
+        out[#out + 1] = { text = text:sub(mention.first, mention.last), target = target(spec, id, mention) }
+        from = mention.last + 1
+    end
+    if from <= #text then
+        out[#out + 1] = { text = text:sub(from) }
+    end
+    return out
+end
+
+---@param prefix string
+---@param value string
+---@return rfc.Inline
+local function number_links(prefix, value)
+    local out = {}
+    for n in value:gmatch("%d+") do
+        if #out > 0 then
+            out[#out + 1] = { text = ", " }
+        end
+        local tag = prefix .. n:gsub("^0+(%d)", "%1")
+        out[#out + 1] = { text = tag, target = tag }
+    end
+    return out
+end
+
+--- Compatibility export of a numeric field as help links.
+---@param prefix string
+---@param value string
+---@return string?
+function M.links(prefix, value)
+    local parts = number_links(prefix, value)
+    return #parts > 0 and M.format(parts, help_link) or nil
+end
+
 ---@param prefix string
 ---@param fields table<string, string>
 ---@param row rfc.ProposalRow
----@return string|nil
-function M.row(prefix, fields, row)
+---@return rfc.Inline?
+local function row_parts(prefix, fields, row)
     local value = fields[row.key]
     if not value or value == "" then
         return nil
     end
-    local text
+    local parts
     if row.as == "links" then
-        text = M.links(prefix, value)
+        parts = number_links(prefix, value)
     elseif type(row.as) == "function" then
         local items = row.as(value)
-        text = #items > 0 and table.concat(items, ", ") or nil
+        parts = #items > 0 and { { text = table.concat(items, ", ") } } or {}
     else
-        text = value
+        parts = { { text = value } }
     end
-    return text and (label(row.key) .. ": " .. text) or nil
+    if #parts == 0 then
+        return nil
+    end
+    table.insert(parts, 1, { text = label(row.key) .. ": " })
+    return parts
 end
 
---- The link pass for a document: a mention becomes |kindN|, or
---- |kindN-section| when it names a section, the document's own prefix and
---- number standing in for what the mention leaves out (a link into the
---- document itself).
+--- Compatibility export of a header row as help text.
+---@param prefix string
+---@param fields table<string, string>
+---@param row rfc.ProposalRow
+---@return string?
+function M.row(prefix, fields, row)
+    local parts = row_parts(prefix, fields, row)
+    return parts and M.format(parts, help_link) or nil
+end
+
+--- Compatibility helper; shared model consumers use pre-resolved inline parts.
 ---@param spec rfc.ProposalSpec
 ---@param id string
 ---@return fun(line: string): string
 function M.linker(spec, id)
     return function(line)
-        local found = spec.mentions(line)
-        for i = #found, 1, -1 do
-            local m = found[i]
-            local tag = (m.kind or spec.prefix) .. (m.id or id)
-            if m.section then
-                tag = tag .. "-" .. help.slug(m.section)
-            end
-            line = line:sub(1, m.first - 1) .. "|" .. tag .. "|" .. line:sub(m.last + 1)
-        end
-        return line
+        return M.format(M.inline(spec, id, line), help_link)
     end
 end
 
@@ -125,24 +197,41 @@ function M.model(spec, id, lines)
         end
     )
     table.insert(header, 1, spec.number(fields, id))
-    local rows = { table.concat(header, "  ") }
+    local rows = { { { text = table.concat(header, "  ") } } }
     for _, row in ipairs(spec.rows) do
         local line = type(row) == "function" and row(fields, id)
-            or type(row) == "table" and M.row(spec.prefix, fields, row)
+            or type(row) == "table" and row_parts(spec.prefix, fields, row)
         if line then
-            table.insert(rows, line)
+            table.insert(rows, type(line) == "string" and { { text = line } } or line)
+        end
+    end
+    local inlines = { [""] = {} }
+    local function prepare(text)
+        if text and not inlines[text] then
+            inlines[text] = M.inline(spec, id, text)
+        end
+    end
+    for _, block in ipairs(blocks) do
+        prepare(block.text)
+        for _, cells in ipairs(block.rows or {}) do
+            for _, cell in ipairs(cells) do
+                prepare(cell)
+            end
+        end
+        for _, note in ipairs(block.notes or {}) do
+            prepare(note.text)
         end
     end
     return {
         kind = "proposal",
         name = name,
         id = id,
-        spec = spec,
         blocks = blocks,
         title = fields.title or (spec.label(fields) .. " " .. id),
         fields = fields,
         aliases = spec.tags and spec.tags(fields, id) or {},
         header = rows,
+        inlines = inlines,
         body = M.plan_body(blocks, name),
     }
 end
@@ -152,7 +241,12 @@ end
 ---@param lines string[]
 ---@return rfc.HelpDoc
 function M.render(spec, id, lines)
-    local model = M.model(spec, id, lines)
+    return M.render_model(M.model(spec, id, lines))
+end
+
+---@param model rfc.ProposalModel
+---@return rfc.HelpDoc
+function M.render_model(model)
     local blocks, file_tag = model.blocks, model.name
     local out, tags = {}, {}
     local function put(line)
@@ -170,11 +264,13 @@ function M.render(spec, id, lines)
         tag(name)
     end
     for _, line in ipairs(model.header) do
-        put(line)
+        put(M.format(line, help_link))
     end
     put("")
 
-    local body, body_tags = M.body(blocks, file_tag, M.linker(spec, id), model.body)
+    local body, body_tags = M.body(blocks, file_tag, function(text)
+        return M.format(model.inlines[text], help_link)
+    end, model.body)
     local offset = #out
     for _, line in ipairs(body) do
         put(line)

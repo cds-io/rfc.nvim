@@ -137,4 +137,65 @@ describe("RFC shared document adapters", function()
         end
         assert.equals(5, #doc.headings)
     end)
+
+    it("keeps literal metadata pipes separate from resolved proposal links", function()
+        local proposal = require("rfc.proposal")
+        local spec = require("rfc.help_eip").spec
+        local lines = {
+            "---",
+            "eip: 20",
+            "title: Pipes",
+            "author: A |bip32| B",
+            "requires: 0001, 2",
+            "status: Moved",
+            "category: ERC",
+            "---",
+            "## Abstract",
+            "See EIP-1.",
+        }
+        local model = proposal.model(spec, "20", lines)
+        assert.same({ text = "Requires: " }, model.header[2][1])
+        assert.same({ text = "eip1", target = "eip1" }, model.header[2][2])
+        local doc = contract.from_model(model)
+        local markdown = table.concat(doc.markdown, "\n")
+        assert.truthy(markdown:find("Author: A |bip32| B", 1, true))
+        assert.truthy(markdown:find("Moved: see [erc20](rfc-tag:erc20)", 1, true))
+        for _, link in ipairs(doc.links) do
+            assert.is_not.equal("rfc-tag:bip32", link.target)
+        end
+        local exported = proposal.render_model(model)
+        assert.equals("Requires: |eip1|, |eip2|", exported.lines[3])
+        assert.equals("Author: A |bip32| B", exported.lines[4])
+    end)
+
+    it("renders both proposal formats without scanning mentions again", function()
+        local proposal = require("rfc.proposal")
+        for _, item in ipairs({
+            { require("rfc.help_eip").spec, "20", fixtures.erc20 },
+            { require("rfc.help_bip").spec, "32", fixtures.bip32 },
+            { require("rfc.help_simd").spec, "64", fixtures.simd64 },
+        }) do
+            local original, calls = item[1].mentions, 0
+            local spec = {}
+            for key, value in pairs(item[1]) do
+                spec[key] = value
+            end
+            spec.mentions = function(text)
+                calls = calls + 1
+                return original(text)
+            end
+            local model = proposal.model(spec, item[2], fixtures.read(item[3]))
+            local prepared = calls
+            assert.is_true(prepared > 0)
+            spec.mentions = function()
+                error("rendering must not parse mentions")
+            end
+            local native = proposal.render_model(model)
+            local markdown = contract.from_model(model)
+            assert.equals(prepared, calls)
+            assert.is_true(native.model == model)
+            assert.same(native.lines, proposal.render_model(model).lines)
+            assert.same(markdown.markdown, contract.from_model(model).markdown)
+        end
+    end)
 end)

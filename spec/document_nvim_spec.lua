@@ -371,4 +371,74 @@ describe("the shared RFC document reader", function()
         assert.is_true(vim.api.nvim_win_is_valid(win))
         assert.is_nil(model())
     end)
+
+    it("prepares a cold document once for its help export and Markdown view", function()
+        local source = require("rfc.sources").rfc
+        local original, calls = source.prepare, 0
+        source.prepare = function(...)
+            calls = calls + 1
+            return original(...)
+        end
+        local ok, err = pcall(function()
+            vim.cmd("Rfc 9110")
+            assert.is_true(wait_document("rfc9110"))
+            assert.equals(1, calls)
+            vim.cmd("Rfc 2616")
+            assert.is_true(wait_document("rfc2616"))
+            vim.cmd("Rfc 9110")
+            assert.is_true(wait_document("rfc9110"))
+            assert.equals(2, calls)
+        end)
+        source.prepare = original
+        assert.is_true(ok, tostring(err))
+    end)
+
+    for _, item in ipairs({
+        { "eip", "Eip 20", "eip20" },
+        { "w3c", "W3c wcag22", "w3c-wcag22" },
+    }) do
+        it("reuses the prepared " .. item[1] .. " model when reopening a document", function()
+            local source = require("rfc.sources")[item[1]]
+            local original, calls = source.prepare, 0
+            source.prepare = function(...)
+                calls = calls + 1
+                return original(...)
+            end
+            local ok, err = pcall(function()
+                vim.cmd(item[2])
+                assert.is_true(wait_document(item[3]), vim.inspect(case.notices))
+                assert.equals(1, calls)
+                vim.cmd.enew()
+                vim.cmd(item[2])
+                assert.is_true(wait_document(item[3]), vim.inspect(case.notices))
+                assert.equals(1, calls)
+            end)
+            source.prepare = original
+            assert.is_true(ok, tostring(err))
+        end)
+    end
+
+    it("prepares subjects once for export and view, and invalidates on a status change", function()
+        local subjects = require("rfc.subjects")
+        local original, calls = subjects.model, 0
+        subjects.model = function(...)
+            calls = calls + 1
+            return original(...)
+        end
+        local ok, err = pcall(function()
+            vim.cmd("Eip subjects")
+            assert.is_true(wait_document("eip-subjects"), vim.inspect(case.notices))
+            assert.equals(1, calls)
+            vim.cmd("Eip status final")
+            assert.is_true(
+                vim.wait(3000, function()
+                    return calls == 2
+                end),
+                vim.inspect(case.notices)
+            )
+            assert.equals(2, calls)
+        end)
+        subjects.model = original
+        assert.is_true(ok, tostring(err))
+    end)
 end)

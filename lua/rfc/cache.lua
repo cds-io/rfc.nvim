@@ -218,13 +218,17 @@ function M.fetched(cfg, spec)
     }, Fetched)
 end
 
+---@alias rfc.PreparationContext string|(fun(): string?)
+
 ---@class rfc.Derived
 ---@field cfg rfc.Config
 ---@field name string             -- the document's name: rfc9110, rfc-subjects
 ---@field from rfc.Fetched[]      -- the inputs, in the order produce receives them
 ---@field version string          -- the render the document must carry
----@field produce fun(...: string[]): rfc.HelpDoc|nil, string|nil
+---@field produce nil|fun(...: string[]): rfc.HelpDoc|nil, string|nil
 ---@field prepare nil|fun(...: string[]): rfc.SourceModel|nil, string|nil
+---@field render_model nil|fun(model: rfc.SourceModel): rfc.HelpDoc|nil, string|nil
+---@field context rfc.PreparationContext? -- extra preparation dependencies, such as the report URL
 ---@field limit integer|nil       -- how many inputs are produced at once; all without
 local Derived = {}
 Derived.__index = Derived
@@ -234,11 +238,82 @@ function Derived:path()
     return store.doc_path(self.cfg, self.name)
 end
 
+-- One immutable plan per derived path, reused across short-lived descriptors.
+-- A version/context/input identity change replaces it; missing inputs and failed
+-- preparations never leave an older plan available under a new identity.
+---@type table<string, {key: string, model: rfc.SourceModel}>
+local source_models = {}
+---@type table<string, string> -- identity used by the last successful help export
+local exported_sources = {}
+
+---@param entry rfc.Derived
+---@return string?
+local function source_key(entry)
+    local context = entry.context
+    if type(context) == "function" then
+        context = context()
+    end
+    local parts = { entry.version, context or "" }
+    for _, input in ipairs(entry.from) do
+        if type(input.path) ~= "function" then
+            return nil -- custom inputs without file identity cannot be memoised
+        end
+        local path = input:path()
+        local stat = vim.uv.fs_stat(path)
+        if not stat then
+            return nil
+        end
+        parts[#parts + 1] = path
+        -- Nanosecond times and inode distinguish atomic writes and same-second
+        -- edits even when their length and second-resolution mtime are unchanged.
+        parts[#parts + 1] = table.concat({
+            stat.dev,
+            stat.ino,
+            stat.size,
+            stat.mtime.sec,
+            stat.mtime.nsec,
+            stat.ctime.sec,
+            stat.ctime.nsec,
+        }, ":")
+    end
+    return table.concat(parts, "\0")
+end
+
+---@param entry rfc.Derived
+---@param inputs { [integer]: string[], n?: integer }
+---@return rfc.SourceModel?, string?
+local function prepare_model(entry, inputs)
+    local path, key = entry:path(), source_key(entry)
+    local held = source_models[path]
+    if key and held and held.key == key then
+        return held.model
+    end
+    source_models[path] = nil
+    local model, err
+    if entry.prepare then
+        model, err = entry.prepare(unpack(inputs, 1, inputs.n or #inputs))
+    else
+        local doc
+        doc, err = assert(entry.produce, "derived entry supplies prepare or produce")(unpack(inputs))
+        model = doc and doc.model
+        err = err or (not model and "source model not available" or nil)
+    end
+    if model and key then
+        source_models[path] = { key = key, model = model }
+    end
+    return model, err
+end
+
 --- Stats and the document's last line; an input that is no longer fresh
 --- counts as missing, so a day-old index rebuilds its document.
 ---@return boolean
 function Derived:current()
     local path = self:path()
+    local held = source_models[path]
+    local exported = exported_sources[path] or (held and held.key)
+    if exported and exported ~= source_key(self) then
+        return false
+    end
     local mtime = mtime_of(path)
     local version_ok = mtime ~= nil and help.render_of(vim.fn.readfile(path, "", -1)) == self.version
     local inputs = fp.map(self.from, function(input)
@@ -266,32 +341,49 @@ function Derived:ensure()
         end)
     end
     return task().all(tasks):on_main():bind_result(function(inputs)
-        local doc, err = self.produce(unpack(inputs, 1, inputs.n or #inputs))
+        local doc, err
+        if self.render_model then
+            local model
+            model, err = prepare_model(self, inputs)
+            if not model then
+                return nil, err
+            end
+            doc, err = self.render_model(model)
+        else
+            doc, err = assert(self.produce, "derived entry supplies a renderer")(unpack(inputs, 1, inputs.n or #inputs))
+        end
         if not doc then
             return nil, err
         end
         local ok, werr = store.write_doc(self.cfg, self.name, doc)
+        if ok and self.render_model then
+            exported_sources[self:path()] = source_key(self)
+        end
         return ok and self.name or nil, werr
     end)
 end
 
---- Rebuild the pure source plan from the inputs already ensured on disk.
+--- The pure source plan for the inputs already ensured on disk. Reuses the
+--- plan prepared for help, or reads and prepares it once for a warm disk cache.
+--- Version, context and ordered input identities invalidate it automatically.
 --- This never parses the generated help file or performs network work.
 ---@return rfc.SourceModel|nil, string|nil
 function Derived:source_model()
+    local key, path = source_key(self), self:path()
+    local held = source_models[path]
+    if key and held and held.key == key then
+        return held.model
+    end
+    source_models[path] = nil
     local inputs = {}
     for _, input in ipairs(self.from) do
         local lines = input:cached()
         if not lines then
-            return nil, "missing source input: " .. input.file
+            return nil, "missing source input: " .. (input.file or "(unnamed)")
         end
         table.insert(inputs, lines)
     end
-    if self.prepare then
-        return self.prepare(unpack(inputs))
-    end
-    local doc, err = self.produce(unpack(inputs))
-    return doc and doc.model or nil, err or (not (doc and doc.model) and "source model not available" or nil)
+    return prepare_model(self, inputs)
 end
 
 --- `parse` over the document's lines, once per mtime of the document
@@ -304,7 +396,7 @@ function Derived:memo(name, parse)
 end
 
 ---@param cfg rfc.Config
----@param spec { name: string, from: rfc.Fetched[], version: string, produce: (fun(...: string[]): rfc.HelpDoc|nil, string|nil), prepare?: (fun(...: string[]): rfc.SourceModel|nil, string|nil), limit?: integer }
+---@param spec { name: string, from: rfc.Fetched[], version: string, produce?: (fun(...: string[]): rfc.HelpDoc|nil, string|nil), render_model?: (fun(model: rfc.SourceModel): rfc.HelpDoc|nil, string|nil), context?: rfc.PreparationContext, prepare?: (fun(...: string[]): rfc.SourceModel|nil, string|nil), limit?: integer }
 ---@return rfc.Derived
 function M.derived(cfg, spec)
     return setmetatable({
@@ -314,6 +406,8 @@ function M.derived(cfg, spec)
         version = spec.version,
         produce = spec.produce,
         prepare = spec.prepare,
+        render_model = spec.render_model,
+        context = spec.context,
         limit = spec.limit,
     }, Derived)
 end

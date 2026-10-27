@@ -293,7 +293,13 @@ end
 ---@param url string
 ---@return rfc.HelpDoc
 function M.render(id, lines, url)
-    local model = M.model(id, lines, url)
+    return M.render_model(M.model(id, lines, url))
+end
+
+---@param model rfc.ReportModel
+---@return rfc.HelpDoc
+function M.render_model(model)
+    local id, url = model.id, model.url
     local head, blocks, file_tag = model.head, model.blocks, model.name
     local tag_of, sections, refs, ref_tag = model.tag_of, model.sections, model.refs, model.ref_tag
     local out = {}
