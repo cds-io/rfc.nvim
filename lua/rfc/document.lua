@@ -4,6 +4,7 @@ local document = require("cds.document")
 local html = require("cds.html")
 local help = require("rfc.help")
 local outline = require("rfc.outline")
+local proposal = require("rfc.proposal")
 
 local M = {}
 
@@ -163,13 +164,6 @@ function M.from_model(model)
         anchors[tag] = #out
         table.insert(headings, { tag = tag, text = text, level = level, line = #out })
     end
-    local function metadata(text)
-        return (
-            prose(text):gsub("|([^|%s]+)|", function(tag)
-                return "[" .. tag .. "](rfc-tag:" .. tag .. ")"
-            end)
-        )
-    end
     if model.kind == "rfc" then
         local function depth(number)
             local count = 0
@@ -207,14 +201,15 @@ function M.from_model(model)
         put("")
     elseif model.kind == "proposal" then
         for _, line in ipairs(model.header) do
-            put(metadata(line))
+            put(proposal.format(line, function(tag)
+                return "[" .. tag .. "](rfc-tag:" .. tag .. ")"
+            end, prose))
         end
         put("")
         local function inline(text)
-            return linked(text, model.spec.mentions(text), function(m)
-                local tag = (m.kind or model.spec.prefix) .. (m.id or model.id)
-                return m.section and tag .. "-" .. help.slug(m.section) or tag
-            end)
+            return proposal.format(model.inlines[text], function(tag)
+                return "[" .. tag .. "](rfc-tag:" .. tag .. ")"
+            end, prose)
         end
         if next(model.body.tags) then
             put("CONTENTS")

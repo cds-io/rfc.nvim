@@ -19,6 +19,23 @@
 --- The default view="document" uses shared document rendering and history.
 --- Vellum is an optional dependency of this plugin; cds-lua never requires it.
 --- Requires Neovim 0.13 (vim.async), curl, and the house cds-lua libraries.
+--- With lazy.nvim 11+, cds-lua automatically brings lua-gumbo for W3C HTML.
+--- Lazy builds its rockspec and exposes the Lua/native modules without manual
+--- path edits. Keep pkg.sources including lazy and rockspec, and rocks.enabled
+--- true (the defaults). Run :Lazy sync after updating; retry a failed build
+--- with :Lazy build lua-gumbo. A C99 compiler is required; Lazy uses system
+--- LuaRocks or its managed hererocks environment.
+--- For other managers or disabled Lazy rock support, install manually: >sh
+---   luarocks --lua-version=5.1 --local install gumbo 0.5-1
+--- <
+--- Building needs a C99 compiler and Lua 5.1/LuaJIT headers. If the plugin
+--- manager does not expose the local rock tree, add its paths in init.lua: >lua
+---   local rocks = vim.fn.expand("~/.luarocks")
+---   package.path = rocks .. "/share/lua/5.1/?.lua;" .. rocks .. "/share/lua/5.1/?/init.lua;" .. package.path
+---   package.cpath = rocks .. "/lib/lua/5.1/?.so;" .. package.cpath
+--- <
+--- Use the actual tree if installed elsewhere. Verify with
+--- :lua print(require("gumbo").VERSION) (tested: 0.5).
 ---
 ---@toc
 
@@ -397,24 +414,19 @@ end
 ---@param id string
 ---@return rfc.Derived
 local function document_of(source, id)
+    local function url()
+        local entry = source.located and entry_of(source, id) or nil
+        return entry and entry.file or nil
+    end
     return cache.derived(config.get(), {
         name = tag_of(source, id),
         from = { raw_of(source, id) },
         version = help.RENDER,
+        context = url,
         prepare = function(lines)
-            local entry = source.located and entry_of(source, id) or nil
-            return assert(source.prepare, "document source supplies a source plan")(
-                id,
-                lines,
-                entry and entry.file or nil
-            )
+            return assert(source.prepare, "document source supplies a source plan")(id, lines, url())
         end,
-        produce = function(lines)
-            -- a render that needs the document's file (a report's URL, for
-            -- its figures) gets it as a third argument; the others ignore it
-            local entry = source.located and entry_of(source, id) or nil
-            return source.render(id, lines, entry and entry.file or nil)
-        end,
+        render_model = source.render_model,
     })
 end
 
@@ -482,9 +494,7 @@ local function subjects_of(source)
             version = version,
             limit = 8,
             prepare = prepare,
-            produce = function(...)
-                return subjects.render_model(prepare(...))
-            end,
+            render_model = subjects.render_model,
         })
     end
     local from = { subjects_index_of(source) }
@@ -516,13 +526,7 @@ local function subjects_of(source)
         from = from,
         version = version,
         prepare = prepare,
-        produce = function(...)
-            local model, err = prepare(...)
-            if not model then
-                return nil, err
-            end
-            return subjects.render_model(model)
-        end,
+        render_model = subjects.render_model,
     })
 end
 

@@ -30,7 +30,9 @@ M.spec = {
         { key = "requires", as = "links" },
         { key = "author", as = "text" },
         function(fields, id)
-            return fields.status == "Moved" and ("Moved: see |erc" .. id .. "|") or nil
+            return fields.status == "Moved"
+                    and { { text = "Moved: see " }, { text = "erc" .. id, target = "erc" .. id } }
+                or nil
         end,
     },
     tags = function(fields, id)

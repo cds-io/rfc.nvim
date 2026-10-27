@@ -7,6 +7,7 @@
 local fetch = require("rfc.fetch")
 local help = require("rfc.help")
 local help_eip = require("rfc.help_eip")
+local proposal = require("rfc.proposal")
 local help_bip = require("rfc.help_bip")
 local help_simd = require("rfc.help_simd")
 local help_w3c = require("rfc.help_w3c")
@@ -51,6 +52,7 @@ local M = {}
 ---@field index fun(): cds.Task                    -- of the index text as one string
 ---@field entries fun(lines: string[]): rfc.Entry[]  -- pure
 ---@field prepare nil|fun(id: string, lines: string[], file?: string): rfc.SourceModel -- pure source plan
+---@field render_model fun(model: rfc.SourceModel): rfc.HelpDoc
 ---@field render fun(id: string, lines: string[], file?: string): rfc.HelpDoc  -- pure, total; `file` is the entry's, for a located source
 ---@field placeholder nil|fun(lines: string[]): boolean  -- pure: whether a stored text stands in for the document rather than being it
 ---@field subjects nil|rfc.Subjects   -- the source's taxonomy, for a source that has one
@@ -91,6 +93,7 @@ M.rfc = {
         "UNKNOWN",
     },
     render = help.render,
+    render_model = help.render_model,
     -- the RFC Editor's subject tags: a tree of 19 roots, four levels at
     -- most, published daily as a CSV by rfc-editor/rfc-subject-tags
     subjects = {
@@ -179,6 +182,7 @@ M.eip = {
         end)
     end,
     render = help_eip.render,
+    render_model = proposal.render_model,
     -- the lifecycle EIP-1 lays out, then the two ways out of it
     status = { "Draft", "Review", "Last Call", "Final", "Living", "Stagnant", "Withdrawn" },
     -- two roots: the category (the page a row came from), with the
@@ -225,6 +229,7 @@ M.bip = {
         end)
     end,
     render = help_bip.render,
+    render_model = proposal.render_model,
     -- the README's four statuses, in the order a BIP passes through them
     status = { "Draft", "Complete", "Deployed", "Closed" },
     -- the README's Layer and Type columns, each a root; a Process BIP has
@@ -271,6 +276,7 @@ M.simd = {
         end)
     end,
     render = help_simd.render,
+    render_model = proposal.render_model,
     -- the directory names no status; each proposal's frontmatter does, and
     -- SIMD-0001 lays the lifecycle out as idea to activation, living beside
     -- it, stagnant and withdrawn out of it
@@ -334,6 +340,7 @@ M.w3c = {
         end)
     end,
     render = help_w3c.render,
+    render_model = help_w3c.render_model,
     -- the maturities as the TR page names them: the Recommendation track,
     -- then the Note track, the Registry track and Statements
     status = {

@@ -308,11 +308,49 @@ The plugin's `lazy.lua` declares its dependency,
 [cds-lua](https://github.com/cds-io/cds-lua), the family's house library,
 tracking its main, which brings the vocabulary rock
 [cds-lua-fp](https://github.com/cds-io/cds-lua-fp) with it; lazy.nvim 11 and
-later installs both with the plugin. With another plugin manager, install
+later installs both with the plugin, plus lua-gumbo through cds-lua. With another plugin manager, install
 `cds-io/cds-lua` and `cds-io/cds-lua-fp` alongside. At startup the
 plugin checks that the cds-lua present provides what it uses (`rfc.needs`)
 and, when something is missing, says so and what to install instead of
 failing later.
+
+W3C HTML conversion uses lua-gumbo through cds-lua. Lazy automatically fetches
+and builds its rockspec for Lua 5.1/LuaJIT and exposes the Lua and native modules.
+No manual LuaRocks installation or module-path edits are needed with Lazy's
+default package support: `pkg.sources` includes `lazy` and `rockspec`, and
+`rocks.enabled` is true. Run `:Lazy sync` after updating; retry a failed build
+with `:Lazy build lua-gumbo`. A C99 compiler is required; Lazy uses system
+LuaRocks or its managed hererocks environment.
+
+For other plugin managers or disabled Lazy rock support, install Gumbo manually
+for Lua 5.1/Neovim's LuaJIT (a build for another Lua version will not load):
+
+```sh
+luarocks --lua-version=5.1 --local install gumbo 0.5-1
+```
+
+Building needs a C99 compiler and Lua 5.1 or LuaJIT development headers. If your
+plugin manager does not already expose the local rock tree, add this near the
+start of `init.lua`:
+
+```lua
+local rocks = vim.fn.expand("~/.luarocks")
+package.path = rocks .. "/share/lua/5.1/?.lua;" .. rocks .. "/share/lua/5.1/?/init.lua;" .. package.path
+package.cpath = rocks .. "/lib/lua/5.1/?.so;" .. package.cpath
+```
+
+Use your actual rock tree if installed elsewhere. Verify inside Neovim with
+`:lua print(require("gumbo").VERSION)` (tested: `0.5`). Plugin dependencies on
+the runtimepath alone do not install this native rock with other managers.
+
+Development tests run outside Lazy and need Lua 5.1 Busted and Gumbo in the
+same rock tree:
+
+```sh
+luarocks --lua-version=5.1 --local install busted
+luarocks --lua-version=5.1 --local install gumbo 0.5-1
+make test
+```
 
 `setup` is optional:
 
@@ -345,8 +383,33 @@ remains usable by plugins that never render documents.
 
 The help and Markdown renderers share pure source plans: RFC sections and
 citations, proposal headings and aliases, subject trees and counts, and W3C
-section identities are planned once per render. Markdown is rendered from these
+section identities are prepared once per source revision. Markdown is rendered from these
 plans rather than recovered from formatted help files. Cached-source preparation
 never needs a help-file import or a network request. The old `from_help` adapter
 is retained for compatibility imports. W3C plans select the full report body so
 abstract/status anchors outside main remain available.
+
+Proposal plans carry literal text and resolved tag targets, including their
+metadata rows. The help and Markdown renderers format those parts independently;
+literal pipes in metadata are never interpreted as Markdown links. Proposal
+mention scanning runs during preparation, rather than again for each renderer.
+
+Derived cache entries pair `prepare(inputs...)` with `render_model(model)`.
+The immutable model is reused across help export, Markdown rendering and later
+opens, including newly created cache-entry descriptors. Reuse checks the cache
+root, render version, preparation context (such as the report URL), and the
+ordered input paths and file identities. Nanosecond modification/change times,
+size and inode detect same-second replacements. Missing inputs and preparation
+errors discard stale models; a status or report-URL change also invalidates reuse.
+Custom preparations with extra dependencies declare them through `context`, a
+string or a function returning the current string. Legacy `produce(inputs...)`
+entries remain supported.
+
+Source loading now returns revisioned snapshots internally: each snapshot pairs
+its lines with the exact file identity captured during a stable read. Derived
+models and help exports retain that identity even if another refresh replaces a
+file while other inputs are loading. `Fetched:lines()` remains the lines-only
+compatibility API; `snapshot()` and `cached_snapshot()` expose the pair. File and
+document memos use the same revision helper, separately from age-based freshness.
+Proposal, W3C and Markdown heading names share the pure cds-lua allocator while
+retaining their existing slug and duplicate-suffix conventions.

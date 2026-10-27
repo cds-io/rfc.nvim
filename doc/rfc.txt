@@ -19,6 +19,23 @@ or view="plain" for commands to use the legacy help backend too.
 The default view="document" uses shared document rendering and history.
 Vellum is an optional dependency of this plugin; cds-lua never requires it.
 Requires Neovim 0.13 (vim.async), curl, and the house cds-lua libraries.
+With lazy.nvim 11+, cds-lua automatically brings lua-gumbo for W3C HTML.
+Lazy builds its rockspec and exposes the Lua/native modules without manual
+path edits. Keep pkg.sources including lazy and rockspec, and rocks.enabled
+true (the defaults). Run :Lazy sync after updating; retry a failed build
+with :Lazy build lua-gumbo. A C99 compiler is required; Lazy uses system
+LuaRocks or its managed hererocks environment.
+For other managers or disabled Lazy rock support, install manually: >sh
+  luarocks --lua-version=5.1 --local install gumbo 0.5-1
+<
+Building needs a C99 compiler and Lua 5.1/LuaJIT headers. If the plugin
+manager does not expose the local rock tree, add its paths in init.lua: >lua
+  local rocks = vim.fn.expand("~/.luarocks")
+  package.path = rocks .. "/share/lua/5.1/?.lua;" .. rocks .. "/share/lua/5.1/?/init.lua;" .. package.path
+  package.cpath = rocks .. "/lib/lua/5.1/?.so;" .. package.cpath
+<
+Use the actual tree if installed elsewhere. Verify with
+:lua print(require("gumbo").VERSION) (tested: 0.5).
 
   Commands ............................................... |rfc.nvim-commands|
   Keys ....................................................... |rfc.nvim-keys|

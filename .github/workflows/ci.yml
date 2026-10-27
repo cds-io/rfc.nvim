@@ -39,8 +39,10 @@ jobs:
         with:
           luaVersion: "5.1"
       - uses: leafo/gh-actions-luarocks@v6
-      - name: Install busted
-        run: luarocks install busted
+      - name: Install Lua 5.1 test and HTML dependencies
+        run: |
+          luarocks --lua-version=5.1 install busted
+          luarocks --lua-version=5.1 install gumbo 0.5-1
       - name: Test
         run: make test
         working-directory: rfc.nvim

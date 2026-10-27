@@ -20,6 +20,8 @@ check: test test-nvim lint typecheck fmt-check doc-check
 # editor loads, which brings the vocabulary rock cds-lua-fp with it, and .busted
 # finds the same modules in ../cds-lua and ../cds-lua-fp, the checkouts beside
 # this one, for both spec tiers (CI checks them out there).
+# The pure W3C document specs also need gumbo 0.5-1 installed for the same
+# Lua 5.1 interpreter as Busted; CI installs both rocks explicitly.
 test:
 	$(BUSTED)
 
