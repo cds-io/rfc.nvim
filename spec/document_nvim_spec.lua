@@ -352,4 +352,23 @@ describe("the shared RFC document reader", function()
             vim.api.nvim_buf_delete(buf, { force = true })
         end)
     end)
+
+    it("quits the last document window while an unrelated float is open", function()
+        vim.cmd("silent! only")
+        vim.cmd("Rfc 9110")
+        assert.is_true(wait_document("rfc9110"))
+        local win = vim.api.nvim_get_current_win()
+        local floating = vim.api.nvim_open_win(vim.api.nvim_create_buf(false, true), false, {
+            relative = "editor",
+            row = 0,
+            col = 0,
+            width = 10,
+            height = 2,
+        })
+        local ok, err = pcall(vim.fn.maparg("q", "n", false, true).callback)
+        vim.api.nvim_win_close(floating, true)
+        assert.is_true(ok, tostring(err))
+        assert.is_true(vim.api.nvim_win_is_valid(win))
+        assert.is_nil(model())
+    end)
 end)

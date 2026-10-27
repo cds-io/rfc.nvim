@@ -9,6 +9,7 @@
 return {
     document = { "target", "rendered", "new", "anchor", "link_at" },
     document_view = { "new" },
+    window = { "close_or" },
     html = { "document", "escape" },
     navigator = { "new" },
     vellum = { "render", "restyle", "forget" },

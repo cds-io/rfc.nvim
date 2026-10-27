@@ -299,11 +299,9 @@ function Reader.new(deps)
         end)
         map("q", function()
             nav.cancel(vim.api.nvim_get_current_win())
-            if #vim.api.nvim_tabpage_list_wins(0) > 1 then
-                vim.cmd.close()
-            else
+            require("cds.window").close_or(vim.api.nvim_get_current_win(), function()
                 vim.cmd.enew()
-            end
+            end)
         end)
         map("gx", function()
             local target = link_under_cursor(false)

@@ -245,13 +245,13 @@ function M.plan_body(blocks, file_tag)
         if b.kind == "heading" then
             local level = assert(b.level, "a heading carries its level")
             top = math.min(top or level, level)
-            local name = file_tag .. "-" .. help.slug(b.title)
-            if used[name] then
-                used[name] = used[name] + 1
-                name = name .. "-" .. used[name]
-            else
-                used[name] = 1
+            local base = file_tag .. "-" .. help.slug(b.title)
+            local name, n = base, 1
+            while used[name] do
+                n = n + 1
+                name = base .. "-" .. n
             end
+            used[name] = true
             tag_of[b] = name
             texts[b] = b.level <= 2 and b.title:upper() or b.title
         end

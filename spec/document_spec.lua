@@ -118,4 +118,23 @@ describe("RFC shared document adapters", function()
         assert.equals(2, count)
         assert.equals("Accept: `*/*`", plan.blocks[2].text)
     end)
+
+    it("allocates distinct proposal tags even when headings already have numeric suffixes", function()
+        local lines =
+            { "---", "eip: 1", "title: Collision", "---", "## Foo", "## Foo", "## Foo-2", "## Foo", "## Foo-2" }
+        local exported = require("rfc.help_eip").render("1", lines)
+        local doc = contract.from_model(exported.model)
+        local seen, tags = {}, {}
+        for _, tag in ipairs(exported.tags) do
+            assert.is_nil(seen[tag.name], tag.name)
+            seen[tag.name] = true
+        end
+        for _, heading in ipairs(doc.headings) do
+            assert.is_nil(tags[heading.tag], heading.tag)
+            tags[heading.tag] = true
+            assert.equals(heading.line, document.anchor(doc, heading.tag))
+            assert.is_true(seen[heading.tag])
+        end
+        assert.equals(5, #doc.headings)
+    end)
 end)
