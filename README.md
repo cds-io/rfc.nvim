@@ -308,11 +308,49 @@ The plugin's `lazy.lua` declares its dependency,
 [cds-lua](https://github.com/cds-io/cds-lua), the family's house library,
 tracking its main, which brings the vocabulary rock
 [cds-lua-fp](https://github.com/cds-io/cds-lua-fp) with it; lazy.nvim 11 and
-later installs both with the plugin. With another plugin manager, install
+later installs both with the plugin, plus lua-gumbo through cds-lua. With another plugin manager, install
 `cds-io/cds-lua` and `cds-io/cds-lua-fp` alongside. At startup the
 plugin checks that the cds-lua present provides what it uses (`rfc.needs`)
 and, when something is missing, says so and what to install instead of
 failing later.
+
+W3C HTML conversion uses lua-gumbo through cds-lua. Lazy automatically fetches
+and builds its rockspec for Lua 5.1/LuaJIT and exposes the Lua and native modules.
+No manual LuaRocks installation or module-path edits are needed with Lazy's
+default package support: `pkg.sources` includes `lazy` and `rockspec`, and
+`rocks.enabled` is true. Run `:Lazy sync` after updating; retry a failed build
+with `:Lazy build lua-gumbo`. A C99 compiler is required; Lazy uses system
+LuaRocks or its managed hererocks environment.
+
+For other plugin managers or disabled Lazy rock support, install Gumbo manually
+for Lua 5.1/Neovim's LuaJIT (a build for another Lua version will not load):
+
+```sh
+luarocks --lua-version=5.1 --local install gumbo 0.5-1
+```
+
+Building needs a C99 compiler and Lua 5.1 or LuaJIT development headers. If your
+plugin manager does not already expose the local rock tree, add this near the
+start of `init.lua`:
+
+```lua
+local rocks = vim.fn.expand("~/.luarocks")
+package.path = rocks .. "/share/lua/5.1/?.lua;" .. rocks .. "/share/lua/5.1/?/init.lua;" .. package.path
+package.cpath = rocks .. "/lib/lua/5.1/?.so;" .. package.cpath
+```
+
+Use your actual rock tree if installed elsewhere. Verify inside Neovim with
+`:lua print(require("gumbo").VERSION)` (tested: `0.5`). Plugin dependencies on
+the runtimepath alone do not install this native rock with other managers.
+
+Development tests run outside Lazy and need Lua 5.1 Busted and Gumbo in the
+same rock tree:
+
+```sh
+luarocks --lua-version=5.1 --local install busted
+luarocks --lua-version=5.1 --local install gumbo 0.5-1
+make test
+```
 
 `setup` is optional:
 
