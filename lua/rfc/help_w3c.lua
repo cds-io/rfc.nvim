@@ -20,6 +20,7 @@
 -- touches the editor; render is pure and total.
 local html = require("rfc.source.html")
 local help = require("rfc.help")
+local document = require("cds.document")
 local proposal = require("rfc.proposal")
 local fp = require("cds.fp")
 
@@ -101,25 +102,21 @@ end
 ---@return table<table, string> tag_of
 ---@return table<string, string> sections   -- id -> tag
 function M.heading_tags(blocks, file_tag)
-    local tag_of, sections, used = {}, {}, {}
+    local tag_of, sections, headings, bases = {}, {}, {}, {}
     for _, b in ipairs(blocks) do
         if b.kind == "heading" then
             local name = b.number and (b.number:match("^[%w%.]+$") or help.slug(b.number)) or help.slug(b.text.text)
-            local tag = file_tag .. "#" .. name
-            if used[tag] then
-                used[tag] = used[tag] + 1
-                tag = tag .. "-" .. used[tag]
-            else
-                used[tag] = 1
-            end
-            tag_of[b] = tag
-            if b.id then
-                sections[b.id] = tag
-            end
-            if b.section then
-                -- the section's first heading is its own
-                sections[b.section] = sections[b.section] or tag
-            end
+            headings[#headings + 1], bases[#bases + 1] = b, file_tag .. "#" .. name
+        end
+    end
+    for i, tag in ipairs(document.unique_names(bases, 2)) do
+        local b = headings[i]
+        tag_of[b] = tag
+        if b.id then
+            sections[b.id] = tag
+        end
+        if b.section then
+            sections[b.section] = sections[b.section] or tag
         end
     end
     return tag_of, sections

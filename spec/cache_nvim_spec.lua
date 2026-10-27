@@ -467,6 +467,78 @@ describe("cache", function()
             assert.are.equal(5, d:memo("n", count))
             assert.are.equal(1, parses)
         end)
+
+        it("keeps a captured input revision separate from a concurrent replacement", function()
+            local input = fetched({ file = "first.txt", body = "old" })
+            assert.same({ "old" }, wait(input:lines()))
+            local other = fetched({
+                file = "second.txt",
+                produce = function()
+                    return Task.new(function()
+                        vim.fn.writefile({ "new" }, input:path())
+                        return "second"
+                    end)
+                end,
+            })
+            local d = cache.derived(cfg, {
+                name = "rfc7",
+                from = { input, other },
+                version = help.RENDER,
+                prepare = function(lines)
+                    return help.model("7", lines)
+                end,
+                render_model = help.render_model,
+            })
+            assert.equals("rfc7", wait(d:ensure()))
+            assert.is_false(d:current())
+            assert.equals("new", d:source_model().blocks[1].text)
+            assert.equals("rfc7", wait(d:ensure()))
+            assert.is_true(d:current())
+            assert.equals("new", vim.fn.readfile(d:path())[2])
+        end)
+
+        it("invalidates file and document memos on same-second rewrites", function()
+            local input = fetched({})
+            local d = derived(input)
+            assert.equals("rfc7", wait(d:ensure()))
+            local function first(lines)
+                return lines[2] or lines[1]
+            end
+            assert.equals("b", input:memo("same-second", first))
+            assert.equals("a", d:memo("same-second", first))
+            local raw_stamp = vim.uv.fs_stat(input:path()).mtime.sec
+            local doc_stamp = vim.uv.fs_stat(d:path()).mtime.sec
+            vim.wait(2)
+            vim.fn.writefile({ "z", "c" }, input:path())
+            local lines = vim.fn.readfile(d:path())
+            lines[2] = "z"
+            vim.fn.writefile(lines, d:path())
+            vim.uv.fs_utime(input:path(), raw_stamp, raw_stamp)
+            vim.uv.fs_utime(d:path(), doc_stamp, doc_stamp)
+            assert.equals("c", input:memo("same-second", first))
+            assert.equals("z", d:memo("same-second", first))
+        end)
+
+        it("retries a source replaced during its read instead of mislabelling the snapshot", function()
+            local input = fetched({ body = "old" })
+            assert.same({ "old" }, wait(input:lines()))
+            local read, changed = vim.fn.readfile, false
+            vim.fn.readfile = function(path, ...)
+                local lines = read(path, ...)
+                if path == input:path() and not changed then
+                    changed = true
+                    vim.fn.writefile({ "new" }, path)
+                end
+                return lines
+            end
+            local ok, snapshot = pcall(function()
+                return input:cached_snapshot()
+            end)
+            vim.fn.readfile = read
+            assert.is_true(ok, tostring(snapshot))
+            assert.same({ "new" }, snapshot.lines)
+            assert.equals(require("rfc.revision").of(input:path()), snapshot.revision)
+        end)
         it("passes a produce refusal through as the error", function()
             local d = cache.derived(cfg, {
                 name = "rfc7",

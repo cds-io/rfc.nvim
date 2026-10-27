@@ -366,3 +366,12 @@ errors discard stale models; a status or report-URL change also invalidates reus
 Custom preparations with extra dependencies declare them through `context`, a
 string or a function returning the current string. Legacy `produce(inputs...)`
 entries remain supported.
+
+Source loading now returns revisioned snapshots internally: each snapshot pairs
+its lines with the exact file identity captured during a stable read. Derived
+models and help exports retain that identity even if another refresh replaces a
+file while other inputs are loading. `Fetched:lines()` remains the lines-only
+compatibility API; `snapshot()` and `cached_snapshot()` expose the pair. File and
+document memos use the same revision helper, separately from age-based freshness.
+Proposal, W3C and Markdown heading names share the pure cds-lua allocator while
+retaining their existing slug and duplicate-suffix conventions.

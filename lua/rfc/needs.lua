@@ -7,7 +7,7 @@
 -- constructors are named.
 ---@type table<string, string[]>
 return {
-    document = { "target", "rendered", "new", "anchor", "link_at" },
+    document = { "unique_names", "target", "rendered", "new", "anchor", "link_at" },
     document_view = { "new" },
     window = { "close_or" },
     html = { "document", "escape" },

@@ -198,4 +198,26 @@ describe("RFC shared document adapters", function()
             assert.same(markdown.markdown, contract.from_model(model).markdown)
         end
     end)
+
+    it("allocates unique W3C tags when a natural heading collides with a duplicate suffix", function()
+        local lines = {
+            "<html><head><title>Tags</title></head><body><main>",
+            '<h2 id="a">Foo</h2>',
+            '<h2 id="b">Foo</h2>',
+            '<h2 id="c">Foo-2</h2>',
+            "</main></body></html>",
+        }
+        local exported = require("rfc.help_w3c").render("test", lines, "https://www.w3.org/TR/test/")
+        local source = contract.from_model(exported.model)
+        local seen = {}
+        for _, h in ipairs(source.headings) do
+            assert.is_nil(seen[h.tag], h.tag)
+            seen[h.tag] = true
+            assert.equals(h.line, document.anchor(source, h.tag))
+        end
+        assert.equals(3, #source.headings)
+        for _, tag in ipairs(exported.tags) do
+            assert.is_not_nil(source.anchors[tag.name])
+        end
+    end)
 end)
