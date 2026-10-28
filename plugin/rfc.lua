@@ -31,6 +31,7 @@ local function define(name, prefix, desc)
                 run(cmd)
             end,
             nargs = "*",
+            bang = true,
             complete = function(arglead, cmdline)
                 local _, complete = require("rfc").command(require("rfc.sources")[prefix])
                 return complete(arglead, cmdline)
@@ -43,11 +44,36 @@ local function define(name, prefix, desc)
     })
 end
 
-define("Rfc", "rfc", "Open an RFC as help: a number, a tag, subjects, a search, or nothing for the index")
-define("Eip", "eip", "Open an EIP or ERC as help: a number, a tag, subjects, a search, or nothing for the index")
-define("Bip", "bip", "Open a BIP as help: a number, a tag, subjects, a search, or nothing for the index")
-define("Simd", "simd", "Open a SIMD as help: a number, a tag, a search, or nothing for the index")
-define("W3c", "w3c", "Open a W3C report as help: a shortname, a tag, subjects, a search, or nothing for the index")
+define(
+    "Rfc",
+    "rfc",
+    "Open an RFC as help: a number, a tag, subjects, a search, or nothing for the index; ! cc clears its cache"
+)
+define(
+    "Eip",
+    "eip",
+    "Open an EIP or ERC as help: a number, a tag, subjects, a search, or nothing for the index; ! cc clears its cache"
+)
+define(
+    "Bip",
+    "bip",
+    "Open a BIP as help: a number, a tag, subjects, a search, or nothing for the index; ! cc clears its cache"
+)
+define(
+    "Simd",
+    "simd",
+    "Open a SIMD as help: a number, a tag, a search, or nothing for the index; ! cc clears its cache"
+)
+define(
+    "W3c",
+    "w3c",
+    "Open a W3C report as help: a shortname, a tag, subjects, a search, or nothing for the index; ! cc clears its cache"
+)
+define(
+    "Crs",
+    "crs",
+    "Open a CRS report as help: a number, a tag, subjects, a search, or nothing for the index; ! cc clears its cache"
+)
 
 vim.api.nvim_create_autocmd("FileType", {
     pattern = "help",

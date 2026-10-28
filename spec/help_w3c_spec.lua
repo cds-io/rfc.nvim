@@ -6,6 +6,17 @@ local fixtures = require("spec.fixtures")
 
 local TD = "https://www.w3.org/TR/wot-thing-description11/"
 
+describe("link", function()
+    it("writes a tag mention as the tag itself", function()
+        local text = require("rfc.help.w3c.text")
+        local t = {
+            text = "See CRS Report 97-1011.",
+            mentions = { { kind = "tag", id = "crs-97-1011", first = 5, last = 22 } },
+        }
+        assert.are.equal("See |crs-97-1011|.", text.link(t, {}))
+    end)
+end)
+
 describe("wrap", function()
     it("wraps at spaces within the width, keeping the indent and never splitting a tag", function()
         assert.are.same({ "    aaa bbb", "    ccc" }, help_w3c.wrap("aaa bbb ccc", "    ", 11))

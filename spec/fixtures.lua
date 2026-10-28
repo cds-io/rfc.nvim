@@ -50,6 +50,20 @@ local M = {
     w3c_td = "w3c-wot-thing-description11.html",
     w3c_grid = "w3c-css-grid-2.html",
     w3c_tr = "w3c-tr.html",
+    -- CRS reports from EveryCRSReport.com (public domain), fetched 2026-10-28:
+    -- three topic pages cut to their head and a few report blocks (both date
+    -- shapes, a raw & in a title, a legacy number, one report on both
+    -- pages, the two reports whose records are below), the JSON records of
+    -- R43397 (17 versions) and IF12345 (one), and
+    -- R43397's HTML cut to its header, contents lists, summary, the first
+    -- questions with a footnote mark and a table, and the last question with
+    -- a citation and the first footnote
+    crs_econ = "crs-topic-economic-policy.html",
+    crs_defense = "crs-topic-national-defense.html",
+    crs_approp = "crs-topic-appropriations.html",
+    crs_r43397_json = "crs-R43397.json",
+    crs_if12345_json = "crs-IF12345.json",
+    crs_r43397 = "crs-R43397.html",
 }
 
 ---@param name string

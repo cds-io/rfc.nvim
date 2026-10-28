@@ -11,6 +11,7 @@
 -- section per node, its heading the node's path with a tag at the margin
 -- and its body the documents filed there as links. render is pure and
 -- total; the store writes the document and `:help` does the rest.
+local tag_names = require("rfc.help.tags")
 local help = require("rfc.help")
 local fp = require("cds.fp")
 
@@ -27,7 +28,7 @@ local M = {}
 ---@param status string|nil
 ---@return string
 function M.suffix(status)
-    return status and ("+" .. help.slug(status)) or ""
+    return status and ("+" .. tag_names.slug(status)) or ""
 end
 
 --- The tag of a node: the file tag, then each level slugged, dash-joined.
@@ -35,7 +36,7 @@ end
 ---@param path string[]
 ---@return string
 function M.tag(prefix, path)
-    local parts = fp.map(path, help.slug)
+    local parts = fp.map(path, tag_names.slug)
     table.insert(parts, 1, prefix .. "-subjects")
     return table.concat(parts, "-")
 end
@@ -96,7 +97,7 @@ function M.read_nodes(lines)
         table.insert(nodes, {
             tag = tag,
             slug = (tag:gsub("^%l[%l%d]-%l%-subjects%-", "")),
-            leaf = help.slug(name),
+            leaf = tag_names.slug(name),
             path = table.concat(names, " / ", 1, depth),
             count = tonumber(count),
         })

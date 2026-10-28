@@ -120,6 +120,26 @@ describe("w3c tags", function()
     end)
 end)
 
+describe("crs tags", function()
+    it("reads a shortname tag of another dashed prefix, with a legacy number's own dash", function()
+        local lines = {
+            "*crs-r43397.txt*  T  *crs-r43397*",
+            "SUMMARY  *crs-r43397#summary*",
+            "Salaries  *crs-98-684#salaries*",
+        }
+        assert.are.same(
+            { "crs-r43397.txt", "crs-r43397", "crs-r43397#summary", "crs-98-684#salaries" },
+            fp.map(help.tags_in(lines), function(t)
+                return t.name
+            end)
+        )
+        assert.are.equal("crs-r43397#summary", help.section_tag(lines[2]))
+        assert.are.equal("crs-98-684#salaries", help.section_tag(lines[3]))
+        assert.is_nil(help.section_tag(lines[1]))
+        assert.are.same({ "", "crs-r43397#summary" }, { help.row_tag("|crs-r43397#summary|  Summary") })
+    end)
+end)
+
 describe("section_tag and row_tag", function()
     it("takes a node tag as a section and the file tag as none", function()
         assert.are.equal("rfc-subjects-web-http", help.section_tag("web / HTTP  (3)   *rfc-subjects-web-http*"))

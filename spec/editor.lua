@@ -12,6 +12,11 @@ local root = vim.fn.getcwd()
 function M.load_plugin()
     -- the reader's leader, which the ,tv key is spelled against
     vim.g.mapleader = ","
+    -- a picker no case captured must never reach the builtin, which reads
+    -- stdin: nlua takes the EOF as the end of the run and exits with no
+    -- summary and status 0, so every case after the stray pick is skipped
+    -- and the tier still reads green
+    vim.ui.select = function() end
     vim.opt.runtimepath:append(root)
     vim.cmd("runtime plugin/rfc.lua")
 end
@@ -36,18 +41,26 @@ function M.start()
             saved.fetch[name] = fn
         end
     end
-    local case = { dir = vim.fn.tempname(), notices = {}, fetched = {}, urls = {} }
+    -- what the plugin says, the index fetches ("fetching the RFC index")
+    -- kept apart in `index_notices`, so a case reads the message it is
+    -- about by position whether or not its index was cached
+    local case = { dir = vim.fn.tempname(), notices = {}, index_notices = {}, fetched = {}, urls = {} }
     function case.setup(sources, extra)
         require("rfc").setup(vim.tbl_extend("force", {
             cache_dir = case.dir,
             sources = sources,
             view = "rich", -- legacy help regressions explicitly exercise the help backend
+            -- no dashboard unless a case asks for one: a fixture's styled
+            -- render can run past the reader's half-second gate, and a
+            -- dashboard left up would reach into the next case's windows
+            progress = { show_after = 60000, linger = 50 },
             notify = function(msg, level, opts)
-                table.insert(case.notices, { msg = msg, level = level, title = opts.title })
+                local list = msg:match("^fetching the .* index$") and case.index_notices or case.notices
+                table.insert(list, { msg = msg, level = level, title = opts.title })
             end,
         }, extra or {}))
     end
-    case.setup({ rfc = true, eip = true, bip = true, simd = true, w3c = true })
+    case.setup({ rfc = true, eip = true, bip = true, simd = true, w3c = true, crs = true })
 
     --- What a stub does: records what was asked, answers the fixture, or
     --- refuses as the network would for a document outside them.
@@ -94,12 +107,30 @@ function M.start()
         meta = fixtures.eips_meta,
         informational = fixtures.eips_informational,
     }
+    -- the CRS topic pages: three as fixtures, the other twenty-nine as a
+    -- page with the heading alone
+    local topics = {
+        ["economic-policy"] = fixtures.crs_econ,
+        ["national-defense"] = fixtures.crs_defense,
+        appropriations = fixtures.crs_approp,
+    }
     fetch.listing = function(url)
         if url:match("bitcoin") then
             return answer("bip-index", fixtures.bips_readme)
         end
         if url == "https://www.w3.org/TR/" then
             return answer("w3c-index", fixtures.w3c_tr)
+        end
+        local slug = url:match("everycrsreport%.com/topics/([%w%-]+)%.html")
+        if slug then
+            table.insert(case.fetched, "crs-topic-" .. slug)
+            if topics[slug] then
+                return text_of(topics[slug])
+            end
+            local title = slug:gsub("%-", " "):gsub("(%a)(%w*)", function(first, rest)
+                return first:upper() .. rest
+            end)
+            return Task.of("<h1>" .. title .. "</h1>\n")
         end
         local category = url:match("eips%.ethereum%.org/(%a+)")
         table.insert(case.fetched, "eips-" .. category)
@@ -148,6 +179,28 @@ function M.start()
     fetch.bip = function(id)
         return answer("bip" .. id, bips[id], "BIP " .. id .. " does not exist")
     end
+    -- CRS reports: the JSON record by number, the HTML by its file name;
+    -- `case.crs_no_html = true` strips the HTML format from a record, as a
+    -- PDF-only report would read
+    local records = { R43397 = fixtures.crs_r43397_json, IF12345 = fixtures.crs_if12345_json }
+    fetch.crs_json = function(number)
+        table.insert(case.fetched, "crs-" .. number .. ".json")
+        if not records[number] then
+            return Task.fail("CRS " .. number .. " does not exist")
+        end
+        local text = table.concat(fixtures.read(records[number]), "\n") .. "\n"
+        if case.crs_no_html then
+            text = text:gsub('{%s*\n%s*"format": "HTML".-}', "")
+        end
+        return Task.of(text)
+    end
+    fetch.crs_html = function(filename, number)
+        table.insert(case.fetched, "crs-" .. number .. ".html")
+        if not filename:match("R43397") then
+            return Task.fail("CRS " .. number .. " does not exist")
+        end
+        return text_of(fixtures.crs_r43397)
+    end
     local function restore()
         for name, fn in pairs(saved.fetch) do
             fetch[name] = fn
@@ -157,6 +210,7 @@ function M.start()
         -- store's root leaves the runtimepath so the next case's root is the
         -- only one
         require("rfc.toc").close_all()
+        require("rfc").close_dashboards()
         pcall(vim.cmd, "helpclose")
         for _, buf in ipairs(vim.api.nvim_list_bufs()) do
             if

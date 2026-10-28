@@ -18,7 +18,7 @@ local M = {}
 ---@field name string
 ---@field path string[]
 ---@field children rfc.source.subjects.Node[]   -- sorted by name, case-insensitively
----@field entries rfc.source.subjects.Entry[]   -- the entries whose direct holds this path, sorted by number
+---@field entries rfc.source.subjects.Entry[]   -- the entries whose direct holds this path, sorted by number (an id that is not a number, a shortname, by its text)
 
 ---@param path string[]
 ---@return string
@@ -128,11 +128,16 @@ local function by_name(a, b)
     return a.name:lower() < b.name:lower()
 end
 
+--- Numbers before shortnames; two numbers by value, anything else by text.
 ---@param a rfc.source.subjects.Entry
 ---@param b rfc.source.subjects.Entry
 ---@return boolean
 local function by_number(a, b)
-    return (tonumber(a.id) or 0) < (tonumber(b.id) or 0)
+    local na, nb = tonumber(a.id), tonumber(b.id)
+    if na and nb then
+        return na < nb
+    end
+    return a.id < b.id
 end
 
 --- Builds the forest of every path prefix the entries name, each entry listed

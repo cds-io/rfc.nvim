@@ -313,11 +313,15 @@ describe("rfc", function()
                 on_choice(chosen)
             end
             vim.cmd("Rfc")
-            vim.wait(500, function()
-                return #case.notices == 1
-            end)
-            assert.are.equal("RFC 31 has no text version", case.notices[1].msg)
-            assert.are.equal(vim.log.levels.WARN, case.notices[1].level)
+            local function declined()
+                return fp.find(case.notices, function(n)
+                    return n.msg == "RFC 31 has no text version"
+                end)
+            end
+            assert.is_true(vim.wait(500, function()
+                return declined() ~= nil
+            end))
+            assert.are.equal(vim.log.levels.WARN, declined().level)
             assert.are.same({ "index" }, case.fetched)
         end)
     end)
@@ -1280,6 +1284,192 @@ describe("rfc", function()
             assert.are_not.equal(v1, v2)
             vim.fn.rename(root .. "/lua/x/b.lua", root .. "/lua/x/c.lua")
             assert.are_not.equal(v2, store.render_version(root))
+        end)
+    end)
+
+    describe("clearing a source's cache", function()
+        local function readable(path)
+            return vim.fn.filereadable(path) == 1
+        end
+
+        it(
+            "removes the source's texts, documents, index and subjects, keeps the other sources', and fetches again",
+            function()
+                vim.cmd("Eip 1559")
+                assert.is_true(editor.wait_help("eip1559"))
+                vim.cmd("Eip subjects")
+                assert.is_true(editor.wait_help("eip-subjects"))
+                vim.cmd("Rfc 9110")
+                assert.is_true(editor.wait_help("9110"))
+                local cfg = config.get()
+                local eip = {
+                    store.raw_path(cfg, "eip1559", "md"),
+                    store.doc_path(cfg, "eip1559"),
+                    store.index_path(cfg, "eip-categories.html"),
+                    store.doc_path(cfg, "eip-subjects"),
+                }
+                for _, path in ipairs(eip) do
+                    assert.is_true(readable(path), path)
+                end
+                vim.cmd("Eip! cc")
+                assert.are.equal("EIP cache cleared: 4 files", case.notices[#case.notices].msg)
+                for _, path in ipairs(eip) do
+                    assert.is_false(readable(path), path)
+                end
+                assert.is_true(readable(store.raw_path(cfg, "rfc9110", "txt")))
+                assert.is_true(readable(store.doc_path(cfg, "rfc9110")))
+                local tags = table.concat(vim.fn.readfile(store.doc_dir(cfg) .. "/tags"), "\n")
+                assert.is_nil(tags:find("eip1559", 1, true))
+                assert.is_not_nil(tags:find("rfc9110-3.1", 1, true))
+                vim.cmd("helpclose")
+                vim.cmd("Eip 1559")
+                assert.is_true(editor.wait_help("eip1559"))
+                assert.are.equal(2, #fp.filter(case.fetched, function(f)
+                    return f == "eip1559"
+                end))
+            end
+        )
+
+        it("refuses without the bang and says what to type", function()
+            vim.cmd("Eip 1559")
+            assert.is_true(editor.wait_help("eip1559"))
+            vim.cmd("Eip cc")
+            assert.are.equal("add ! to clear the EIP cache: :Eip! cc", case.notices[#case.notices].msg)
+            assert.is_true(readable(store.doc_path(config.get(), "eip1559")))
+        end)
+
+        it("says so when there is nothing to clear", function()
+            vim.cmd("Bip! cc")
+            assert.are.equal("BIP cache cleared: 0 files", case.notices[#case.notices].msg)
+        end)
+    end)
+
+    describe(":Crs", function()
+        local sources = require("rfc.sources")
+        local function fetched(pattern)
+            return fp.filter(case.fetched, function(f)
+                return f:match(pattern) ~= nil
+            end)
+        end
+
+        it("knows a crs tag's source, with a dashed legacy id", function()
+            assert.are.equal(sources.crs, sources.of("crs-r43397"))
+            assert.are.equal(sources.crs, sources.of("crs-98-446rsh#summary"))
+            assert.are.equal("98-446rsh", require("rfc.app.names").id_of(sources.crs, "crs-98-446rsh#summary"))
+        end)
+
+        it("opens a report by its number after the topic index, in two requests", function()
+            vim.cmd("Crs R43397")
+            assert.is_true(editor.wait_help("crs-r43397"))
+            assert.are.equal(32, #fetched("^crs%-topic%-"))
+            assert.are.same({ "crs-R43397.json", "crs-R43397.html" }, fetched("^crs%-R"))
+            assert.are.equal(
+                "CRS Report R43397 · Updated October 27, 2026 · 17 versions since March 9, 2016",
+                vim.fn.getline(2)
+            )
+        end)
+
+        it("watches a report's blocks and lets the ticks queued behind a block run after the timer closed", function()
+            local progress = require("rfc.app.progress")
+            local report = require("cds.progress").new({ title = "T", plan = { "a" } })
+            local timer = progress.watch(report)
+            report:begin("a")
+            -- a block: the main loop busy for longer than a tick (hrtime,
+            -- since uv.now is the loop's cached time and would never move)
+            local t0 = vim.uv.hrtime()
+            while vim.uv.hrtime() - t0 < 200e6 do
+            end
+            report:finish()
+            assert.is_true(vim.wait(1000, function()
+                return timer:is_closing()
+            end))
+            vim.wait(200)
+            local blocks = vim.tbl_filter(function(row)
+                return row.kind == "block"
+            end, report:timeline())
+            assert.is_true(#blocks >= 1)
+            assert.is_true(blocks[1].duration >= 150)
+        end)
+
+        it("says it is fetching the index, the first time only", function()
+            vim.cmd("Crs R43397")
+            assert.is_true(editor.wait_help("crs-r43397"))
+            assert.are.same(
+                { "fetching the CRS index" },
+                fp.map(case.index_notices, function(n)
+                    return n.msg
+                end)
+            )
+            vim.cmd("helpclose")
+            vim.cmd("Crs subjects")
+            assert.is_true(editor.wait_help("crs-subjects"))
+            assert.are.equal(1, #case.index_notices)
+        end)
+
+        it("does not ask again for a cached report whose index date has not moved", function()
+            vim.cmd("Crs R43397")
+            assert.is_true(editor.wait_help("crs-r43397"))
+            local before = #case.fetched
+            vim.cmd("helpclose")
+            vim.cmd("Crs r43397")
+            assert.is_true(editor.wait_help("crs-r43397"))
+            assert.are.equal(before, #case.fetched)
+        end)
+
+        it("follows a citation to another report with CTRL-]", function()
+            vim.cmd("Crs R43397")
+            assert.is_true(editor.wait_help("crs-r43397"))
+            assert.is_true(vim.fn.search("|crs-97-1011|", "W") > 0)
+            feed("<C-]>")
+            assert.is_true(vim.wait(2000, function()
+                return vim.tbl_contains(case.fetched, "crs-97-1011.json")
+            end))
+            assert.is_true(vim.wait(2000, function()
+                local last = case.notices[#case.notices]
+                return last ~= nil and last.msg:match("CRS 97%-1011 does not exist") ~= nil
+            end))
+        end)
+
+        it("refuses a report with no HTML rendering, naming the PDF", function()
+            case.crs_no_html = true
+            vim.cmd("Crs IF12345")
+            assert.is_true(vim.wait(2000, function()
+                local last = case.notices[#case.notices]
+                return last ~= nil and last.msg:match("no HTML rendering") ~= nil
+            end))
+            assert.are.equal(
+                "CRS IF12345 has no HTML rendering; the PDF is https://crsreports.congress.gov/product/pdf/IF/IF12345/1",
+                case.notices[#case.notices].msg
+            )
+            assert.are.same({}, fetched("%.html$"))
+        end)
+
+        it("files the reports by topic and type", function()
+            vim.cmd("Crs subjects")
+            assert.is_true(editor.wait_help("crs-subjects"))
+            assert.is_true(vim.fn.search("|crs-subjects-topics-economic-policy|", "nw") > 0)
+            assert.is_true(vim.fn.search("|crs-subjects-topics-national-defense|", "nw") > 0)
+            assert.is_true(vim.fn.search("|crs-subjects-type-legal-sidebar|", "nw") > 0)
+            assert.is_true(
+                vim.fn.search("|crs-ib10051|  Research and Development Funding: Fiscal Year 2001 (2001)", "nw") > 0
+            )
+            -- listed under both topics and under Type / Legacy: three rows
+            local _, rows = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\n"):gsub("|crs%-ib10051|  ", "")
+            assert.are.equal(3, rows)
+        end)
+
+        it("lands on a topic named by a word", function()
+            vim.cmd("Crs subjects economic")
+            assert.is_true(editor.wait_help("crs-subjects"))
+            assert.is_true(vim.wait(2000, function()
+                return vim.api.nvim_get_current_line():match("Economic Policy") ~= nil
+            end))
+        end)
+
+        it("completes a report by its title", function()
+            vim.cmd("Crs R43397")
+            assert.is_true(editor.wait_help("crs-r43397"))
+            assert.are.equal("crs-r42853", vim.fn.getcompletion("Crs nuclear", "cmdline")[1]:match("^(%S+)"))
         end)
     end)
 

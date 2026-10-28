@@ -1,3 +1,81 @@
+2026-10-28  A document over styled_max_lines stays plain
+
+  lua/rfc/config.lua, lua/rfc/reader/presentation.lua
+    A document with more Markdown lines than styled_max_lines (20,000) is
+    drawn plain under its own filetype and left there: treesitter over the
+    lines and vellum's render of them cost seconds the reader waited frozen
+    for, on a page whose styling added little. The timeline says the
+    styling was skipped.
+
+2026-10-28  A source's last open has a timeline
+
+  lua/rfc/app/times.lua, lua/rfc/app/progress.lua, lua/rfc/app/command.lua, doc/manual.lua, README.md
+    :Rfc times (and the other five) shows the last open's timeline in
+    rfc://times/<prefix>: each phase with its length, the Markdown and
+    styled draws, and every stretch the main loop was blocked for, under
+    the phase it fell in. Every report carries a watcher, a tick every
+    50 ms, that notes a tick 150 ms or more late as a block.
+
+2026-10-28  A progress dashboard above a document being prepared
+
+  lua/rfc/app/progress.lua, lua/rfc/reader/presentation.lua, lua/rfc/reader/init.lua,
+  lua/rfc/app/subject_ui.lua, lua/rfc/app/subjects_cache.lua, lua/rfc/app/entries.lua,
+  lua/rfc/app/resolve.lua, lua/rfc/cache/derived.lua, lua/rfc/sources/crs.lua, lua/rfc/config.lua,
+  lua/rfc/needs.lua, doc/manual.lua, README.md
+    A document whose preparation runs past progress.show_after milliseconds
+    gets a cds.dashboard above its window showing a cds.progress report:
+    the source, the elapsed time, the phases in order (reading the source
+    with a bar over its pages, parsing metadata, filing, writing the page,
+    styling) with the one running marked. The report is keyed by source
+    prefix in rfc.app.progress, so the pipeline's stages report by prefix:
+    the CRS index ticks a page per topic page, the subjects preparation
+    names its parsing and filing, the derived page names its writing and
+    hops a main-loop tick between its stages so the dashboard repaints,
+    and the document view reports the styling. The subjects command starts
+    the report before its pipeline, since its jump comes after; the
+    reader's shared resolve starts one for any other open. A page whose
+    plan fetches, or whose inputs on disk exceed progress.at_once_bytes
+    (2 MB), gets its dashboard on the next loop turn; any other after
+    progress.show_after. A page current on disk builds its model through
+    the same hops (a tick before the read and before the Markdown build,
+    the stage named "building the page"), so a picker closes and the
+    dashboard draws before the parse. The dashboard closes progress.linger
+    milliseconds after the last phase, or on q. needs.lua declares
+    dashboard.new and progress.new.
+
+2026-10-28  A source's cache clears with its command and a bang
+
+  lua/rfc/app/clear.lua, lua/rfc/app/command.lua, plugin/rfc.lua, doc/manual.lua, README.md
+    :Rfc! cc (and :Eip! cc, :Bip! cc, :Simd! cc, :W3c! cc, :Crs! cc)
+    deletes the source's texts, documents, index files and subjects
+    document from the cache and rebuilds the tags file; the message counts
+    the files. Without the bang the command says what to type and touches
+    nothing. A file is the source's when its base name is one of the
+    source's tags or its prefix and a dash, which is how a tag's source is
+    read.
+
+2026-10-28  CRS reports are a source
+
+  lua/rfc/sources/crs.lua, lua/rfc/source/crs/, lua/rfc/help/crs/model.lua, lua/rfc/fetch.lua,
+  lua/rfc/help/tags.lua, lua/rfc/source/html/inline.lua, lua/rfc/help/w3c/text.lua,
+  lua/rfc/document/report.lua, lua/rfc/reader/links.lua, lua/rfc/source/subjects.lua,
+  plugin/rfc.lua, doc/manual.lua, README.md, spec/
+    :Crs opens a US Congressional Research Service report by number from
+    EveryCRSReport.com and files every report under the site's 32 topics
+    and its product type. The topic pages, joined, are the index; a report
+    is fetched through its JSON record to the newest version's HTML, stored
+    behind one fact line (versions, first date, topics, the publisher's
+    PDF, the mirror's copy, the product page) and stamped with the version
+    date, so the index dating a newer version is what fetches again.
+    rfc.source.crs normalizes the HTML on every render: named anchors
+    become ids (a heading takes its first anchor's, or a numbered one),
+    the header and contents lists go, citations link to their tags on the
+    rfc-tag: scheme, footnote marks read as [n]. An rfc-tag: href is a
+    mention the help render writes as a tag, the Markdown report render
+    anchors a document at its own name, the tag shapes read a shortname
+    tag of any registered prefix, a link to a report page navigates to
+    its tag, and subjects sort a non-numeric id by its text.
+
 2026-10-25  Persistence, commands and the contents sidebar come from cds-lua
 
   lua/rfc/cache.lua, lua/rfc/store.lua, lua/rfc/toc.lua, plugin/rfc.lua, lua/rfc/needs.lua

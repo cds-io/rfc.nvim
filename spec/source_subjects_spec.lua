@@ -87,6 +87,18 @@ describe("tree", function()
         assert.are.equal("155", forest[4].children[1].children[1].entries[1].id)
         assert.are.same({}, forest[5].entries)
     end)
+    it("sorts ids that are not numbers by their text", function()
+        local forest = subjects.tree({
+            subjects.entry("r9", "b", { { "T" } }),
+            subjects.entry("98-35", "a", { { "T" } }),
+            subjects.entry("if12345", "c", { { "T" } }),
+        })
+        local ids = {}
+        for _, e in ipairs(forest[1].entries) do
+            table.insert(ids, e.id)
+        end
+        assert.are.same({ "98-35", "if12345", "r9" }, ids)
+    end)
     it("is empty for no entries", function()
         assert.are.same({}, subjects.tree({}))
     end)

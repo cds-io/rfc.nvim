@@ -1,6 +1,6 @@
 -- Generates doc/rfc.txt with mini.doc (`make doc`): the manual is the
--- annotation blocks at the head of lua/rfc/init.lua, the setup block above
--- M.setup, and the rfc.Config class with its defaults in lua/rfc/config.lua.
+-- annotation blocks in doc/manual.lua and the rfc.Config class with its
+-- defaults in lua/rfc/config.lua.
 -- A block is kept only when it carries a tag, a class, the contents or an
 -- eval; the doc comments on the rims' functions stay out of the help file,
 -- since they document the code, and the help is for the reader.
@@ -23,7 +23,7 @@ end
 -- description, without the dashes
 local NOTED = { ["@param"] = true, ["@field"] = true, ["@return"] = true }
 
-MiniDoc.generate({ "lua/rfc/init.lua", "lua/rfc/config.lua" }, "doc/rfc.txt", {
+MiniDoc.generate({ "doc/manual.lua", "lua/rfc/config.lua" }, "doc/rfc.txt", {
     hooks = {
         -- every kept block names its own tag and signature, so nothing is
         -- inferred from the code below it

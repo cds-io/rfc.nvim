@@ -1,8 +1,9 @@
 # rfc.nvim
 
-RFCs, Ethereum's EIPs and ERCs, Bitcoin's BIPs, Solana's SIMDs and the
-W3C's technical reports in Neovim. `:Rfc 9110`, `:Eip 1559`, `:Bip 32`,
-`:Simd 64` and `:W3c wcag22` fetch and open a shared Markdown document.
+RFCs, Ethereum's EIPs and ERCs, Bitcoin's BIPs, Solana's SIMDs, the W3C's
+technical reports and the US Congressional Research Service's reports in
+Neovim. `:Rfc 9110`, `:Eip 1559`, `:Bip 32`, `:Simd 64`, `:W3c wcag22` and
+`:Crs R43397` fetch and open a shared Markdown document.
 When optional vellum.nvim is installed it renders headings, code, tables
 and images; otherwise the buffer displays Markdown. `cds-lua` supplies
 the document contract, HTML conversion, rendering lifecycle and navigation.
@@ -20,6 +21,15 @@ q                        close the document window, or show an empty buffer
 :help rfc9110-3.1         an exported section, with tag completion
 :helpgrep MUST NOT        search cached help exports
 ```
+
+A document whose preparation runs past half a second (the CRS subjects
+page fetches 32 topic pages and files 23,000 reports) gets a progress
+dashboard above its window: the phases in order with the one running
+marked, a bar over the pages, the elapsed time. The Markdown shows as
+soon as it is built and the styled page replaces it, so you read while
+the dashboard finishes; it closes a beat after the last phase, or on
+`q`. `progress = { show_after = 500, linger = 1500 }` in `setup` are the
+two timings.
 
 Commands open `rfc://document/<tag>` buffers. They retain explicit W3C HTML
 IDs alongside numbered section tags, so both `w3c-wcag22#intro` and its
@@ -66,6 +76,11 @@ and a sixth, `subjects`, for a source that has them:
 :Rfc subjects            the RFCs by subject, as one help document
 :Rfc subjects dns        a subject by its slug or its name, else a search
                          over the subjects
+:Rfc! cc                 clears the RFC cache: its texts, documents, index
+                         and subjects; the bang is required
+:Rfc times               the last RFC open's timeline: each phase with its
+                         length, the draws, every stretch the editor was
+                         blocked for
 
 :Eip                     EIPs and ERCs, one index
 :Eip token standard      a search over it
@@ -94,6 +109,13 @@ and a sixth, `subjects`, for a source that has them:
 :W3c w3c-css-grid-2#5.3  a tag: the shortname, then # and the section
 :W3c wcag<Tab>           completion
 :W3c subjects            the reports by maturity, tag and working group
+
+:Crs                     the CRS reports index, EveryCRSReport's 32 topic pages
+:Crs nuclear energy      a search over it
+:Crs R43397              a report by its number; `:Crs r43397` is the same one
+:Crs crs-r43397#summary  a tag: the number, then # and the section
+:Crs legis<Tab>          completion
+:Crs subjects            the reports by topic and by type
 ```
 
 A picked or completed item reads `eip20  Token Standard (Final)`: the tag
@@ -161,6 +183,11 @@ every RFC under it, each counted once.
 `:W3c subjects` has three roots, Maturity, Tags and Deliverers (the
 working groups), so `:W3c subjects wot` lands on the Web of Things
 reports and `:W3c subjects standard` on everything at Recommendation.
+`:Crs subjects` has two: Topics, the 32 topic pages EveryCRSReport.com
+files its reports under (a report sits under every topic that lists it),
+and Type, the product read from the report number (Report, In Focus,
+Insight, Legal Sidebar, Legacy), so `:Crs subjects economic` lands on
+Economic Policy.
 `:Eip subjects` has two roots: the site's six categories (Core,
 Networking, Interface, ERC, Meta, Informational), with the hardfork meta
 EIPs filed under `Meta / Hardforks` since their titles say so, and the
