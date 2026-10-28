@@ -4,7 +4,7 @@
 -- Ethereum's proposals are another, over two repositories that share one
 -- number space (ERC-20 is EIP-20), so the reader never has to say which;
 -- Bitcoin's proposals are the third, Solana's the fourth, the W3C's reports
--- the fifth and the Congressional Research Service's the sixth.
+-- the fifth and the US Congressional Research Service's the sixth.
 local fp = require("cds.fp")
 local M = {
     rfc = require("rfc.sources.rfc"),

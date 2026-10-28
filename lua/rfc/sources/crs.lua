@@ -77,7 +77,7 @@ local function fetch_report(id)
     end)
 end
 
---- The Congressional Research Service's reports, from EveryCRSReport.com, by
+--- The US Congressional Research Service's reports, from EveryCRSReport.com, by
 --- report number: the 32 topic pages are the index, a report is fetched
 --- through its JSON record to the mirror's HTML, normalized by
 --- rfc.source.crs and rendered as a W3C report is.

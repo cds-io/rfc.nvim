@@ -4,7 +4,7 @@
   lua/rfc/help/tags.lua, lua/rfc/source/html/inline.lua, lua/rfc/help/w3c/text.lua,
   lua/rfc/document/report.lua, lua/rfc/reader/links.lua, lua/rfc/source/subjects.lua,
   plugin/rfc.lua, doc/manual.lua, README.md, spec/
-    :Crs opens a Congressional Research Service report by number from
+    :Crs opens a US Congressional Research Service report by number from
     EveryCRSReport.com and files every report under the site's 32 topics
     and its product type. The topic pages, joined, are the index; a report
     is fetched through its JSON record to the newest version's HTML, stored

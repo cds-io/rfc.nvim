@@ -64,7 +64,7 @@
 ---   :Bip    Bitcoin's BIPs; `:Bip 0032` and `:Bip 32` are the same one
 ---   :Simd   Solana's SIMDs
 ---   :W3c    the W3C's technical reports, by shortname: `:W3c wcag22`
----   :Crs    the Congressional Research Service's reports, by number: `:Crs R43397`
+---   :Crs    the US Congressional Research Service's reports, by number: `:Crs R43397`
 --- <
 --- A picked or completed item reads `eip20  Token Standard (Final)`: the tag,
 --- then the title; the command takes the first word. The first item a picker
@@ -187,7 +187,7 @@
 ---          after the copy, so a republished draft follows its publication.
 ---   `crs`    tags `crs-r43397`, `crs-r43397#summary`, `crs-98-684` (a legacy
 ---          number keeps its dash); the HTML from EveryCRSReport.com, a
----          mirror of the Congressional Research Service's reports, reached
+---          mirror of the US Congressional Research Service's reports, reached
 ---          through the report's JSON record (the newest version), with the
 ---          publisher's PDF, the mirror's copy and the product page linked
 ---          in the head; the index is the site's 32 topic pages read as one

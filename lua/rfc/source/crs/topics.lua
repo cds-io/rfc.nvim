@@ -1,5 +1,5 @@
 -- Reads EveryCRSReport.com's topic pages, which together list every
--- Congressional Research Service report the site mirrors. The source fetches
+-- US Congressional Research Service report the site mirrors. The source fetches
 -- the 32 pages and joins them into one text, each page behind a marker line
 -- (`marker`), so one cached file is both the index and the taxonomy. A page
 -- is one `div.crs-report` per report:

@@ -1,4 +1,4 @@
--- Reads the Congressional Research Service's reports as EveryCRSReport.com
+-- Reads the US Congressional Research Service's reports as EveryCRSReport.com
 -- mirrors them. The reading goes in four pieces, one module each:
 -- `rfc.source.crs.topics` reads the joined topic pages into the index and
 -- the taxonomy, `rfc.source.crs.version` reads a report's JSON record for

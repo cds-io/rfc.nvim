@@ -1,7 +1,7 @@
 # rfc.nvim
 
 RFCs, Ethereum's EIPs and ERCs, Bitcoin's BIPs, Solana's SIMDs, the W3C's
-technical reports and the Congressional Research Service's reports in
+technical reports and the US Congressional Research Service's reports in
 Neovim. `:Rfc 9110`, `:Eip 1559`, `:Bip 32`, `:Simd 64`, `:W3c wcag22` and
 `:Crs R43397` fetch and open a shared Markdown document.
 When optional vellum.nvim is installed it renders headings, code, tables

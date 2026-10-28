@@ -13,7 +13,7 @@ local M = {}
 ---   vim.notify with an "rfc: " prefix by default
 ---@field sources table<string, boolean>  -- which commands are defined, by prefix: rfc (the RFC
 ---   Editor, :Rfc), eip (Ethereum's EIPs and ERCs, :Eip), bip (Bitcoin's BIPs, :Bip), simd
----   (Solana's SIMDs, :Simd), w3c (the W3C's technical reports, :W3c), crs (the Congressional
+---   (Solana's SIMDs, :Simd), w3c (the W3C's technical reports, :W3c), crs (the US Congressional
 ---   Research Service's reports, :Crs)
 ---@field view rfc.View   -- how a document opens: "document" through Markdown/vellum; legacy "rich" rules or
 ---   "plain" help, as written
