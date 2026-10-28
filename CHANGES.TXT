@@ -1,3 +1,12 @@
+2026-10-28  A document over styled_max_lines stays plain
+
+  lua/rfc/config.lua, lua/rfc/reader/presentation.lua
+    A document with more Markdown lines than styled_max_lines (20,000) is
+    drawn plain under its own filetype and left there: treesitter over the
+    lines and vellum's render of them cost seconds the reader waited frozen
+    for, on a page whose styling added little. The timeline says the
+    styling was skipped.
+
 2026-10-28  A source's last open has a timeline
 
   lua/rfc/app/times.lua, lua/rfc/app/progress.lua, lua/rfc/app/command.lua, doc/manual.lua, README.md

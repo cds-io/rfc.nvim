@@ -63,6 +63,7 @@ return function(deps)
         end,
         group = "rfc_document",
         filetype = "rfc-document",
+        styled_max_lines = require("rfc.config").get().styled_max_lines,
     })
 
     function M.model(buf)
