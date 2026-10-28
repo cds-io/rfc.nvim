@@ -1,3 +1,12 @@
+2026-10-28  A source's last open has a timeline
+
+  lua/rfc/app/times.lua, lua/rfc/app/progress.lua, lua/rfc/app/command.lua, doc/manual.lua, README.md
+    :Rfc times (and the other five) shows the last open's timeline in
+    rfc://times/<prefix>: each phase with its length, the Markdown and
+    styled draws, and every stretch the main loop was blocked for, under
+    the phase it fell in. Every report carries a watcher, a tick every
+    50 ms, that notes a tick 150 ms or more late as a block.
+
 2026-10-28  A progress dashboard above a document being prepared
 
   lua/rfc/app/progress.lua, lua/rfc/reader/presentation.lua, lua/rfc/reader/init.lua,

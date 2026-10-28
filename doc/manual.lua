@@ -59,6 +59,9 @@
 ---   :Rfc! cc              clears the RFC cache: its texts, documents, index
 ---                         and subjects document; without the bang, a line
 ---                         saying so
+---   :Rfc times            the last RFC open's timeline: each phase with its
+---                         length, the draws, and every stretch the main
+---                         loop was blocked for, in a scratch buffer
 --- <
 --- The six commands: >
 ---

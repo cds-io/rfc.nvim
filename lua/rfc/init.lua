@@ -53,7 +53,10 @@ M.command = require("rfc.app.command")(
     picker.open_named,
     subject_ui.nodes,
     completion.complete,
-    require("rfc.app.clear").clear
+    require("rfc.app.clear").clear,
+    function(source)
+        require("rfc.app.times").show(source, session.notify)
+    end
 )
 M._activity, M.activity, M.notify = session._activity, session.activity, session.notify
 M.ensure, M.index_lines, M.ensure_subjects = entries.ensure, entries.index_lines, cached.ensure_subjects

@@ -78,6 +78,9 @@ and a sixth, `subjects`, for a source that has them:
                          over the subjects
 :Rfc! cc                 clears the RFC cache: its texts, documents, index
                          and subjects; the bang is required
+:Rfc times               the last RFC open's timeline: each phase with its
+                         length, the draws, every stretch the editor was
+                         blocked for
 
 :Eip                     EIPs and ERCs, one index
 :Eip token standard      a search over it

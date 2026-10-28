@@ -46,7 +46,35 @@ function M.start(prefix, title, plan)
     end
     local report = progress.new({ title = title, plan = plan })
     M.reports[prefix] = report
+    M.watch(report)
     return report
+end
+
+-- A tick every 50 ms while the report runs; a tick that comes 150 ms or
+-- more late is a stretch the main loop was blocked for, noted on the
+-- report under the phase running.
+local TICK, BLOCK = 50, 150
+
+--- Watches the main loop for the report's life and notes its blocks.
+---@param report cds.ProgressReport
+function M.watch(report)
+    local timer = assert(vim.uv.new_timer(), "a timer")
+    local last = vim.uv.now()
+    timer:start(
+        TICK,
+        TICK,
+        vim.schedule_wrap(function()
+            local now = vim.uv.now()
+            if now - last >= BLOCK then
+                report:block(now - last)
+            end
+            last = now
+            if report:finished() then
+                timer:stop()
+                timer:close()
+            end
+        end)
+    )
 end
 
 ---@param prefix string

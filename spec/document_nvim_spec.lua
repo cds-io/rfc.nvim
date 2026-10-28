@@ -267,6 +267,26 @@ describe("the shared RFC document reader", function()
         assert.is_true(ticks > 1, "ticks: " .. ticks)
     end)
 
+    it("lays the last open's timeline out on :Crs times, draws and blocked stretches included", function()
+        case.setup(
+            { rfc = true, eip = true, bip = true, simd = true, w3c = true, crs = true },
+            { view = "document", progress = { show_after = 60000, linger = 50 } }
+        )
+        vim.cmd("Crs subjects")
+        assert.is_true(wait_document("crs-subjects"))
+        local report = require("rfc.app.progress").reports.crs
+        assert.is_true(vim.wait(3000, function()
+            return report:finished()
+        end))
+        vim.cmd("Crs times")
+        assert.equals("rfc://times/crs", vim.api.nvim_buf_get_name(0))
+        local text = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\n")
+        assert.matches("^CRS reports by topic: done in", text)
+        assert.is_not_nil(text:find("reading source", 1, true))
+        assert.is_not_nil(text:find("Markdown drawn", 1, true))
+        assert.is_not_nil(text:find("styling", 1, true))
+    end)
+
     it("shows a hidden document buffer again without resolving or rendering it again", function()
         vim.cmd("Rfc 9110")
         assert.is_true(wait_document("rfc9110"))

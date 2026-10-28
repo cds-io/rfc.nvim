@@ -3,7 +3,7 @@ local sources = require("rfc.sources")
 local fp = require("cds.fp")
 local statuses_of = require("rfc.app.entries").statuses_of
 local notify = require("rfc.app.session").notify
-return function(pick, jump, subjects, status, open_named, nodes, complete, clear)
+return function(pick, jump, subjects, status, open_named, nodes, complete, clear, times)
     local M = {
         pick = pick,
         jump = jump,
@@ -13,11 +13,13 @@ return function(pick, jump, subjects, status, open_named, nodes, complete, clear
         nodes = nodes,
         complete = complete,
         clear = clear,
+        times = times,
     }
     --- The command for a source: a number, a tag (the source's own or an
     --- alias), `subjects` with a node after it or not, `status` with a status
     --- after it or not, `cc` with the bang to clear the source's cache (and
-    --- without it, a line saying so), words to search its index, or nothing
+    --- without it, a line saying so), `times` for the last open's timeline,
+    --- words to search its index, or nothing
     --- for its picker (on the configured status, when one is set). A
     --- completed item carries its title after the tag, so only the first
     --- word is the tag. After `subjects`, completion is over the nodes of
@@ -38,6 +40,8 @@ return function(pick, jump, subjects, status, open_named, nodes, complete, clear
                 M.subjects(source, vim.trim(arg:sub(#first + 1)))
             elseif first == "status" and source.status then
                 M.status(source, vim.trim(arg:sub(#first + 1)))
+            elseif first == "times" then
+                M.times(source)
             elseif first == "cc" then
                 if not cmd.bang then
                     notify(("add ! to clear the %s cache: :%s! cc"):format(source.label, cmd.name), vim.log.levels.WARN)
