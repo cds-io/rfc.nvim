@@ -1,15 +1,13 @@
 -- Prepared source models and their ordered input identity.
 local revision = require("rfc.revision")
+local fp = require("cds.fp")
 
 local M = {}
 
--- One immutable plan per derived path, reused across short-lived descriptors.
--- A version/context/input identity change replaces it; missing inputs and failed
--- preparations never leave an older plan available under a new identity.
----@type table<string, {key: string, model: rfc.SourceModel}>
-local source_models = {}
 ---@type table<string, string> -- identity used by the last successful help export
 local exported_sources = {}
+---@type table<string, string> -- identity the held plan was prepared under
+local prepared_keys = {}
 
 ---@param entry rfc.Derived
 ---@param snapshots? rfc.SourceSnapshot[]
@@ -39,26 +37,41 @@ end
 
 ---@param entry rfc.Derived
 ---@param inputs { [integer]: string[], n?: integer }
----@param key string?
+---@return rfc.SourceModel?, string?
+local function compute(entry, inputs)
+    if entry.prepare then
+        return entry.prepare(unpack(inputs, 1, inputs.n or #inputs))
+    end
+    local doc, err = assert(entry.produce, "derived entry supplies prepare or produce")(unpack(inputs))
+    local model = doc and doc.model
+    return model, err or (not model and "source model not available" or nil)
+end
+
+-- One plan per derived path, kept while the inputs' identity (version,
+-- context, each input's path and revision) is the one it was prepared
+-- under; a failed preparation is never kept.
+local remembered, memo = fp.memoize(function(entry, inputs, _)
+    return compute(entry, inputs)
+end, {
+    slot = function(entry)
+        return entry:path()
+    end,
+    key = function(_, _, key)
+        return key
+    end,
+})
+
+---@param entry rfc.Derived
+---@param inputs { [integer]: string[], n?: integer }
+---@param key string?   -- the inputs' identity; without one the plan is prepared and not kept
 ---@return rfc.SourceModel?, string?
 local function prepare_model(entry, inputs, key)
-    local path = entry:path()
-    local held = source_models[path]
-    if key and held and held.key == key then
-        return held.model
+    if not key then
+        return compute(entry, inputs)
     end
-    source_models[path] = nil
-    local model, err
-    if entry.prepare then
-        model, err = entry.prepare(unpack(inputs, 1, inputs.n or #inputs))
-    else
-        local doc
-        doc, err = assert(entry.produce, "derived entry supplies prepare or produce")(unpack(inputs))
-        model = doc and doc.model
-        err = err or (not model and "source model not available" or nil)
-    end
-    if model and key then
-        source_models[path] = { key = key, model = model }
+    local model, err = remembered(entry, inputs, key)
+    if model then
+        prepared_keys[entry:path()] = key
     end
     return model, err
 end
@@ -68,12 +81,10 @@ end
 --- This never parses the generated help file or performs network work.
 ---@return rfc.SourceModel|nil, string|nil
 function M.source_model(self)
-    local key, path = source_key(self), self:path()
-    local held = source_models[path]
-    if key and held and held.key == key then
-        return held.model
+    local key = source_key(self)
+    if key and memo.held(self, nil, key) then
+        return remembered(self, nil, key)
     end
-    source_models[path] = nil
     local inputs, snapshots = {}, {}
     for _, input in ipairs(self.from) do
         local snapshot
@@ -96,18 +107,22 @@ end
 ---@param entry rfc.Derived
 ---@return boolean
 function M.held(entry)
-    local key, held = source_key(entry), source_models[entry:path()]
-    return key ~= nil and held ~= nil and held.key == key
+    local key = source_key(entry)
+    return key ~= nil and memo.held(entry, nil, key)
 end
 
 --- Drops every held plan; the spec harness's way to a cold session.
 function M.forget_all()
-    source_models = {}
+    memo.forget()
+    prepared_keys = {}
 end
 
+--- The identity the path's document stands at: its last export's, or the
+--- held plan's.
+---@param path string
+---@return string?
 function M.exported_key(path)
-    local held = source_models[path]
-    return exported_sources[path] or (held and held.key)
+    return exported_sources[path] or prepared_keys[path]
 end
 
 function M.export(path, key)

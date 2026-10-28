@@ -40,9 +40,19 @@ return function(deps)
     end
     local presenter = document_view.new({
         current = current,
-        render = function(markdown, width)
+        -- one styled layout per Markdown (the document's table, held
+        -- weakly), width and theme generation; a layout still waiting on
+        -- an image is not kept, so its retry renders again
+        render = require("cds.fp").memoize(function(markdown, width)
             return vellum.render(markdown, width, { notify = deps.notify })
-        end,
+        end, {
+            key = function(_, width)
+                return width .. ":" .. vellum.generation()
+            end,
+            keep = function(lines, _, waiting)
+                return lines ~= nil and not waiting
+            end,
+        }),
         draw = draw,
         attach = function(buf)
             deps.bindings(buf)

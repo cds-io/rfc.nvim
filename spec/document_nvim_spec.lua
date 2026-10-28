@@ -285,6 +285,17 @@ describe("the shared RFC document reader", function()
         assert.is_true(vim.api.nvim_win_get_cursor(0)[1] > 1)
     end)
 
+    it("builds a wiped document's Markdown once per model: the same document comes back", function()
+        vim.cmd("Rfc 9110")
+        assert.is_true(wait_document("rfc9110"))
+        local document = model().document
+        vim.cmd("bwipeout!")
+        vim.cmd("Rfc 9110")
+        assert.is_true(wait_document("rfc9110"))
+        assert.is_true(model().document == document)
+        assert.same({ "9110" }, case.fetched)
+    end)
+
     it("turns list markers off in a document window, since the rendering pads its lines", function()
         vim.o.list = true
         vim.cmd("Rfc 9110")
@@ -473,6 +484,22 @@ describe("the shared RFC document reader", function()
             assert.equals("markdown", vim.bo.filetype)
             require("rfc").jump("eip20-abstract")
             assert.matches("ABSTRACT", vim.api.nvim_get_current_line())
+        end)
+
+        it("styles a wiped document's Markdown once per width: the layout comes back without a render", function()
+            vim.cmd("Eip 20")
+            assert.is_true(wait_styled("eip20"))
+            local calls, lines = fake.calls, model().doc.lines
+            vim.cmd("bwipeout!")
+            vim.cmd("Eip 20")
+            assert.is_true(wait_styled("eip20"))
+            assert.equals(calls, fake.calls)
+            assert.is_true(model().doc.lines == lines)
+            -- a colorscheme change renders again: the theme is applied anew
+            vim.api.nvim_exec_autocmds("ColorScheme", {})
+            assert.is_true(vim.wait(2000, function()
+                return fake.calls > calls
+            end))
         end)
 
         it("ignores image retries for a replaced or wiped model", function()

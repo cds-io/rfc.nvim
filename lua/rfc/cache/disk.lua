@@ -18,8 +18,22 @@ local function mtime_of(path)
     return stat and stat.mtime.sec or nil
 end
 
--- Memos, one per file and name: the exact revision parsed and its answer.
-local memos = {}
+-- One parse per file and name, kept while the file's revision is the one
+-- it was parsed at.
+local parsed = require("cds.fp").memoize(function(path, _, parse)
+    local snapshot = revision.read(path)
+    if not snapshot then
+        return nil
+    end
+    return parse(snapshot.lines)
+end, {
+    slot = function(path, name)
+        return path .. "\0" .. name
+    end,
+    key = function(path)
+        return revision.of(path)
+    end,
+})
 
 --- `parse` over the file's lines, once per revision of the file under
 --- `name`; nil when there is no file.
@@ -28,21 +42,10 @@ local memos = {}
 ---@param parse fun(lines: string[]): any
 ---@return any|nil
 local function memo_of(path, name, parse)
-    local key, stamp = path .. "\0" .. name, revision.of(path)
-    if not stamp then
-        memos[key] = nil
+    if not revision.of(path) then
         return nil
     end
-    local memo = memos[key]
-    if not memo or memo.revision ~= stamp then
-        local snapshot = revision.read(path)
-        if not snapshot then
-            return nil
-        end
-        memo = { revision = snapshot.revision, value = parse(snapshot.lines) }
-        memos[key] = memo
-    end
-    return memo.value
+    return parsed(path, name, parse)
 end
 
 M.write, M.mtime, M.memo = write, mtime_of, memo_of
