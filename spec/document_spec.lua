@@ -47,6 +47,30 @@ describe("RFC shared document adapters", function()
         assert.equals("rfc-tag:rfc9110", doc.links[1].target)
         assert.equals(3, #doc.markdown)
     end)
+    it("writes a subjects document's contents and entries as Markdown lists, nested by level", function()
+        local source = require("rfc.source.subjects")
+        local forest = source.tree({
+            source.entry("r1", "Nuclear Energy (2026)", { { "Topics", "Economic Policy" } }),
+            source.entry("if2", "Farm Bill (2026)", { { "Topics", "Economic Policy" }, { "Type", "In Focus" } }),
+        }, { "Topics", "Type" })
+        local model = require("rfc.subjects").model(
+            { prefix = "crs", title = "CRS reports by topic", about = "From the site.", key = "shortname" },
+            forest
+        )
+        local markdown = contract.from_model(model).markdown
+        local text = table.concat(markdown, "\n")
+        assert.is_not_nil(text:find("\n- [crs-subjects-topics](rfc-tag:crs-subjects-topics)  Topics (2)\n", 1, true))
+        assert.is_not_nil(
+            text:find(
+                "\n  - [crs-subjects-topics-economic-policy](rfc-tag:crs-subjects-topics-economic-policy)  Economic Policy (2)\n",
+                1,
+                true
+            )
+        )
+        assert.is_not_nil(text:find("\n- [crs-r1](rfc-tag:crs-r1)  Nuclear Energy (2026)\n", 1, true))
+        assert.is_not_nil(text:find("\n- [crs-if2](rfc-tag:crs-if2)  Farm Bill (2026)\n", 1, true))
+    end)
+
     it("removes only known help declarations and preserves wildcard and note prose", function()
         local lines = {
             "*rfc1.txt* Example *rfc1*",

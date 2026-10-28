@@ -1,4 +1,7 @@
--- Markdown projection of subjects source plans.
+-- Markdown projection of subjects source plans. The contents and each
+-- node's entries are Markdown lists, one item a line, the contents nested
+-- by level: Markdown folds bare consecutive lines into one paragraph, and a
+-- rendered list is what a reader scans.
 
 local builder = require("rfc.document.builder")
 return function(model)
@@ -9,7 +12,7 @@ return function(model)
     for _, node in ipairs(model.nodes) do
         put(
             string.rep("  ", #node.node.path - 1)
-                .. "["
+                .. "- ["
                 .. node.tag
                 .. "](rfc-tag:"
                 .. node.tag
@@ -25,7 +28,7 @@ return function(model)
         heading(node.tag, node.node.name .. "  (" .. node.count .. ")", #node.node.path)
         for _, entry in ipairs(node.node.entries) do
             local tag = model.doc.prefix .. (model.doc.key == "shortname" and "-" or "") .. entry.id
-            put("[" .. tag .. "](rfc-tag:" .. tag .. ")  " .. prose(entry.label))
+            put("- [" .. tag .. "](rfc-tag:" .. tag .. ")  " .. prose(entry.label))
         end
         put("")
     end
