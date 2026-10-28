@@ -28,6 +28,9 @@ return function(deps)
         local model = models[vim.api.nvim_win_get_buf(win)]
         vim.wo[win].wrap = not (model and model.doc and model.doc.styled)
         vim.wo[win].linebreak = true
+        -- a rendered document pads its banner and spacer lines, which a
+        -- reader's trailing-space marker would dot
+        vim.wo[win].list = false
         if model and model.doc and model.doc.styled then
             vim.wo[win].number, vim.wo[win].relativenumber = false, false
             vim.wo[win].signcolumn, vim.wo[win].foldcolumn, vim.wo[win].statuscolumn = "no", "0", ""

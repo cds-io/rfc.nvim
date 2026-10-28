@@ -177,6 +177,14 @@ describe("the shared RFC document reader", function()
         assert.matches("no anchor", case.notices[#case.notices].msg)
     end)
 
+    it("turns list markers off in a document window, since the rendering pads its lines", function()
+        vim.o.list = true
+        vim.cmd("Rfc 9110")
+        assert.is_true(wait_document("rfc9110"))
+        assert.is_false(vim.wo.list)
+        vim.o.list = false
+    end)
+
     it("opens subject documents and retains lifecycle cycling", function()
         vim.cmd("Eip subjects")
         assert.is_true(wait_document("eip-subjects"))
