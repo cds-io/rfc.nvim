@@ -91,6 +91,20 @@ function M.source_model(self)
     return prepare_model(self, inputs, source_key(self, snapshots))
 end
 
+--- Whether the entry's plan is held under its current identity, so a
+--- source_model answers without reading or preparing.
+---@param entry rfc.Derived
+---@return boolean
+function M.held(entry)
+    local key, held = source_key(entry), source_models[entry:path()]
+    return key ~= nil and held ~= nil and held.key == key
+end
+
+--- Drops every held plan; the spec harness's way to a cold session.
+function M.forget_all()
+    source_models = {}
+end
+
 function M.exported_key(path)
     local held = source_models[path]
     return exported_sources[path] or (held and held.key)

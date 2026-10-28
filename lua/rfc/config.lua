@@ -20,8 +20,9 @@ local M = {}
 ---@field toc { width: integer }   -- the contents sidebar
 ---@field status table<string, string>  -- the status a source's subjects document opens filtered to,
 ---   by prefix: { eip = "Final" }; every entry when unset
----@field progress { show_after: integer, linger: integer }  -- the dashboard above a document being
----   prepared: shown once the preparation has run this many milliseconds, kept this long after it ends
+---@field progress { show_after: integer, linger: integer, at_once_bytes: integer }  -- the dashboard above a
+---   document being prepared: shown once the preparation has run show_after milliseconds, or at once when it
+---   fetches or its inputs on disk exceed at_once_bytes; kept linger milliseconds after it ends
 ---@text The defaults, which `setup` merges its argument over:
 ---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
 M.defaults = {
@@ -31,7 +32,7 @@ M.defaults = {
     view = "document",
     toc = { width = 44 },
     status = {},
-    progress = { show_after = 500, linger = 1500 },
+    progress = { show_after = 500, linger = 1500, at_once_bytes = 2 * 1024 * 1024 },
 }
 --minidoc_afterlines_end
 
@@ -53,6 +54,7 @@ function M.set(opts)
     vim.validate("progress", current.progress, "table")
     vim.validate("progress.show_after", current.progress.show_after, "number")
     vim.validate("progress.linger", current.progress.linger, "number")
+    vim.validate("progress.at_once_bytes", current.progress.at_once_bytes, "number")
     return current
 end
 

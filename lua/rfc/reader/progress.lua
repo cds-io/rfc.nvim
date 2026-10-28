@@ -25,11 +25,13 @@ local dashboard = require("cds.dashboard").new({
 ---@return string[]
 local function plan_for(source, id)
     if not id then
-        local current_page = subjects_cache.subjects_of(source):current()
+        local page = subjects_cache.subjects_of(source)
+        local current_page = page:current()
         return progress.plan({
             index = not current_page and not subjects_cache.subjects_fresh(source),
-            subjects = not current_page,
+            subjects = not current_page or not page:model_held(),
             page = not current_page,
+            build = true,
         })
     end
     local page = entries.document_of(source, id)
@@ -37,7 +39,20 @@ local function plan_for(source, id)
         index = source.key == "shortname" and not entries.index_of(source):fresh(),
         text = not entries.raw_of(source, id):cached(),
         page = not page:current(),
+        build = true,
     })
+end
+
+--- The bytes of the page's inputs on disk: the index for a subjects page,
+--- the text for a document; what says the preparation is heavy before it
+--- runs.
+---@param source rfc.Source
+---@param id string|nil
+---@return integer
+local function input_bytes(source, id)
+    local input = id and entries.raw_of(source, id) or entries.subjects_index_of(source)
+    local size = vim.fn.getfsize(input:path())
+    return size > 0 and size or 0
 end
 
 --- A report for the document, and its dashboard above the window once
@@ -58,12 +73,24 @@ function M.report_for(tag, win)
     end
     local id = names.id_of(source, tag)
     local title = id and (source.label .. " " .. id) or (source.subjects and source.subjects.title or tag)
-    local report = progress.start(source.prefix, title, plan_for(source, id))
-    vim.defer_fn(function()
+    local plan = plan_for(source, id)
+    local report = progress.start(source.prefix, title, plan)
+    local settings = config.get().progress
+    -- a fetch, or inputs past the size, is known heavy before it runs: the
+    -- dashboard opens at once; anything else gets show_after to finish first
+    local heavy = plan[1] == "reading source" or input_bytes(source, id) >= settings.at_once_bytes
+    local function open()
         if not report:finished() and vim.api.nvim_win_is_valid(win) then
             dashboard:open(win, report)
         end
-    end, config.get().progress.show_after)
+    end
+    if heavy then
+        -- on the next turn, which comes before the pipeline's first hop, and
+        -- outside the read autocmd a jump may be running in
+        vim.schedule(open)
+    else
+        vim.defer_fn(open, settings.show_after)
+    end
     return report
 end
 

@@ -10,7 +10,7 @@ local M = { reports = {} }
 --- The phase names a document's preparation will run through, given what
 --- the cache already holds: only the stages that will happen, so a report
 --- ends with every phase done.
----@param stages { index: boolean, text: boolean, page: boolean, subjects: boolean }
+---@param stages { index: boolean, text: boolean, page: boolean, subjects: boolean, build: boolean }
 ---@return string[]
 function M.plan(stages)
     local plan = {}
@@ -26,6 +26,9 @@ function M.plan(stages)
     end
     if stages.page then
         table.insert(plan, "writing the page")
+    end
+    if stages.build then
+        table.insert(plan, "building the page")
     end
     table.insert(plan, "styling")
     return plan

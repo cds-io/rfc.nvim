@@ -116,6 +116,26 @@ function Derived:ensure()
 end
 
 Derived.source_model = models.source_model
+
+--- Whether the plan is held in memory, so source_model costs nothing.
+---@return boolean
+function Derived:model_held()
+    return models.held(self)
+end
+
+--- The source plan as a Task: at once when held, else after a hop to the
+--- next main-loop turn, so a dashboard can draw and a picker close before
+--- the read and the preparation run.
+---@return cds.Task
+function Derived:source_model_task()
+    if self:model_held() then
+        local model, err = self:source_model()
+        return model and task().of(model) or task().fail(err)
+    end
+    return task().of(true):tick():bind_result(function()
+        return self:source_model()
+    end)
+end
 --- under `name`; nil before it exists.
 ---@param name string
 ---@param parse fun(lines: string[]): any

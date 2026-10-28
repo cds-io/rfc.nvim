@@ -203,7 +203,7 @@ describe("the shared RFC document reader", function()
         end))
         local fp = require("cds.fp")
         assert.same(
-            { "reading source", "parsing metadata", "filing", "writing the page", "styling" },
+            { "reading source", "parsing metadata", "filing", "writing the page", "building the page", "styling" },
             fp.map(report.phases, function(phase)
                 return phase.name
             end)
@@ -216,6 +216,55 @@ describe("the shared RFC document reader", function()
         assert.is_true(vim.wait(2000, function()
             return require("rfc").dashboard_window(owner) == nil
         end))
+    end)
+
+    it("opens the dashboard at once for a page whose inputs are large, and hops between the warm stages", function()
+        case.setup(
+            { rfc = true, eip = true, bip = true, simd = true, w3c = true, crs = true },
+            { view = "document", progress = { show_after = 60000, linger = 500, at_once_bytes = 1 } }
+        )
+        local owner = vim.api.nvim_get_current_win()
+        vim.cmd("Crs subjects")
+        assert.is_true(vim.wait(3000, function()
+            return require("rfc").dashboard_window(owner) ~= nil
+        end, 1))
+        local first = require("rfc").progress_report(owner)
+        assert.is_true(wait_document("crs-subjects"))
+        assert.is_true(vim.wait(3000, function()
+            return first:finished()
+        end))
+        -- the page is on disk now; a new session would build its model again
+        vim.api.nvim_buf_delete(vim.api.nvim_get_current_buf(), { force = true })
+        require("rfc").close_dashboards()
+        require("rfc.cache.models").forget_all()
+        owner = vim.api.nvim_get_current_win()
+        local ticks = 0
+        local timer = vim.uv.new_timer()
+        timer:start(
+            0,
+            1,
+            vim.schedule_wrap(function()
+                ticks = ticks + 1
+            end)
+        )
+        vim.cmd("Crs subjects")
+        assert.is_true(vim.wait(3000, function()
+            return require("rfc").dashboard_window(owner) ~= nil
+        end, 1))
+        local report = require("rfc").progress_report(owner)
+        assert.is_true(wait_document("crs-subjects"))
+        assert.is_true(vim.wait(3000, function()
+            return report:finished()
+        end))
+        timer:stop()
+        assert.same(
+            { "parsing metadata", "filing", "building the page", "styling" },
+            require("cds.fp").map(report.phases, function(phase)
+                return phase.name
+            end)
+        )
+        -- the loop turned between the stages: the heartbeat ran more than once
+        assert.is_true(ticks > 1, "ticks: " .. ticks)
     end)
 
     it("turns list markers off in a document window, since the rendering pads its lines", function()

@@ -15,9 +15,15 @@
     hops a main-loop tick between its stages so the dashboard repaints,
     and the document view reports the styling. The subjects command starts
     the report before its pipeline, since its jump comes after; the
-    reader's shared resolve starts one for any other open. The dashboard
-    closes progress.linger milliseconds after the last phase, or on q.
-    needs.lua declares dashboard.new and progress.new.
+    reader's shared resolve starts one for any other open. A page whose
+    plan fetches, or whose inputs on disk exceed progress.at_once_bytes
+    (2 MB), gets its dashboard on the next loop turn; any other after
+    progress.show_after. A page current on disk builds its model through
+    the same hops (a tick before the read and before the Markdown build,
+    the stage named "building the page"), so a picker closes and the
+    dashboard draws before the parse. The dashboard closes progress.linger
+    milliseconds after the last phase, or on q. needs.lua declares
+    dashboard.new and progress.new.
 
 2026-10-28  A source's cache clears with its command and a bang
 

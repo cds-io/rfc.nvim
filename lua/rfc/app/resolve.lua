@@ -19,15 +19,26 @@ return function(tag, done)
         return
     end
     local id = id_of(source, tag)
+    local progress = require("rfc.app.progress")
+    --- The document for the page: its source plan (held in memory, or read
+    --- and prepared after a hop) and the Markdown built from it after one
+    --- more hop, each stage named on the source's report.
     local function destination(name)
         local derived = id and document_of(source, id) or subjects_of(source)
-        local model, err = derived:source_model()
-        if not model then
-            done(nil, err)
-            return
-        end
-        local doc = require("rfc.document").from_model(model)
-        done({ name = name, document = doc })
+        run(
+            derived:source_model_task():tick():map(function(model)
+                progress.phase(source.prefix, "building the page")
+                return require("rfc.document").from_model(model)
+            end),
+            source.label .. " " .. name,
+            function(doc, err)
+                if not doc then
+                    done(nil, err)
+                else
+                    done({ name = name, document = doc })
+                end
+            end
+        )
     end
     if not id then
         if not source.subjects then
