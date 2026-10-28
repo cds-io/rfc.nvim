@@ -1,0 +1,552 @@
+{
+  "id": "R43397",
+  "type": "Reports",
+  "typeId": "R",
+  "number": "R43397",
+  "active": true,
+  "source": "Congress.gov, CRSReports.Congress.gov, EveryCRSReport.com",
+  "versions": [
+    {
+      "source": "Congress.gov",
+      "sourceLink": "https://www.congress.gov/crs-product/R43397",
+      "id": "R43397_A37_2026-10-27",
+      "date": "2026-10-27",
+      "retrieved": "2026-10-28T06:25:32.499563",
+      "title": "Legislative Branch Appropriations: Frequently Asked Questions",
+      "summary": null,
+      "type": "Reports",
+      "typeId": "R",
+      "active": true,
+      "formats": [
+        {
+          "format": "PDF",
+          "url": "https://www.congress.gov/crs_external_products/R/PDF/R43397/R43397.37.pdf",
+          "sha1": "264c73e065f072820bff571bfe73b61cc114f9fc",
+          "filename": "files/2026-10-27_R43397_264c73e065f072820bff571bfe73b61cc114f9fc.pdf"
+        },
+        {
+          "format": "HTML",
+          "url": "https://www.congress.gov/crs_external_products/R/HTML/R43397.web.html",
+          "sha1": "e500edbb9a8b94251f7ace20fe27473d9263bf3a",
+          "filename": "files/2026-10-27_R43397_e500edbb9a8b94251f7ace20fe27473d9263bf3a.html"
+        }
+      ],
+      "source_dir": "crsreports.congress.gov"
+    },
+    {
+      "source": "Congress.gov",
+      "sourceLink": "https://www.congress.gov/crs-product/R43397",
+      "id": "R43397_A35_2026-04-24",
+      "date": "2026-04-24",
+      "retrieved": "2026-04-25T06:25:30.891467",
+      "title": "Legislative Branch Appropriations: Frequently Asked Questions",
+      "summary": null,
+      "type": "Reports",
+      "typeId": "R",
+      "active": true,
+      "formats": [
+        {
+          "format": "PDF",
+          "url": "https://www.congress.gov/crs_external_products/R/PDF/R43397/R43397.35.pdf",
+          "sha1": "438b8a268575ed5ed7fcba5be177b0d9701f06ea",
+          "filename": "files/2026-04-24_R43397_438b8a268575ed5ed7fcba5be177b0d9701f06ea.pdf"
+        },
+        {
+          "format": "HTML",
+          "url": "https://www.congress.gov/crs_external_products/R/HTML/R43397.web.html",
+          "sha1": "4af3396ca11cb457544f7b77f912440e7f5c03cf",
+          "filename": "files/2026-04-24_R43397_4af3396ca11cb457544f7b77f912440e7f5c03cf.html"
+        }
+      ],
+      "source_dir": "crsreports.congress.gov"
+    },
+    {
+      "source": "Congress.gov",
+      "sourceLink": "https://www.congress.gov/crs-product/R43397",
+      "id": "R43397_A33_2025-07-30",
+      "date": "2025-07-30",
+      "retrieved": "2025-08-13T16:18:58.517153",
+      "title": "Legislative Branch Appropriations: Frequently Asked Questions",
+      "summary": null,
+      "type": "Reports",
+      "typeId": "R",
+      "active": true,
+      "formats": [
+        {
+          "format": "PDF",
+          "url": "https://www.congress.gov/crs_external_products/R/PDF/R43397/R43397.33.pdf",
+          "sha1": "d0a364fab3c3905433394ab7971f212b98662eab",
+          "filename": "files/2025-07-30_R43397_d0a364fab3c3905433394ab7971f212b98662eab.pdf"
+        },
+        {
+          "format": "HTML",
+          "url": "https://www.congress.gov/crs_external_products/R/HTML/R43397.web.html",
+          "sha1": "a55df92ae488a80c855b4e9e12b620db7d1b3756",
+          "filename": "files/2025-07-30_R43397_a55df92ae488a80c855b4e9e12b620db7d1b3756.html"
+        }
+      ],
+      "source_dir": "crsreports.congress.gov"
+    },
+    {
+      "source": "Congress.gov",
+      "sourceLink": "https://www.congress.gov/crs-product/R43397",
+      "id": "R43397_A32_2024-08-08",
+      "date": "2024-08-08",
+      "retrieved": "2025-05-03T22:39:52.434099",
+      "title": "Legislative Branch Appropriations: Frequently Asked Questions",
+      "summary": null,
+      "type": "Reports",
+      "typeId": "R",
+      "active": true,
+      "formats": [
+        {
+          "format": "PDF",
+          "url": "https://www.congress.gov/crs_external_products/R/PDF/R43397/R43397.32.pdf",
+          "sha1": "290d102fff4479b4ba04a45ac4fe38acff2e6614",
+          "filename": "files/2024-08-08_R43397_290d102fff4479b4ba04a45ac4fe38acff2e6614.pdf"
+        },
+        {
+          "format": "HTML",
+          "url": "https://www.congress.gov/crs_external_products/R/HTML/R43397.web.html",
+          "sha1": "7cddbe60be690d0283d751d9f4c1c71d58e635b2",
+          "filename": "files/2024-08-08_R43397_7cddbe60be690d0283d751d9f4c1c71d58e635b2.html"
+        }
+      ],
+      "source_dir": "crsreports.congress.gov"
+    },
+    {
+      "source": "CRSReports.Congress.gov",
+      "sourceLink": "https://crsreports.congress.gov/product/details?prodcode=R43397",
+      "id": "R43397_29_2024-06-11",
+      "date": "2024-06-11",
+      "retrieved": "2024-07-10T04:03:22.807622",
+      "title": "Legislative Branch Appropriations: Frequently Asked Questions",
+      "summary": null,
+      "type": "CRS Report",
+      "typeId": "R",
+      "active": true,
+      "formats": [
+        {
+          "format": "PDF",
+          "url": "https://crsreports.congress.gov/product/pdf/R/R43397/29",
+          "sha1": "2dd009922568b2f93be862f726b87fdac13859b6",
+          "filename": "files/2024-06-11_R43397_2dd009922568b2f93be862f726b87fdac13859b6.pdf"
+        },
+        {
+          "format": "HTML",
+          "filename": "files/2024-06-11_R43397_2dd009922568b2f93be862f726b87fdac13859b6.html",
+          "source": "pymupdf"
+        }
+      ],
+      "source_dir": "crsreports.congress.gov"
+    },
+    {
+      "source": "CRSReports.Congress.gov",
+      "sourceLink": "https://crsreports.congress.gov/product/details?prodcode=R43397",
+      "id": "R43397_27_2024-03-12",
+      "date": "2024-03-12",
+      "retrieved": "2024-07-10T04:03:22.806524",
+      "title": "Legislative Branch Appropriations: Frequently Asked Questions",
+      "summary": null,
+      "type": "CRS Report",
+      "typeId": "R",
+      "active": true,
+      "formats": [
+        {
+          "format": "PDF",
+          "url": "https://crsreports.congress.gov/product/pdf/R/R43397/27",
+          "sha1": "bdf8cc51c8a4e71b59f0f1f6540beb5106c0a572",
+          "filename": "files/2024-03-12_R43397_bdf8cc51c8a4e71b59f0f1f6540beb5106c0a572.pdf"
+        },
+        {
+          "format": "HTML",
+          "filename": "files/2024-03-12_R43397_bdf8cc51c8a4e71b59f0f1f6540beb5106c0a572.html",
+          "source": "pymupdf"
+        }
+      ],
+      "source_dir": "crsreports.congress.gov"
+    },
+    {
+      "source": "CRSReports.Congress.gov",
+      "sourceLink": "https://crsreports.congress.gov/product/details?prodcode=R43397",
+      "id": "R43397_25_2023-10-12",
+      "date": "2023-10-12",
+      "retrieved": "2024-07-10T04:03:22.804995",
+      "title": "Legislative Branch Appropriations: Frequently Asked Questions",
+      "summary": null,
+      "type": "CRS Report",
+      "typeId": "R",
+      "active": true,
+      "formats": [
+        {
+          "format": "PDF",
+          "url": "https://crsreports.congress.gov/product/pdf/R/R43397/25",
+          "sha1": "8e120bfd23e3ade18b925cb56bff37f4927c50cf",
+          "filename": "files/2023-10-12_R43397_8e120bfd23e3ade18b925cb56bff37f4927c50cf.pdf"
+        },
+        {
+          "format": "HTML",
+          "filename": "files/2023-10-12_R43397_8e120bfd23e3ade18b925cb56bff37f4927c50cf.html",
+          "source": "pymupdf"
+        }
+      ],
+      "source_dir": "crsreports.congress.gov"
+    },
+    {
+      "source": "CRSReports.Congress.gov",
+      "sourceLink": "https://crsreports.congress.gov/product/details?prodcode=R43397",
+      "id": "R43397_24_2023-07-11",
+      "date": "2023-07-11",
+      "retrieved": "2024-07-10T04:03:22.804385",
+      "title": "Legislative Branch Appropriations: Frequently Asked Questions",
+      "summary": null,
+      "type": "CRS Report",
+      "typeId": "R",
+      "active": true,
+      "formats": [
+        {
+          "format": "PDF",
+          "url": "https://crsreports.congress.gov/product/pdf/R/R43397/24",
+          "sha1": "052a67ed19858baec0cf5854b6f8e0488336f72a",
+          "filename": "files/2023-07-11_R43397_052a67ed19858baec0cf5854b6f8e0488336f72a.pdf"
+        },
+        {
+          "format": "HTML",
+          "filename": "files/2023-07-11_R43397_052a67ed19858baec0cf5854b6f8e0488336f72a.html",
+          "source": "pymupdf"
+        }
+      ],
+      "source_dir": "crsreports.congress.gov"
+    },
+    {
+      "source": "CRSReports.Congress.gov",
+      "sourceLink": "https://crsreports.congress.gov/product/details?prodcode=R43397",
+      "id": "R43397_23_2023-04-18",
+      "date": "2023-04-18",
+      "retrieved": "2024-07-10T04:03:22.803832",
+      "title": "Legislative Branch Appropriations: Frequently Asked Questions",
+      "summary": null,
+      "type": "CRS Report",
+      "typeId": "R",
+      "active": true,
+      "formats": [
+        {
+          "format": "PDF",
+          "url": "https://crsreports.congress.gov/product/pdf/R/R43397/23",
+          "sha1": "a165bad68658c4cc05addd44f835bf6dd567b0f0",
+          "filename": "files/2023-04-18_R43397_a165bad68658c4cc05addd44f835bf6dd567b0f0.pdf"
+        },
+        {
+          "format": "HTML",
+          "filename": "files/2023-04-18_R43397_a165bad68658c4cc05addd44f835bf6dd567b0f0.html",
+          "source": "pymupdf"
+        }
+      ],
+      "source_dir": "crsreports.congress.gov"
+    },
+    {
+      "source": "CRSReports.Congress.gov",
+      "sourceLink": "https://crsreports.congress.gov/product/details?prodcode=R43397",
+      "id": "R43397_21_2022-10-31",
+      "date": "2022-10-31",
+      "retrieved": "2024-07-10T04:03:22.802445",
+      "title": "Legislative Branch Appropriations: Frequently Asked Questions",
+      "summary": null,
+      "type": "CRS Report",
+      "typeId": "R",
+      "active": true,
+      "formats": [
+        {
+          "format": "PDF",
+          "url": "https://crsreports.congress.gov/product/pdf/R/R43397/21",
+          "sha1": "0f842f3202df1980b0056a36a114c75eaedbde4f",
+          "filename": "files/2022-10-31_R43397_0f842f3202df1980b0056a36a114c75eaedbde4f.pdf"
+        },
+        {
+          "format": "HTML",
+          "filename": "files/2022-10-31_R43397_0f842f3202df1980b0056a36a114c75eaedbde4f.html",
+          "source": "pymupdf"
+        }
+      ],
+      "source_dir": "crsreports.congress.gov"
+    },
+    {
+      "source": "CRSReports.Congress.gov",
+      "sourceLink": "https://crsreports.congress.gov/product/details?prodcode=R43397",
+      "id": "R43397_19_2022-07-14",
+      "date": "2022-07-14",
+      "retrieved": "2024-07-10T04:03:22.801295",
+      "title": "Legislative Branch Appropriations: Frequently Asked Questions",
+      "summary": null,
+      "type": "CRS Report",
+      "typeId": "R",
+      "active": true,
+      "formats": [
+        {
+          "format": "PDF",
+          "url": "https://crsreports.congress.gov/product/pdf/R/R43397/19",
+          "sha1": "0fd4deb1dd902ab7cb624a7a02eb7feacb68deed",
+          "filename": "files/2022-07-14_R43397_0fd4deb1dd902ab7cb624a7a02eb7feacb68deed.pdf"
+        },
+        {
+          "format": "HTML",
+          "filename": "files/2022-07-14_R43397_0fd4deb1dd902ab7cb624a7a02eb7feacb68deed.html",
+          "source": "pymupdf"
+        }
+      ],
+      "source_dir": "crsreports.congress.gov"
+    },
+    {
+      "source": "EveryCRSReport.com",
+      "id": 616518,
+      "date": "2020-02-10",
+      "retrieved": "2020-02-11T23:21:53.941080",
+      "title": "Legislative Branch Appropriations: Frequently Asked Questions",
+      "summary": "This report responds to frequently asked questions about legislative branch appropriations. Frequently asked questions include the items that are funded within this bill; development, presentation, and consideration of the legislative branch budget requests; the legislative branch budget in historical perspective; and recent actions. \nThe House and Senate considered FY2020 legislative branch funding during 2019:\nThe FY2020 legislative branch budget request of $5.288 billion (+9.3%) was submitted on March 11, 2019. \nThe House Legislative Branch Appropriations Subcommittee held hearings in February, March, and April 2019.\nThe Senate Legislative Branch Appropriations Subcommittee held hearings in March and April 2019.\nThe House Appropriations Committee Legislative Branch Subcommittee held a markup on May 1, 2019.\nThe House Appropriations Committee held a markup on May 9, 2019, and ordered an original bill reported (H.R. 2779, H.Rept. 116-64) by recorded vote (28-22). It would provide $3.972 billion, not including Senate items.\nThe Office of Management and Budget (OMB) issued a May 8, 2019, letter with the Administration\u2019s position on the legislative branch budget. \nThe potential inclusion of legislative branch funding in H.R. 2740 (Rules Committee Print 116-17) was discussed in June, although the bill was ultimately agreed to in the House on June 19, 2019, without the legislative branch appropriations funding.\nThe Senate Appropriations Committee held a markup on September 26, 2019, and ordered an original bill reported (S. 2581, S.Rept. 116-124) by recorded vote (31-0). It would provide $3.600 billion, not including House items.\nOn September 27, 2019, a continuing resolution providing funding through November 21, 2019, was enacted (P.L. 116-59). \nOn November 21, 2019, a continuing resolution providing funding through December 20, 2019, was enacted (P.L. 116-69). \nOn December 20, 2019, the Further Consolidated Appropriations Act (P.L. 116-94) was enacted. Division E provides $5.049 billion for legislative branch activities for FY2020 (+$202.8 million, or +4.2%, from the FY2019 level, including the supplemental). Additional language related to the legislative branch was included in Division P. \nPreviously, $4.836 billion was provided for legislative branch operations for FY2019, an increase of $136.0 million (+2.9%) from the FY2018 enacted level (P.L. 115-244, September 21, 2018). In addition, $10.0 million in FY2019 supplemental appropriations was provided to GAO for audits and investigations related to storms and disasters on June 6, 2019 (P.L. 116-20).\nFor additional information, including information on the most recent legislative branch appropriations bills, see CRS Report R45755, Legislative Branch: FY2020 Appropriations, by Ida A. Brudnick.",
+      "type": "CRS Report",
+      "typeId": "REPORTS",
+      "active": true,
+      "formats": [
+        {
+          "format": "HTML",
+          "encoding": "utf-8",
+          "url": "https://www.crs.gov/Reports/R43397",
+          "sha1": "2321ec11ceaf945dc18765d28eaf1b6d145c663b",
+          "filename": "files/20200210_R43397_2321ec11ceaf945dc18765d28eaf1b6d145c663b.html",
+          "images": {
+            "/products/Getimages/?directory=R/html/R43397_files&id=/0.png": "files/20200210_R43397_images_0af9805950fbd1f5ad1403d24ef7b65937185729.png"
+          }
+        },
+        {
+          "format": "PDF",
+          "encoding": null,
+          "url": "https://www.crs.gov/Reports/pdf/R43397",
+          "sha1": "f84c613c35a690939aa306dab01a44d5fb7d85a1",
+          "filename": "files/20200210_R43397_f84c613c35a690939aa306dab01a44d5fb7d85a1.pdf",
+          "images": {}
+        }
+      ],
+      "topics": [
+        {
+          "source": "IBCList",
+          "id": 4774,
+          "name": "Legislative Branch Appropriations"
+        },
+        {
+          "source": "IBCList",
+          "id": 4777,
+          "name": "Congressional Operations, Leadership, & Funding"
+        }
+      ]
+    },
+    {
+      "source": "EveryCRSReport.com",
+      "id": 607486,
+      "date": "2019-11-12",
+      "retrieved": "2019-12-13T15:25:38.337269",
+      "title": "Legislative Branch Appropriations: Frequently Asked Questions",
+      "summary": "This report responds to frequently asked questions about legislative branch appropriations. Frequently asked questions include the items that are funded within this bill; development, presentation, and consideration of the legislative branch budget requests; the legislative branch budget in historical perspective; and recent actions. \nThe House and Senate considered FY2020 legislative branch funding during 2019:\nThe FY2020 legislative branch budget request of $5.288 billion (+9.3%) was submitted on March 11, 2019. \nThe House Legislative Branch Appropriations Subcommittee held hearings in February, March, and April 2019.\nThe Senate Legislative Branch Appropriations Subcommittee held hearings in March and April 2019.\nThe House Appropriations Committee Legislative Branch Subcommittee held a markup on May 1, 2019.\nThe House Appropriations Committee held a markup on May 9, 2019, and ordered an original bill reported (H.R. 2779, H.Rept. 116-64) by recorded vote (28-22). It would provide $3.972 billion, not including Senate items.\nThe Office of Management and Budget (OMB) issued a May 8, 2019, letter with the Administration\u2019s position on the legislative branch budget. \nThe potential inclusion of legislative branch funding in H.R. 2740 (Rules Committee Print 116-17) was discussed in June, although the bill was ultimately agreed to in the House on June 19, 2019, without the legislative branch appropriations funding.\nThe Senate Appropriations Committee held a markup on September 26, 2019, and ordered an original bill reported (S. 2581, S.Rept. 116-124) by recorded vote (31-0). It would provide $3.600 billion, not including House items.\nOn September 27, 2019, a continuing resolution providing funding through November 21, 2019, was enacted (P.L. 116-59).\nPreviously, $4.836 billion was provided for legislative branch operations for FY2019, an increase of $136.0 million (+2.9%) from the FY2018 enacted level (P.L. 115-244, September 21, 2018).\nFor additional information, including information on the most recent legislative branch appropriations bills, see CRS Report R45755, Legislative Branch: FY2020 Appropriations, by Ida A. Brudnick.",
+      "type": "CRS Report",
+      "typeId": "REPORTS",
+      "active": true,
+      "formats": [
+        {
+          "format": "HTML",
+          "encoding": "utf-8",
+          "url": "https://www.crs.gov/Reports/R43397",
+          "sha1": "f6b3b3b2e1c6bb501e2b881eacee9282105c37c2",
+          "filename": "files/20191112_R43397_f6b3b3b2e1c6bb501e2b881eacee9282105c37c2.html",
+          "images": {
+            "/products/Getimages/?directory=R/html/R43397_files&id=/0.png": "files/20191112_R43397_images_c8e0da49cc73c40c70566994fa0da63d04df0cbb.png"
+          }
+        },
+        {
+          "format": "PDF",
+          "encoding": null,
+          "url": "https://www.crs.gov/Reports/pdf/R43397",
+          "sha1": "301e2fe0e4f2d0eb1366b7043c8265a025b8744d",
+          "filename": "files/20191112_R43397_301e2fe0e4f2d0eb1366b7043c8265a025b8744d.pdf",
+          "images": {}
+        }
+      ],
+      "topics": [
+        {
+          "source": "IBCList",
+          "id": 4774,
+          "name": "Legislative Branch Appropriations"
+        },
+        {
+          "source": "IBCList",
+          "id": 4777,
+          "name": "Congressional Operations, Leadership, & Funding"
+        }
+      ]
+    },
+    {
+      "source": "EveryCRSReport.com",
+      "id": 589655,
+      "date": "2019-01-09",
+      "retrieved": "2019-04-17T14:36:51.911895",
+      "title": "Legislative Branch Appropriations: Frequently Asked Questions",
+      "summary": "This report responds to frequently asked questions about legislative branch appropriations. Frequently asked questions include the items that are funded within this bill; development, presentation, and consideration of the legislative branch budget requests; the legislative branch budget in historical perspective; and recent actions. \nThe House and Senate considered FY2019 legislative branch funding during 2018:\nThe FY2019 legislative branch budget request of $4.960 billion was submitted on February 12, 2018. The budget request levels were developed prior to the enactment of full-year appropriations for FY2018. Agency assessments for FY2019 may subsequently have been revised\u2014for example, to account for items funded or not funded in the FY2018 Consolidated Appropriations Act. Subsequent discussions may vary from the levels or language included in the budget request due to this timing. By law, the President includes the legislative branch request in the annual budget submission without change.\nH.R. 5895, which contained funding for the legislative branch, was passed by the House on June 8, 2018 (212-179, Roll No. 257). \nSenate consideration of H.R. 5895 began June 18, 2018, and the Senate agreed to S.Amdt. 2910. H.R. 5895, as amended, passed the Senate on June 25, 2018 (86-5, Record Vote No. 139). \nThe Senate agreed to the conference report (H.Rept. 115-929) on September 12, 2018 (92-5, Record Vote Number 207). \nThe House agreed to the conference report on September 13, 2018 (377-20, Roll No. 399).\nH.R. 5895 was signed into law on September 21, 2018 (P.L. 115-244; the Energy and Water, Legislative Branch, and Military Construction and Veterans Affairs Appropriations Act, 2019).\nThe FY2019 act provides $4.836 billion for the legislative branch, an increase of $136.0 million (+2.9%) from the FY2018 enacted level.\nFor additional information, including information on the most recent legislative branch appropriations bills, see CRS Report R45214, Legislative Branch: FY2019 Appropriations, by Ida A. Brudnick and Sarah J. Eckman.",
+      "type": "CRS Report",
+      "typeId": "REPORTS",
+      "active": true,
+      "formats": [
+        {
+          "format": "HTML",
+          "encoding": "utf-8",
+          "url": "https://www.crs.gov/Reports/R43397",
+          "sha1": "df3a4f4dbdf92b46a6a71232b62bb847ee5b7c53",
+          "filename": "files/20190109_R43397_df3a4f4dbdf92b46a6a71232b62bb847ee5b7c53.html",
+          "images": {
+            "/products/Getimages/?directory=R/html/R43397_files&id=/0.png": "files/20190109_R43397_images_c8e0da49cc73c40c70566994fa0da63d04df0cbb.png"
+          }
+        },
+        {
+          "format": "PDF",
+          "encoding": null,
+          "url": "https://www.crs.gov/Reports/pdf/R43397",
+          "sha1": "3f8722264424ee964c272c6fbed97c86f63b12ef",
+          "filename": "files/20190109_R43397_3f8722264424ee964c272c6fbed97c86f63b12ef.pdf",
+          "images": {}
+        }
+      ],
+      "topics": [
+        {
+          "source": "IBCList",
+          "id": 4774,
+          "name": "Legislative Branch Appropriations"
+        },
+        {
+          "source": "IBCList",
+          "id": 4777,
+          "name": "Congressional Operations, Leadership, & Funding"
+        }
+      ]
+    },
+    {
+      "source": "EveryCRSReport.com",
+      "id": 463213,
+      "date": "2017-08-08",
+      "retrieved": "2017-08-22T13:32:26.061195",
+      "title": "Legislative Branch Appropriations: Frequently Asked Questions ",
+      "summary": "This report responds to frequently asked questions about legislative branch appropriations. Frequently asked questions include the items that are funded within this bill; development, presentation, and consideration of the legislative branch budget requests; the legislative branch budget in historical perspective; and recent actions. \nThe FY2018 legislative branch budget request of $4.865 billion was submitted on May 23, 2017.\nOn June 29, 2017, the House Appropriations Committee ordered reported by voice vote the FY2018 legislative branch appropriations bill (H.R. 3162). It would provide $3.580 billion, not including Senate items (H.Rept. 115-199, July 6, 2017). \nOn July 18, 2017, the text of H.R. 3162 was included in a print issued by the House Rules Committee. The print was referred to as the Make America Secure Appropriations Act, 2018, and was short titled the \u201cDefense, Military Construction, Veterans Affairs, Legislative Branch, and Energy and Water Development National Security Appropriations Act, 2018\u201d (Committee Print 115-30, which also contains the text of H.R. 3219, H.R. 2998, and H.R. 3266).\nThe House Rules Committee met on July 24 and 25, 2017, to consider a special rule for consideration of H.R. 3219, which included legislative branch funding as Division B. A total of 34 proposed amendments were considered by the committee (including 7 the committee considered late or late revised). Ten amendments were made in order (printed in H.Rept. 115-259). The rule for consideration (H.Res. 473) was agreed to in the House on July 26, 2017 (232-192, Roll no. 415).\nThe House proceeded to consideration of H.R. 3219 on July 26. Of the 10 amendments to Division B made in order by H.Res. 473, 9 were offered:\n4 which were agreed to by voice vote,\n2 which failed by voice vote, and\n3 which failed by roll call vote. \nH.R. 3219 was passed in the House the next day (235-192, Roll no. 435).\nAlso on July 27, the Senate Appropriations Committee reported S. 1648 (S.Rept. 115-137), which would provide $3.171 billion, not including House items. \nFor additional information, including information on the most recent legislative branch appropriations bills, see CRS Report R44899, Legislative Branch: FY2018 Appropriations, by Ida A. Brudnick.",
+      "type": "CRS Report",
+      "typeId": "REPORTS",
+      "active": true,
+      "formats": [
+        {
+          "format": "HTML",
+          "encoding": "utf-8",
+          "url": "http://www.crs.gov/Reports/R43397",
+          "sha1": "3f2a741c386f556c8ddb03e734963eada59c806a",
+          "filename": "files/20170808_R43397_3f2a741c386f556c8ddb03e734963eada59c806a.html",
+          "images": {
+            "/products/Getimages/?directory=R/html/R43397_files&id=/0.png": "files/20170808_R43397_images_a8d7dc00e4662fabe665cfadbf694e295fb53d28.png"
+          }
+        },
+        {
+          "format": "PDF",
+          "encoding": null,
+          "url": "http://www.crs.gov/Reports/pdf/R43397",
+          "sha1": "92735ac4e1fa99a1687e926bf818f338c8c4cc0a",
+          "filename": "files/20170808_R43397_92735ac4e1fa99a1687e926bf818f338c8c4cc0a.pdf",
+          "images": {}
+        }
+      ],
+      "topics": [
+        {
+          "source": "IBCList",
+          "id": 4774,
+          "name": "Legislative Branch Appropriations"
+        },
+        {
+          "source": "IBCList",
+          "id": 4777,
+          "name": "Congressional Operations, Leadership, & Funding"
+        }
+      ]
+    },
+    {
+      "source": "EveryCRSReport.com",
+      "id": 454289,
+      "date": "2016-07-14",
+      "retrieved": "2016-10-17T19:45:01.406089",
+      "title": "Legislative Branch Appropriations: Frequently Asked Questions ",
+      "summary": "This report responds to frequently asked questions about legislative branch appropriations. Frequently asked questions include the items that are funded within this bill; development, presentation, and consideration of the legislative branch budget requests; the legislative branch budget in historical perspective; and recent actions. \nFor additional information, including information on the most recent legislative branch appropriations bills (H.R. 5325 and S. 2955), see CRS Report R44515, Legislative Branch: FY2017 Appropriations, by Ida A. Brudnick.",
+      "type": "CRS Report",
+      "typeId": "REPORTS",
+      "active": true,
+      "formats": [
+        {
+          "format": "HTML",
+          "encoding": "utf-8",
+          "url": "http://www.crs.gov/Reports/R43397",
+          "sha1": "9b9bc4aad690c2435d86e4b13dc6a06a4332a713",
+          "filename": "files/20160714_R43397_9b9bc4aad690c2435d86e4b13dc6a06a4332a713.html",
+          "images": null
+        },
+        {
+          "format": "PDF",
+          "encoding": null,
+          "url": "http://www.crs.gov/Reports/pdf/R43397",
+          "sha1": "bedc59c126a345aea2447e98722459d32a763908",
+          "filename": "files/20160714_R43397_bedc59c126a345aea2447e98722459d32a763908.pdf",
+          "images": null
+        }
+      ],
+      "topics": [
+        {
+          "source": "IBCList",
+          "id": 4774,
+          "name": "Legislative Branch Appropriations"
+        },
+        {
+          "source": "IBCList",
+          "id": 4777,
+          "name": "Congressional Operations, Leadership, & Funding"
+        }
+      ]
+    },
+    {
+      "source": "EveryCRSReport.com",
+      "id": 450753,
+      "date": "2016-03-09",
+      "retrieved": "2016-03-24T16:57:47.008492",
+      "title": "Legislative Branch Appropriations: Frequently Asked Questions ",
+      "summary": "This report responds to frequently asked questions about legislative branch appropriations. Frequently asked questions include the items that are funded within this bill; development, presentation, and consideration of the legislative branch budget requests; the legislative branch budget in historical perspective; and recent actions. \nFor additional information, including information on the most recent legislative branch appropriations act, see CRS Report R44029, Legislative Branch: FY2016 Appropriations, by Ida A. Brudnick.",
+      "type": "CRS Report",
+      "typeId": "REPORTS",
+      "active": true,
+      "formats": [
+        {
+          "format": "HTML",
+          "encoding": "utf-8",
+          "url": "http://www.crs.gov/Reports/R43397",
+          "sha1": "d906b523fc81f014e5b481701f17f57bd941069f",
+          "filename": "files/20160309_R43397_d906b523fc81f014e5b481701f17f57bd941069f.html",
+          "images": null
+        },
+        {
+          "format": "PDF",
+          "encoding": null,
+          "url": "http://www.crs.gov/Reports/pdf/R43397",
+          "sha1": "06f66b93f38bac0c224aaab64f5ee2183d4ef58a",
+          "filename": "files/20160309_R43397_06f66b93f38bac0c224aaab64f5ee2183d4ef58a.pdf",
+          "images": null
+        }
+      ],
+      "topics": [
+        {
+          "source": "IBCList",
+          "id": 2348,
+          "name": "Legislative Branch Appropriations"
+        }
+      ]
+    }
+  ],
+  "topics": [
+    "Appropriations"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "id": "IF12345",
+  "type": "CRS In Focus",
+  "typeId": "IF",
+  "number": "IF12345",
+  "active": true,
+  "source": "CRSReports.Congress.gov",
+  "versions": [
+    {
+      "source": "CRSReports.Congress.gov",
+      "sourceLink": "https://crsreports.congress.gov/product/details?prodcode=IF12345",
+      "id": "IF12345_1_2023-03-14",
+      "date": "2023-03-14",
+      "retrieved": "2023-04-15T04:03:35.331766",
+      "title": "Defense Health Primer: TRICARE Comprehensive Autism Care Demonstration ",
+      "summary": null,
+      "type": "CRS In Focus",
+      "typeId": "IF",
+      "active": true,
+      "formats": [
+        {
+          "format": "PDF",
+          "url": "https://crsreports.congress.gov/product/pdf/IF/IF12345/1",
+          "sha1": "1087fe4e8af95026423404068d5a04b79a489c4f",
+          "filename": "files/2023-03-14_IF12345_1087fe4e8af95026423404068d5a04b79a489c4f.pdf"
+        },
+        {
+          "format": "HTML",
+          "filename": "files/2023-03-14_IF12345_1087fe4e8af95026423404068d5a04b79a489c4f.html",
+          "source": "pymupdf"
+        }
+      ],
+      "source_dir": "crsreports.congress.gov"
+    }
+  ],
+  "topics": [
+    "National Defense"
+  ]
+}
