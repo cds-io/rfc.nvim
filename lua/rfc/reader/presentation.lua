@@ -59,7 +59,10 @@ return function(deps)
     local function show(model, destination)
         model.name, model.document = destination.name, destination.document
         model.markdown = destination.document.markdown
-        presenter.show(model)
+        -- the views a jump back saved are of the styled layout; the view applies
+        -- them once that draw is in
+        presenter.show(model, { views = model.restore_views })
+        model.restore_views = nil
         deps.bindings(model.buf)
         if deps.attach then
             deps.attach(model.buf)
@@ -101,14 +104,6 @@ return function(deps)
                 return
             end
             show(model, destination)
-            for win, saved in pairs(model.restore_views or {}) do
-                if vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) == buf then
-                    vim.api.nvim_win_call(win, function()
-                        vim.fn.winrestview(saved)
-                    end)
-                end
-            end
-            model.restore_views = nil
             if after then
                 after(model)
             end

@@ -11,6 +11,14 @@ local function wait_document(name)
         return vim.api.nvim_buf_get_name(0) == "rfc://document/" .. name and model() and model().doc ~= nil
     end)
 end
+--- The document shown and its styled draw in: the view draws the Markdown
+--- first and styles a tick later.
+local function wait_styled(name)
+    return wait_document(name)
+        and vim.wait(3000, function()
+            return model() and model().doc and model().doc.styled == true
+        end)
+end
 local function feed(keys)
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), "x", false)
 end
@@ -218,7 +226,10 @@ describe("the shared RFC document reader", function()
         vim.api.nvim_buf_delete(origin, { force = true })
         feed("<C-T>")
         assert.is_true(wait_document("rfc9110"))
-        assert.same(saved, vim.api.nvim_win_get_cursor(0))
+        -- the saved view is of the styled layout, applied once that draw is in
+        assert.is_true(vim.wait(2000, function()
+            return vim.deep_equal(saved, vim.api.nvim_win_get_cursor(0))
+        end))
         assert.same({ "9110", "2616" }, case.fetched)
     end)
 
@@ -325,37 +336,40 @@ describe("the shared RFC document reader", function()
 
         it("follows rendered tag spans and retains the source contract", function()
             vim.cmd("Rfc 9110")
-            assert.is_true(wait_document("rfc9110"))
+            assert.is_true(wait_styled("rfc9110"))
             assert.equals("rfc-document", vim.bo.filetype)
             assert.is_true(model().doc.styled)
             assert.is_true(model().doc.source == model().document)
             cursor_on("rfc-tag:rfc2616-14.4")
             local position = vim.api.nvim_win_get_cursor(0)
             feed("<C-]>")
-            assert.is_true(wait_document("rfc2616"))
+            assert.is_true(wait_styled("rfc2616"))
             assert.matches("Accept%-Language", vim.api.nvim_get_current_line())
             feed("<C-T>")
+            assert.is_true(wait_styled("rfc9110"))
             assert.same(position, vim.api.nvim_win_get_cursor(0))
         end)
 
         it("follows the leftmost rendered link on Enter rather than the shortest span", function()
             vim.cmd("Rfc 9110")
-            assert.is_true(wait_document("rfc9110"))
+            assert.is_true(wait_styled("rfc9110"))
             cursor_on("rfc-tag:rfc2616-14.4")
             feed("<CR>")
-            assert.is_true(wait_document("rfc2616"))
+            assert.is_true(wait_styled("rfc2616"))
             assert.matches("Accept%-Language", vim.api.nvim_get_current_line())
         end)
 
         it("redraws on colorscheme changes and falls back if vellum fails", function()
             vim.cmd("Eip 20")
-            assert.is_true(wait_document("eip20"))
+            assert.is_true(wait_styled("eip20"))
             local calls = fake.calls
             vim.api.nvim_exec_autocmds("ColorScheme", {})
             assert.is_true(fake.calls > calls)
             fake.fail = true
             vim.api.nvim_exec_autocmds("ColorScheme", {})
-            assert.is_false(model().doc.styled)
+            assert.is_true(vim.wait(2000, function()
+                return model().doc.styled == false
+            end))
             assert.equals("markdown", vim.bo.filetype)
             require("rfc").jump("eip20-abstract")
             assert.matches("ABSTRACT", vim.api.nvim_get_current_line())
@@ -370,7 +384,7 @@ describe("the shared RFC document reader", function()
             fake.wait = false
             vim.cmd.edit(vim.fn.fnameescape(vim.api.nvim_buf_get_name(buf)))
             assert.is_true(vim.wait(2000, function()
-                return model() and model() ~= old and model().doc ~= nil
+                return model() and model() ~= old and model().doc ~= nil and model().doc.styled
             end))
             local calls = fake.calls
             vim.wait(600)
