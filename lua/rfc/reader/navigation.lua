@@ -1,6 +1,8 @@
 -- Tag navigation, cursor links and document history.
 local document = require("cds.document")
 local navigator = require("cds.navigator")
+local sources = require("rfc.sources")
+local names = require("rfc.app.names")
 return function(model_of, fresh, show, resolve, notify)
     local M = {}
     local nav = navigator.new()
@@ -27,9 +29,38 @@ return function(model_of, fresh, show, resolve, notify)
         end
         return landed
     end
+    --- The buffer holding the tag's document with a rendering in it, or
+    --- nil: a document shown earlier in this session and hidden since.
+    ---@param tag string
+    ---@return integer|nil
+    local function held_buffer(tag)
+        local source = sources.of(tag)
+        if not source then
+            return nil
+        end
+        local id = names.id_of(source, tag)
+        local name = "rfc://document/" .. (id and names.tag_of(source, id) or (source.prefix .. "-subjects"))
+        local buf = vim.fn.bufnr(name)
+        if buf == -1 or not vim.api.nvim_buf_is_loaded(buf) then
+            return nil
+        end
+        local model = model_of(buf)
+        return model and model.doc and buf or nil
+    end
+
     function M.jump(tag)
         local win = vim.api.nvim_get_current_win()
         if jump(win, tag, true) then
+            return
+        end
+        -- a document rendered earlier in this session and hidden since is
+        -- shown as it is: no resolve, no render
+        local held = held_buffer(tag)
+        if held then
+            vim.api.nvim_win_set_buf(win, held)
+            if not jump(win, tag, false) then
+                vim.api.nvim_win_set_cursor(win, { 1, 0 })
+            end
             return
         end
         nav.follow(win, tag, resolve, function(destination, err, done)

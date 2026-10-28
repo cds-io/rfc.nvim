@@ -267,6 +267,24 @@ describe("the shared RFC document reader", function()
         assert.is_true(ticks > 1, "ticks: " .. ticks)
     end)
 
+    it("shows a hidden document buffer again without resolving or rendering it again", function()
+        vim.cmd("Rfc 9110")
+        assert.is_true(wait_document("rfc9110"))
+        local buf, doc = vim.api.nvim_get_current_buf(), model().doc
+        local draws = model().draws
+        vim.cmd("enew")
+        assert.are_not.equal(buf, vim.api.nvim_get_current_buf())
+        vim.cmd("Rfc 9110")
+        assert.is_true(wait_document("rfc9110"))
+        assert.equals(buf, vim.api.nvim_get_current_buf())
+        assert.is_true(model().doc == doc)
+        assert.equals(draws, model().draws)
+        assert.same({ "9110" }, case.fetched)
+        require("rfc").jump("rfc9110-3.1")
+        assert.equals(buf, vim.api.nvim_get_current_buf())
+        assert.is_true(vim.api.nvim_win_get_cursor(0)[1] > 1)
+    end)
+
     it("turns list markers off in a document window, since the rendering pads its lines", function()
         vim.o.list = true
         vim.cmd("Rfc 9110")
