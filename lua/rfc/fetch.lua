@@ -1,7 +1,8 @@
 -- The network, as Tasks: the RFC Editor's text, index and subject tags,
 -- the Ethereum proposals' repositories and listing pages, the Bitcoin
--- proposals' repository, and the Solana proposals' directory and files. A
--- spec replaces the eight functions below with Tasks of fixture text.
+-- proposals' repository, the Solana proposals' directory and files, and the
+-- CRS reports' records and files. A spec replaces the functions below with
+-- Tasks of fixture text.
 local Task = require("cds.task")
 local http = require("cds.http")
 local status = http.status
@@ -153,6 +154,24 @@ function M.w3c(url, shortname, since)
         local modified = res.headers["last-modified"] and w3c.parse_http_time(res.headers["last-modified"])
         return { body = res.body, modified = modified or os.time() }
     end)
+end
+
+local CRS = "https://www.everycrsreport.com/"
+
+--- A CRS report's JSON record on EveryCRSReport.com, by its number as the
+--- site spells it (uppercase).
+---@param number string   -- R43397
+---@return cds.Task
+function M.crs_json(number)
+    return text(CRS .. "reports/" .. number .. ".json", "CRS " .. number)
+end
+
+--- A CRS report's HTML rendering, by the file name its record gives.
+---@param filename string   -- files/2026-10-27_R43397_<sha1>.html
+---@param number string     -- for the message
+---@return cds.Task
+function M.crs_html(filename, number)
+    return text(CRS .. filename, "CRS " .. number)
 end
 
 --- A listing page, every proposal under its status.

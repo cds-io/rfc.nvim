@@ -48,6 +48,7 @@ define("Eip", "eip", "Open an EIP or ERC as help: a number, a tag, subjects, a s
 define("Bip", "bip", "Open a BIP as help: a number, a tag, subjects, a search, or nothing for the index")
 define("Simd", "simd", "Open a SIMD as help: a number, a tag, a search, or nothing for the index")
 define("W3c", "w3c", "Open a W3C report as help: a shortname, a tag, subjects, a search, or nothing for the index")
+define("Crs", "crs", "Open a CRS report as help: a number, a tag, subjects, a search, or nothing for the index")
 
 vim.api.nvim_create_autocmd("FileType", {
     pattern = "help",

@@ -3,7 +3,8 @@
 -- how its index reads, and how its text renders. The RFC Editor is one;
 -- Ethereum's proposals are another, over two repositories that share one
 -- number space (ERC-20 is EIP-20), so the reader never has to say which;
--- Bitcoin's proposals are the third and Solana's the fourth.
+-- Bitcoin's proposals are the third, Solana's the fourth, the W3C's reports
+-- the fifth and the Congressional Research Service's the sixth.
 local fp = require("cds.fp")
 local M = {
     rfc = require("rfc.sources.rfc"),
@@ -11,8 +12,9 @@ local M = {
     bip = require("rfc.sources.bip"),
     simd = require("rfc.sources.simd"),
     w3c = require("rfc.sources.w3c"),
+    crs = require("rfc.sources.crs"),
 }
-M.all = { M.rfc, M.eip, M.bip, M.simd, M.w3c }
+M.all = { M.rfc, M.eip, M.bip, M.simd, M.w3c, M.crs }
 
 --- The source a tag belongs to, by its prefix or one of the aliases, or
 --- nil: a document's tag (eip1559-abstract) or a subjects tag

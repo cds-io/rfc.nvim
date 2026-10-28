@@ -47,7 +47,7 @@ function M.start()
             end,
         }, extra or {}))
     end
-    case.setup({ rfc = true, eip = true, bip = true, simd = true, w3c = true })
+    case.setup({ rfc = true, eip = true, bip = true, simd = true, w3c = true, crs = true })
 
     --- What a stub does: records what was asked, answers the fixture, or
     --- refuses as the network would for a document outside them.
@@ -94,12 +94,30 @@ function M.start()
         meta = fixtures.eips_meta,
         informational = fixtures.eips_informational,
     }
+    -- the CRS topic pages: three as fixtures, the other twenty-nine as a
+    -- page with the heading alone
+    local topics = {
+        ["economic-policy"] = fixtures.crs_econ,
+        ["national-defense"] = fixtures.crs_defense,
+        appropriations = fixtures.crs_approp,
+    }
     fetch.listing = function(url)
         if url:match("bitcoin") then
             return answer("bip-index", fixtures.bips_readme)
         end
         if url == "https://www.w3.org/TR/" then
             return answer("w3c-index", fixtures.w3c_tr)
+        end
+        local slug = url:match("everycrsreport%.com/topics/([%w%-]+)%.html")
+        if slug then
+            table.insert(case.fetched, "crs-topic-" .. slug)
+            if topics[slug] then
+                return text_of(topics[slug])
+            end
+            local title = slug:gsub("%-", " "):gsub("(%a)(%w*)", function(first, rest)
+                return first:upper() .. rest
+            end)
+            return Task.of("<h1>" .. title .. "</h1>\n")
         end
         local category = url:match("eips%.ethereum%.org/(%a+)")
         table.insert(case.fetched, "eips-" .. category)
@@ -147,6 +165,28 @@ function M.start()
     local bips = { ["32"] = fixtures.bip32, ["22"] = fixtures.bip22, ["341"] = fixtures.bip341, ["3"] = fixtures.bip3 }
     fetch.bip = function(id)
         return answer("bip" .. id, bips[id], "BIP " .. id .. " does not exist")
+    end
+    -- CRS reports: the JSON record by number, the HTML by its file name;
+    -- `case.crs_no_html = true` strips the HTML format from a record, as a
+    -- PDF-only report would read
+    local records = { R43397 = fixtures.crs_r43397_json, IF12345 = fixtures.crs_if12345_json }
+    fetch.crs_json = function(number)
+        table.insert(case.fetched, "crs-" .. number .. ".json")
+        if not records[number] then
+            return Task.fail("CRS " .. number .. " does not exist")
+        end
+        local text = table.concat(fixtures.read(records[number]), "\n") .. "\n"
+        if case.crs_no_html then
+            text = text:gsub('{%s*\n%s*"format": "HTML".-}', "")
+        end
+        return Task.of(text)
+    end
+    fetch.crs_html = function(filename, number)
+        table.insert(case.fetched, "crs-" .. number .. ".html")
+        if not filename:match("R43397") then
+            return Task.fail("CRS " .. number .. " does not exist")
+        end
+        return text_of(fixtures.crs_r43397)
     end
     local function restore()
         for name, fn in pairs(saved.fetch) do
