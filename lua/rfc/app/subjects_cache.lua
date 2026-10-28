@@ -7,6 +7,7 @@ local cds_subjects = require("rfc.source.subjects")
 local lifecycle = require("rfc.status")
 local fp = require("cds.fp")
 local metadata = require("rfc.app.entries")
+local progress = require("rfc.app.progress")
 local index_of, subjects_index_of, raw_of = metadata.index_of, metadata.subjects_index_of, metadata.raw_of
 local with_status = metadata.with_status
 local M = {}
@@ -57,10 +58,12 @@ function M.subjects_of(source)
         table.insert(from, index_of(source))
     end
     local function prepare(lines, index_lines)
+        progress.phase(source.prefix, "parsing metadata")
         local entries, err = s.entries(lines)
         if not entries then
             return nil, err
         end
+        progress.phase(source.prefix, "filing")
         if status then
             local standing = fp.set(
                 fp.filter(with_status(source, source.entries(index_lines)), function(e)
@@ -82,6 +85,9 @@ function M.subjects_of(source)
         version = version,
         prepare = prepare,
         render_model = subjects.render_model,
+        phase = function(stage)
+            progress.phase(source.prefix, stage)
+        end,
     })
 end
 

@@ -10,7 +10,7 @@ local entries = require("rfc.app.entries")
 local index_of, statuses_of = entries.index_of, entries.statuses_of
 local cached = require("rfc.app.subjects_cache")
 local subjects_of, subjects_fresh = cached.subjects_of, cached.subjects_fresh
-return function(help_tag, refresh)
+return function(help_tag, refresh, report)
     local M = { notify = session.notify, index_lines = entries.index_lines, ensure_subjects = cached.ensure_subjects }
     --- Runs `done` once the source's subjects document is in the store: a
     --- source the reader has not enabled is refused in words, a fetch is
@@ -30,6 +30,10 @@ return function(help_tag, refresh)
         end
         if not subjects_fresh(source) then
             M.notify("fetching the " .. source.label .. " subjects")
+        end
+        -- the pipeline runs before the jump, so the report starts here
+        if report then
+            report(name)
         end
         run(M.ensure_subjects(source), source.label .. " subjects", function(_, err)
             if err then

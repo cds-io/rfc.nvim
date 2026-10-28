@@ -22,6 +22,15 @@ q                        close the document window, or show an empty buffer
 :helpgrep MUST NOT        search cached help exports
 ```
 
+A document whose preparation runs past half a second (the CRS subjects
+page fetches 32 topic pages and files 23,000 reports) gets a progress
+dashboard above its window: the phases in order with the one running
+marked, a bar over the pages, the elapsed time. The Markdown shows as
+soon as it is built and the styled page replaces it, so you read while
+the dashboard finishes; it closes a beat after the last phase, or on
+`q`. `progress = { show_after = 500, linger = 1500 }` in `setup` are the
+two timings.
+
 Commands open `rfc://document/<tag>` buffers. They retain explicit W3C HTML
 IDs alongside numbered section tags, so both `w3c-wcag22#intro` and its
 numbered tag navigate to the same source heading when the report defines

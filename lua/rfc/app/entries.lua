@@ -7,6 +7,7 @@ local fp = require("cds.fp")
 local Task = require("cds.task")
 local lifecycle = require("rfc.status")
 local session = require("rfc.app.session")
+local progress = require("rfc.app.progress")
 local tag_of = require("rfc.app.names").tag_of
 local M = {}
 
@@ -113,6 +114,9 @@ function M.document_of(source, id)
             return assert(source.prepare, "document source supplies a source plan")(id, lines, url())
         end,
         render_model = source.render_model,
+        phase = function(stage)
+            progress.phase(source.prefix, stage)
+        end,
     })
 end
 --- The entries with their statuses: as the index gives them, or, for a
@@ -158,6 +162,7 @@ function M.index_lines(source)
     -- says so; a fresh copy reads silently
     if not index:fresh() then
         session.notify("fetching the " .. source.label .. " index")
+        progress.phase(source.prefix, "reading source")
     end
     return index:lines()
 end

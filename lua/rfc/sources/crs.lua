@@ -6,6 +6,7 @@ local w3c = require("rfc.source.w3c")
 local subjects = require("rfc.source.subjects")
 local Task = require("cds.task")
 local fp = require("cds.fp")
+local progress = require("rfc.app.progress")
 
 local M = {}
 
@@ -31,10 +32,12 @@ local NOT_A_TOPIC = { ["CRS Insights"] = true }
 --- one text: the index and the taxonomy in one cached file.
 ---@return cds.Task
 local function index()
+    progress.phase("crs", "reading source", #TOPICS)
     local pages = fp.map(TOPICS, function(slug)
         return fetch
             .listing(crs.BASE .. "topics/" .. slug .. ".html", "the CRS " .. slug .. " topic")
             :map(function(text)
+                progress.tick("crs")
                 return crs.marker(slug) .. "\n" .. text
             end)
     end)

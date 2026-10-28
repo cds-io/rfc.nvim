@@ -20,8 +20,22 @@ function Reader.new(deps)
             navigation.target
         )
     end
-    local presentation = require("rfc.reader.presentation")({
-        resolve = deps.resolve,
+    local reporting = require("rfc.reader.progress")
+    local presentation
+    --- Resolves a tag with a progress report started for it, since both
+    --- the read of an :edit and a jump come through here; a refusal ends
+    --- the report with its reason.
+    local function resolve(tag, done)
+        local report = reporting.report_for(tag, vim.api.nvim_get_current_win())
+        deps.resolve(tag, function(destination, err)
+            if not destination and report then
+                report:fail(err or "document not available")
+            end
+            done(destination, err)
+        end)
+    end
+    presentation = require("rfc.reader.presentation")({
+        resolve = resolve,
         notify = deps.notify,
         reload_toc = deps.toc.reload,
         attach = deps.attach,
@@ -37,11 +51,13 @@ function Reader.new(deps)
         presentation.model,
         presentation.fresh,
         presentation.show,
-        deps.resolve,
+        resolve,
         deps.notify
     )
     M.read, M.reload, M.model, M.attach_window =
         presentation.read, presentation.reload, presentation.model, presentation.attach_window
+    M.dashboard_window, M.progress_report = reporting.dashboard_window, reporting.progress_report
+    M.report_for, M.close_dashboards = reporting.report_for, reporting.close_dashboards
     M.jump, M.back, M.follow = navigation.jump, navigation.back, navigation.follow
     M.headings, M.step, M.forget = navigation.headings, navigation.step, navigation.forget
     return M

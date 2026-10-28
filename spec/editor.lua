@@ -50,6 +50,10 @@ function M.start()
             cache_dir = case.dir,
             sources = sources,
             view = "rich", -- legacy help regressions explicitly exercise the help backend
+            -- no dashboard unless a case asks for one: a fixture's styled
+            -- render can run past the reader's half-second gate, and a
+            -- dashboard left up would reach into the next case's windows
+            progress = { show_after = 60000, linger = 50 },
             notify = function(msg, level, opts)
                 local list = msg:match("^fetching the .* index$") and case.index_notices or case.notices
                 table.insert(list, { msg = msg, level = level, title = opts.title })
@@ -206,6 +210,7 @@ function M.start()
         -- store's root leaves the runtimepath so the next case's root is the
         -- only one
         require("rfc.toc").close_all()
+        require("rfc").close_dashboards()
         pcall(vim.cmd, "helpclose")
         for _, buf in ipairs(vim.api.nvim_list_bufs()) do
             if

@@ -32,7 +32,9 @@ local navigation = require("rfc.app.navigation")(
     end,
     refresh
 )
-subject_ui = require("rfc.app.subject_ui")(navigation.help_tag, refresh)
+subject_ui = require("rfc.app.subject_ui")(navigation.help_tag, refresh, function(tag)
+    return reader.report_for(tag, vim.api.nvim_get_current_win())
+end)
 local picker = require("rfc.app.picker")(navigation.open, navigation.jump, subject_ui.subjects)
 local completion = require("rfc.app.completion")
 bindings = require("rfc.app.bindings")(
@@ -61,5 +63,7 @@ M.status, M.nodes, M.subjects = subject_ui.status, subject_ui.nodes, subject_ui.
 M.candidates, M.complete = completion.candidates, completion.complete
 M.owns, M.step, M.attach = owns, bindings.step, bindings.attach
 M.read_document, M.document_model, M.document_headings = reader.read, reader.model, reader.headings
+M.dashboard_window, M.progress_report, M.close_dashboards =
+    reader.dashboard_window, reader.progress_report, reader.close_dashboards
 M.document_window, M.document_forget = reader.attach_window, reader.forget
 return M

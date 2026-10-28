@@ -185,6 +185,39 @@ describe("the shared RFC document reader", function()
         assert.matches("no anchor", case.notices[#case.notices].msg)
     end)
 
+    it("shows a progress dashboard above a document being prepared and closes it once the page is final", function()
+        case.setup(
+            { rfc = true, eip = true, bip = true, simd = true, w3c = true, crs = true },
+            { view = "document", progress = { show_after = 0, linger = 50 } }
+        )
+        local owner = vim.api.nvim_get_current_win()
+        vim.cmd("Crs subjects")
+        assert.is_true(vim.wait(3000, function()
+            return require("rfc").dashboard_window(owner) ~= nil
+        end))
+        local report = require("rfc").progress_report(owner)
+        assert.is_not_nil(report)
+        assert.is_true(wait_document("crs-subjects"))
+        assert.is_true(vim.wait(3000, function()
+            return report:finished()
+        end))
+        local fp = require("cds.fp")
+        assert.same(
+            { "reading source", "parsing metadata", "filing", "writing the page", "styling" },
+            fp.map(report.phases, function(phase)
+                return phase.name
+            end)
+        )
+        assert.equals(32, report.phases[1].of)
+        assert.equals(32, report.phases[1].count)
+        for _, phase in ipairs(report.phases) do
+            assert.equals("done", phase.status, phase.name)
+        end
+        assert.is_true(vim.wait(2000, function()
+            return require("rfc").dashboard_window(owner) == nil
+        end))
+    end)
+
     it("turns list markers off in a document window, since the rendering pads its lines", function()
         vim.o.list = true
         vim.cmd("Rfc 9110")

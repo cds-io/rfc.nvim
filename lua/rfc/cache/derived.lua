@@ -25,6 +25,7 @@ local M = {}
 ---@field render_model nil|fun(model: rfc.SourceModel): rfc.HelpDoc|nil, string|nil
 ---@field context rfc.PreparationContext? -- extra preparation dependencies, such as the report URL
 ---@field limit integer|nil       -- how many inputs are produced at once; all without
+---@field phase nil|fun(name: string) -- told the stage about to run, for a progress report
 local Derived = {}
 Derived.__index = Derived
 
@@ -67,32 +68,51 @@ function Derived:ensure()
             return t:limited(permits)
         end)
     end
-    return task().all(tasks):on_main():bind_result(function(snapshots)
-        local key = source_key(self, snapshots)
-        local inputs = { n = snapshots.n or #snapshots }
-        for i = 1, inputs.n do
-            inputs[i] = snapshots[i].lines
+    local function phase(name)
+        if self.phase then
+            self.phase(name)
         end
-        local doc, err
-        if self.render_model then
-            local model
-            model, err = prepare_model(self, inputs, key)
+    end
+    -- a tick between the stages lets a dashboard repaint between two
+    -- synchronous steps
+    return task()
+        .all(tasks)
+        :on_main()
+        :tick()
+        :bind_result(function(snapshots)
+            local key = source_key(self, snapshots)
+            local inputs = { n = snapshots.n or #snapshots }
+            for i = 1, inputs.n do
+                inputs[i] = snapshots[i].lines
+            end
+            if not self.render_model then
+                return { inputs = inputs, key = key }
+            end
+            local model, err = prepare_model(self, inputs, key)
             if not model then
                 return nil, err
             end
-            doc, err = self.render_model(model)
-        else
-            doc, err = assert(self.produce, "derived entry supplies a renderer")(unpack(inputs, 1, inputs.n or #inputs))
-        end
-        if not doc then
-            return nil, err
-        end
-        local ok, werr = store.write_doc(self.cfg, self.name, doc)
-        if ok and self.render_model then
-            models.export(self:path(), key)
-        end
-        return ok and self.name or nil, werr
-    end)
+            return { model = model, key = key }
+        end)
+        :tick()
+        :bind_result(function(prepared)
+            phase("writing the page")
+            local doc, err
+            if prepared.model then
+                doc, err = self.render_model(prepared.model)
+            else
+                local inputs = prepared.inputs
+                doc, err = assert(self.produce, "derived entry supplies a renderer")(unpack(inputs, 1, inputs.n))
+            end
+            if not doc then
+                return nil, err
+            end
+            local ok, werr = store.write_doc(self.cfg, self.name, doc)
+            if ok and self.render_model then
+                models.export(self:path(), prepared.key)
+            end
+            return ok and self.name or nil, werr
+        end)
 end
 
 Derived.source_model = models.source_model
@@ -105,7 +125,7 @@ function Derived:memo(name, parse)
 end
 
 ---@param cfg rfc.Config
----@param spec { name: string, from: rfc.Fetched[], version: string, produce?: (fun(...: string[]): rfc.HelpDoc|nil, string|nil), render_model?: (fun(model: rfc.SourceModel): rfc.HelpDoc|nil, string|nil), context?: rfc.PreparationContext, prepare?: (fun(...: string[]): rfc.SourceModel|nil, string|nil), limit?: integer }
+---@param spec { name: string, from: rfc.Fetched[], version: string, produce?: (fun(...: string[]): rfc.HelpDoc|nil, string|nil), render_model?: (fun(model: rfc.SourceModel): rfc.HelpDoc|nil, string|nil), context?: rfc.PreparationContext, prepare?: (fun(...: string[]): rfc.SourceModel|nil, string|nil), limit?: integer, phase?: fun(name: string) }
 ---@return rfc.Derived
 function M.derived(cfg, spec)
     return setmetatable({
@@ -116,6 +136,7 @@ function M.derived(cfg, spec)
         produce = spec.produce,
         prepare = spec.prepare,
         render_model = spec.render_model,
+        phase = spec.phase,
         context = spec.context,
         limit = spec.limit,
     }, Derived)

@@ -2,6 +2,8 @@
 local document = require("cds.document")
 local vellum = require("cds.vellum")
 local document_view = require("cds.document_view")
+local sources = require("rfc.sources")
+local progress = require("rfc.app.progress")
 return function(deps)
     local M, models, wiped = {}, {}, {}
     local ns = vim.api.nvim_create_namespace("rfc.document")
@@ -61,7 +63,8 @@ return function(deps)
         model.markdown = destination.document.markdown
         -- the views a jump back saved are of the styled layout; the view applies
         -- them once that draw is in
-        presenter.show(model, { views = model.restore_views })
+        local source = sources.of(destination.name)
+        presenter.show(model, { views = model.restore_views, report = source and progress.current(source.prefix) })
         model.restore_views = nil
         deps.bindings(model.buf)
         if deps.attach then

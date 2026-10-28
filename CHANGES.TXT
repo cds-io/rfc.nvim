@@ -1,3 +1,24 @@
+2026-10-28  A progress dashboard above a document being prepared
+
+  lua/rfc/app/progress.lua, lua/rfc/reader/presentation.lua, lua/rfc/reader/init.lua,
+  lua/rfc/app/subject_ui.lua, lua/rfc/app/subjects_cache.lua, lua/rfc/app/entries.lua,
+  lua/rfc/app/resolve.lua, lua/rfc/cache/derived.lua, lua/rfc/sources/crs.lua, lua/rfc/config.lua,
+  lua/rfc/needs.lua, doc/manual.lua, README.md
+    A document whose preparation runs past progress.show_after milliseconds
+    gets a cds.dashboard above its window showing a cds.progress report:
+    the source, the elapsed time, the phases in order (reading the source
+    with a bar over its pages, parsing metadata, filing, writing the page,
+    styling) with the one running marked. The report is keyed by source
+    prefix in rfc.app.progress, so the pipeline's stages report by prefix:
+    the CRS index ticks a page per topic page, the subjects preparation
+    names its parsing and filing, the derived page names its writing and
+    hops a main-loop tick between its stages so the dashboard repaints,
+    and the document view reports the styling. The subjects command starts
+    the report before its pipeline, since its jump comes after; the
+    reader's shared resolve starts one for any other open. The dashboard
+    closes progress.linger milliseconds after the last phase, or on q.
+    needs.lua declares dashboard.new and progress.new.
+
 2026-10-28  A source's cache clears with its command and a bang
 
   lua/rfc/app/clear.lua, lua/rfc/app/command.lua, plugin/rfc.lua, doc/manual.lua, README.md

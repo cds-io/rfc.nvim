@@ -15,6 +15,8 @@ return {
     vellum = { "render", "restyle", "forget" },
     activity = { "new" },
     companion = { "new" },
+    dashboard = { "new" },
+    progress = { "new" },
     command = { "register" },
     persist = { "write_lines" },
     async = { "semaphore" },

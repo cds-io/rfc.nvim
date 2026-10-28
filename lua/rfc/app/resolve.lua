@@ -52,6 +52,7 @@ return function(tag, done)
     end
     if not raw_of(source, id):cached() then
         M.notify("fetching " .. source.label .. " " .. id)
+        require("rfc.app.progress").phase(source.prefix, "fetching the text")
     end
     run(M.ensure(source, id), source.label .. " " .. id, function(name, err)
         if err then

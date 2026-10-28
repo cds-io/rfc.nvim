@@ -220,6 +220,15 @@
 ---
 --- `require("rfc").activity()` is a statusline segment naming the fetches
 --- out, with their seconds; `User RfcActivity` fires when one starts or ends.
+---
+--- A document whose preparation runs past `progress.show_after` milliseconds
+--- (500 unless set) gets a dashboard above its window: the source, the
+--- elapsed time, the phases in order (reading the source, a bar over its
+--- pages where it has them, parsing, filing, writing the page, styling) with
+--- the one running marked. The Markdown shows as soon as it is built and the
+--- styled page replaces it, so the reader reads while the dashboard
+--- finishes; it closes `progress.linger` milliseconds (1500) after the last
+--- phase, or on `q`.
 
 ---@tag rfc.nvim-setup rfc.setup()
 ---@toc_entry Setup

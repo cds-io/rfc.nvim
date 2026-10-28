@@ -226,6 +226,15 @@ files and rebuilds the tags file; delete the directory to start over.
 `require("rfc").activity()` is a statusline segment naming the fetches
 out, with their seconds; `User RfcActivity` fires when one starts or ends.
 
+A document whose preparation runs past `progress.show_after` milliseconds
+(500 unless set) gets a dashboard above its window: the source, the
+elapsed time, the phases in order (reading the source, a bar over its
+pages where it has them, parsing, filing, writing the page, styling) with
+the one running marked. The Markdown shows as soon as it is built and the
+styled page replaces it, so the reader reads while the dashboard
+finishes; it closes `progress.linger` milliseconds (1500) after the last
+phase, or on `q`.
+
 ------------------------------------------------------------------------------
                                                     *rfc.nvim-setup* *rfc.setup()*
                               `rfc.setup`({opts})
@@ -258,6 +267,8 @@ Fields ~
 {toc} `({ width: integer })` the contents sidebar
 {status} `(table<string, string>)` the status a source's subjects document opens filtered to,
   by prefix: { eip = "Final" }; every entry when unset
+{progress} `({ show_after: integer, linger: integer })` the dashboard above a document being
+  prepared: shown once the preparation has run this many milliseconds, kept this long after it ends
 The defaults, which `setup` merges its argument over:
 >lua
   M.defaults = {
@@ -267,6 +278,7 @@ The defaults, which `setup` merges its argument over:
       view = "document",
       toc = { width = 44 },
       status = {},
+      progress = { show_after = 500, linger = 1500 },
   }
 <
 
