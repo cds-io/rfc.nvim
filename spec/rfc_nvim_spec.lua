@@ -1360,6 +1360,14 @@ describe("rfc", function()
             assert.are.equal(3, rows)
         end)
 
+        it("lands on a topic named by a word", function()
+            vim.cmd("Crs subjects economic")
+            assert.is_true(editor.wait_help("crs-subjects"))
+            assert.is_true(vim.wait(2000, function()
+                return vim.api.nvim_get_current_line():match("Economic Policy") ~= nil
+            end))
+        end)
+
         it("completes a report by its title", function()
             vim.cmd("Crs R43397")
             assert.is_true(editor.wait_help("crs-r43397"))

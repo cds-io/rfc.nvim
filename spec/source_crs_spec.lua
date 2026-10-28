@@ -193,6 +193,11 @@ describe("mentions", function()
         assert.are.equal("crs", m.kind)
         assert.are.equal("CRS Report R43397", line:sub(m.first, m.last))
     end)
+    it("finds a number with a letter suffix, as the legacy series and the IP series spell them", function()
+        assert.are.same({ "98-446rsh", "96-212enr" }, ids("CRS Report 98-446RSH and CRS Report 96-212ENR"))
+        assert.are.same({ "ip0333a" }, ids("CRS Report IP0333A"))
+        assert.are.same({ "r43397" }, ids("CRS Report R43397, Legislative Branch"))
+    end)
     it("finds two on one line in order", function()
         assert.are.same({ "r43397", "if12345" }, ids("CRS Report R43397 and CRS In Focus IF12345"))
     end)
@@ -234,6 +239,29 @@ describe("normalize over the R43397 excerpt", function()
     end)
     it("removes an empty image", function()
         assert.is_nil(text:find("<img>", 1, true))
+    end)
+end)
+
+describe("normalize over citations already inside a link", function()
+    local function one(html)
+        return table.concat((crs.normalize({ html })), "\n")
+    end
+    it("puts the tag on an enclosing link that has no destination, as pymupdf wraps a PDF link", function()
+        assert.are.equal(
+            '<p>See <a href="rfc-tag:crs-r43397"><span>CRS Report R43397</span></a>.</p>',
+            one("<p>See <a><span>CRS Report R43397</span></a>.</p>")
+        )
+    end)
+    it("leaves a citation inside a link with a destination alone", function()
+        local html = '<p>See <a href="https://crsreports.congress.gov/x">CRS Report R43397</a>.</p>'
+        assert.are.equal(html, one(html))
+    end)
+    it("still links a bare citation and one beside a link", function()
+        assert.are.equal(
+            '<p><a href="rfc-tag:crs-if12345">CRS In Focus IF12345</a> and <a href="#x">y</a> and'
+                .. ' <a href="rfc-tag:crs-97-1011">CRS Report 97-1011</a></p>',
+            one('<p>CRS In Focus IF12345 and <a href="#x">y</a> and CRS Report 97-1011</p>')
+        )
     end)
 end)
 

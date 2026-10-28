@@ -64,6 +64,36 @@ local function metadata(facts)
     return out
 end
 
+--- The text's few HTML-significant characters escaped.
+---@param s string
+---@return string
+local function escape(s)
+    return (s:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;"))
+end
+
+--- The head as HTML, for the Markdown view, which renders the lines and
+--- not the head: the title, the subtitle, and each metadata line with its
+--- URL a link. The help view builds its own head from `model.head`, so
+--- these lines stay out of the blocks.
+---@param title string
+---@param sub string
+---@param entries { term: string, text: rfc.source.html.Text }[]
+---@return string[]
+local function head_html(title, sub, entries)
+    local out = { '<div class="crs-head">', "<h1>" .. escape(title) .. "</h1>", "<p>" .. escape(sub) .. "</p>" }
+    for _, m in ipairs(entries) do
+        local value = m.text.text
+        if value:match("^https?://") then
+            value = '<a href="' .. value .. '">' .. value .. "</a>"
+        else
+            value = escape(value)
+        end
+        table.insert(out, "<p>" .. escape(m.term) .. ": " .. value .. "</p>")
+    end
+    table.insert(out, "</div>")
+    return out
+end
+
 --- The model for a report. `url` is what the cache passes a source that is
 --- not located, nil; the report's page on the mirror stands in, since the
 --- Markdown render resolves relative links against it.
@@ -78,18 +108,19 @@ function M.model(id, lines)
     local file_tag = "crs-" .. id
     local blocks = html.blocks(normalized)
     local tag_of, sections = plan.heading_tags(blocks, file_tag)
+    local title, sub = head.title ~= "" and head.title or number, subtitle(number, head, facts)
+    local entries = metadata(facts)
+    local lines_out = head_html(title, sub, entries)
+    for _, l in ipairs(normalized) do
+        table.insert(lines_out, l)
+    end
     return {
         kind = "html",
         name = file_tag,
         id = id,
-        lines = normalized,
+        lines = lines_out,
         url = crs.BASE .. "reports/" .. number .. ".html",
-        head = {
-            title = head.title ~= "" and head.title or number,
-            subtitle = subtitle(number, head, facts),
-            meta = metadata(facts),
-            abstract = {},
-        },
+        head = { title = title, subtitle = sub, meta = entries, abstract = {} },
         blocks = blocks,
         tag_of = tag_of,
         sections = sections,

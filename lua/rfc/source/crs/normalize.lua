@@ -119,28 +119,6 @@ local function footnotes(text)
     return (text:gsub('(<sup><a href="#fn%d+" id="ifn%d+">)(%d+)(</a></sup>)', "%1[%2]%3"))
 end
 
---- Each citation in a text run (between tags) linked to its tag.
----@param text string
----@return string
-local function citations(text)
-    return (
-        text:gsub(">([^<]+)<", function(run)
-            local found = mentions.mentions(run)
-            for i = #found, 1, -1 do
-                local m = found[i]
-                run = run:sub(1, m.first - 1)
-                    .. '<a href="rfc-tag:crs-'
-                    .. m.id
-                    .. '">'
-                    .. run:sub(m.first, m.last)
-                    .. "</a>"
-                    .. run:sub(m.last + 1)
-            end
-            return ">" .. run .. "<"
-        end)
-    )
-end
-
 --- The report normalized, and its head read from the header before the
 --- header went.
 ---@param lines string[]
@@ -152,7 +130,7 @@ function M.normalize(lines)
     text = heading_ids(text)
     text = anchors(text)
     text = footnotes(text)
-    text = citations(text)
+    text = mentions.link_citations(text)
     text = text:gsub("<img>", "")
     local out = {}
     for line in (text .. "\n"):gmatch("(.-)\n") do
