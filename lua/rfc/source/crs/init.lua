@@ -10,6 +10,7 @@
 local topics = require("rfc.source.crs.topics")
 local version = require("rfc.source.crs.version")
 local facts = require("rfc.source.crs.facts")
+local mentions = require("rfc.source.crs.mentions")
 
 return {
     BASE = "https://www.everycrsreport.com/",
@@ -22,4 +23,5 @@ return {
     version = version.version,
     facts = facts.facts,
     read_facts = facts.read_facts,
+    mentions = mentions.mentions,
 }
