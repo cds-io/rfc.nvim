@@ -7,6 +7,10 @@ local view = require("rfc.view")
 local M = {}
 local ns = vim.api.nvim_create_namespace("rfc.toc")
 local contents
+local actions
+function M.configure(deps)
+    actions = deps
+end
 
 ---@param s cds.CompanionView
 local function place(s)
@@ -47,8 +51,7 @@ contents = require("cds.companion").new({
         if vim.bo[buf].filetype == "" and vim.api.nvim_buf_get_name(buf) == "" then
             return nil
         end
-        return require("rfc").owns(buf)
-            and (vim.bo[buf].filetype == "help" or require("rfc").document_model(buf) ~= nil)
+        return actions.owns(buf) and (vim.bo[buf].filetype == "help" or actions.document_model(buf) ~= nil)
     end,
     on_update = load,
     on_track = place,
@@ -99,7 +102,7 @@ function M.follow(doc_win)
         return
     end
     vim.api.nvim_win_call(doc_win, function()
-        require("rfc").jump(h.tag)
+        actions.jump(h.tag)
     end)
     vim.api.nvim_set_current_win(doc_win)
 end

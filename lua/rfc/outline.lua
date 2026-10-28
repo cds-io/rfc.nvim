@@ -2,7 +2,7 @@
 -- lines that carry a section tag, with a level, and the questions the keys
 -- and the sidebar ask of them. Plain lines in, plain tables out; nothing
 -- here names the editor.
-local help = require("rfc.help")
+local tags = require("rfc.help.tags")
 
 local M = {}
 
@@ -42,7 +42,7 @@ end
 function M.of(lines)
     local row_indent, shallowest = {}, nil
     for _, line in ipairs(lines) do
-        local indent, tag = help.row_tag(line)
+        local indent, tag = tags.row_tag(line)
         if tag and not row_indent[tag] then
             row_indent[tag] = #indent
             shallowest = math.min(shallowest or #indent, #indent)
@@ -50,7 +50,7 @@ function M.of(lines)
     end
     local headings = {}
     for i, line in ipairs(lines) do
-        local tag = i > 1 and help.section_tag(line) or nil
+        local tag = i > 1 and tags.section_tag(line) or nil
         if tag then
             local text = line:gsub("%s*%*[^*]+%*$", "")
             local num = label(text)
