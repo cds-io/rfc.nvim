@@ -197,6 +197,11 @@ describe("inline mentions", function()
         assert.are.equal("Arch and box", t.text)
         assert.are.same({ { kind = "report", id = "wot-architecture11", first = 1, last = 4 } }, t.mentions)
     end)
+    it("makes a tag mention of a link on the plugin's own rfc-tag scheme", function()
+        local t = one('<p>See <a href="rfc-tag:crs-97-1011">CRS Report 97-1011</a>.</p>')
+        assert.are.equal("See CRS Report 97-1011.", t.text)
+        assert.are.same({ { kind = "tag", id = "crs-97-1011", first = 5, last = 22 } }, t.mentions)
+    end)
     it("makes a reference mention of a bibref of either generator", function()
         local t = one(
             '<p><cite><a class="bibref" href="#bib-wot-architecture11">wot-architecture11</a></cite> <a data-link-type="biblio" href="#biblio-css-align-3">[CSS-ALIGN-3]</a></p>'

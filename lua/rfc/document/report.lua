@@ -4,7 +4,7 @@ local html = require("cds.html")
 ---@param model rfc.ReportModel
 ---@return rfc.Document
 local function report(model)
-    local id, lines, url, blocks, names = model.id, model.lines, model.url, model.blocks, model.tag_of
+    local name, lines, url, blocks, names = model.name, model.lines, model.url, model.blocks, model.tag_of
     if not url:match("/$") then
         url = url .. "/"
     end
@@ -14,7 +14,7 @@ local function report(model)
         region = "body",
         drop = { head = true, script = true, style = true, nav = true, footer = true },
     }) --[[@as rfc.Document]]
-    doc.anchors["w3c-" .. id], doc.anchors["w3c-" .. id .. ".txt"] = 1, 1
+    doc.anchors[name], doc.anchors[name .. ".txt"] = 1, 1
     doc.headings = {}
     for _, block in ipairs(blocks) do
         if block.kind == "heading" then
@@ -33,15 +33,15 @@ local function report(model)
     end
     -- Reference tags have stable bibliography IDs in ReSpec/Bikeshed HTML.
     local references = {}
-    for name, row in pairs(doc.anchors) do
-        local key = name:match("^biblio%-(.+)$")
+    for anchor, row in pairs(doc.anchors) do
+        local key = anchor:match("^biblio%-(.+)$")
         if key then
-            references["w3c-" .. id .. "#ref-" .. key] = row
-            references["w3c-" .. id .. "#ref-" .. key:upper()] = row
+            references[name .. "#ref-" .. key] = row
+            references[name .. "#ref-" .. key:upper()] = row
         end
     end
-    for name, row in pairs(references) do
-        doc.anchors[name] = row
+    for tag, row in pairs(references) do
+        doc.anchors[tag] = row
     end
     return doc
 end

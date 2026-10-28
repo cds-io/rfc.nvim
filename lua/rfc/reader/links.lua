@@ -19,6 +19,11 @@ return function(model_of, navigate, jump, notify, cancel)
             navigate("w3c-" .. report:lower() .. (fragment and "#" .. fragment or ""))
             return
         end
+        local crs = target:lower():match("^https?://www%.everycrsreport%.com/reports/([^/#?]+)%.html")
+        if crs then
+            navigate("crs-" .. crs .. (fragment and "#" .. fragment or ""))
+            return
+        end
         cancel(vim.api.nvim_get_current_win())
         local scheme = (target:match("^(%a[%w+.-]*):") or ""):lower()
         if scheme == "javascript" or scheme == "data" then

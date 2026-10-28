@@ -56,6 +56,8 @@ local function link(t, ctx)
             tag = ctx.sections[m.section]
         elseif m.kind == "report" then
             tag = "w3c-" .. m.id:lower()
+        elseif m.kind == "tag" then
+            tag = m.id
         elseif m.kind == "reference" then
             tag = ctx.refs[m.id:lower()]
         end

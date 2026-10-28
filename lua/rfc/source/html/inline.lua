@@ -80,7 +80,12 @@ local function anchor(node, b, ctx)
     local text = inner.finish().text
     local id = href:match("^#(.+)$")
     local key = id and (id:match("^bib%-(.+)$") or id:match("^biblio%-(.+)$"))
-    if key then
+    -- the plugin's own scheme, written by a source's normalization, so a
+    -- citation the HTML never linked still becomes a tag
+    local tag = href:match("^rfc%-tag:(.+)$")
+    if tag then
+        b.mention(text, { kind = "tag", id = tag })
+    elseif key then
         b.mention(text, { kind = "reference", id = key })
     elseif id and ctx.ids[id] then
         b.mention(text, { kind = "section", section = id })
