@@ -57,13 +57,14 @@
 ---   :Rfc subjects         the RFCs by subject, as one help document
 ---   :Rfc subjects dns     a subject by slug or name, else a search over them
 --- <
---- The five commands: >
+--- The six commands: >
 ---
 ---   :Rfc    the RFC Editor's RFCs
 ---   :Eip    Ethereum's EIPs and ERCs, one number space: `:Eip 20` is ERC-20
 ---   :Bip    Bitcoin's BIPs; `:Bip 0032` and `:Bip 32` are the same one
 ---   :Simd   Solana's SIMDs
 ---   :W3c    the W3C's technical reports, by shortname: `:W3c wcag22`
+---   :Crs    the Congressional Research Service's reports, by number: `:Crs R43397`
 --- <
 --- A picked or completed item reads `eip20  Token Standard (Final)`: the tag,
 --- then the title; the command takes the first word. The first item a picker
@@ -153,10 +154,15 @@
 ---                    time, and keeps the texts.
 ---   `:W3c subjects`    Maturity, Tags and Deliverers (the working groups), so
 ---                    `:W3c subjects wot` lands on the Web of Things reports.
+---   `:Crs subjects`    Topics (EveryCRSReport.com's 32 topic pages; a report
+---                    sits under every topic that lists it) and Type (Report,
+---                    In Focus, Insight, Legal Sidebar, Legacy, read from the
+---                    report number), so `:Crs subjects economic` lands on
+---                    Economic Policy.
 
 ---@tag rfc.nvim-sources
 ---@toc_entry Sources
----@text Five sources, chosen in |rfc.nvim-setup|; only the RFC Editor is on by
+---@text Six sources, chosen in |rfc.nvim-setup|; only the RFC Editor is on by
 --- default.
 ---
 ---   `rfc`    tags `rfc9110`, `rfc9110-3.1`; the text from rfc-editor.org, the
@@ -179,6 +185,15 @@
 ---          it, read by `rfc.source.html`; the index is www.w3.org/TR. A report is
 ---          asked for again with `If-Modified-Since` when the index dates it
 ---          after the copy, so a republished draft follows its publication.
+---   `crs`    tags `crs-r43397`, `crs-r43397#summary`, `crs-98-684` (a legacy
+---          number keeps its dash); the HTML from EveryCRSReport.com, a
+---          mirror of the Congressional Research Service's reports, reached
+---          through the report's JSON record (the newest version), with the
+---          publisher's PDF, the mirror's copy and the product page linked
+---          in the head; the index is the site's 32 topic pages read as one
+---          (7.5 MB a refresh, 24 MB on disk), which is also where a
+---          report's topics come from. A report is fetched again when the
+---          index dates a newer version than the copy.
 ---
 --- Every index is kept a day. A text is rendered once and kept: the
 --- frontmatter or preamble becomes a header block, headings get tags and a

@@ -48,7 +48,10 @@ end
 local function header(text)
     local head = { title = "", updated = "", number = "" }
     local open = text:find('<div class="ReportHeader">', 1, true)
-    local close = open and div_end(text, open)
+    if not open then
+        return text, head
+    end
+    local close = div_end(text, open)
     if not close then
         return text, head
     end

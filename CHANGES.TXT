@@ -1,3 +1,25 @@
+2026-10-28  CRS reports are a source
+
+  lua/rfc/sources/crs.lua, lua/rfc/source/crs/, lua/rfc/help/crs/model.lua, lua/rfc/fetch.lua,
+  lua/rfc/help/tags.lua, lua/rfc/source/html/inline.lua, lua/rfc/help/w3c/text.lua,
+  lua/rfc/document/report.lua, lua/rfc/reader/links.lua, lua/rfc/source/subjects.lua,
+  plugin/rfc.lua, doc/manual.lua, README.md, spec/
+    :Crs opens a Congressional Research Service report by number from
+    EveryCRSReport.com and files every report under the site's 32 topics
+    and its product type. The topic pages, joined, are the index; a report
+    is fetched through its JSON record to the newest version's HTML, stored
+    behind one fact line (versions, first date, topics, the publisher's
+    PDF, the mirror's copy, the product page) and stamped with the version
+    date, so the index dating a newer version is what fetches again.
+    rfc.source.crs normalizes the HTML on every render: named anchors
+    become ids (a heading takes its first anchor's, or a numbered one),
+    the header and contents lists go, citations link to their tags on the
+    rfc-tag: scheme, footnote marks read as [n]. An rfc-tag: href is a
+    mention the help render writes as a tag, the Markdown report render
+    anchors a document at its own name, the tag shapes read a shortname
+    tag of any registered prefix, a link to a report page navigates to
+    its tag, and subjects sort a non-numeric id by its text.
+
 2026-10-25  Persistence, commands and the contents sidebar come from cds-lua
 
   lua/rfc/cache.lua, lua/rfc/store.lua, lua/rfc/toc.lua, plugin/rfc.lua, lua/rfc/needs.lua
