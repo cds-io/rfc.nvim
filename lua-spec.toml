@@ -1,0 +1,7 @@
+# Settings for lua-spec, the architecture checker beside this checkout
+# (make architecture-check): the module prefix whose lua/rfc.lua and
+# lua/rfc/init.lua are the public facade, and the lines a production module
+# may run to.
+[architecture]
+plugin = "rfc"
+limit = 200
