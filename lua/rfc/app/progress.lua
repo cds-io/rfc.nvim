@@ -55,16 +55,29 @@ end
 -- report under the phase running.
 local TICK, BLOCK = 50, 150
 
+--- Milliseconds from the high-resolution clock; vim.uv.now is the loop's
+--- cached time, stale inside the very stretches this measures.
+---@return integer
+local function now_ms()
+    return math.floor(vim.uv.hrtime() / 1e6)
+end
+
 --- Watches the main loop for the report's life and notes its blocks.
+--- The ticks that queued up behind a block run after the first of them
+--- closed the timer, so a tick that finds it closing does nothing.
 ---@param report cds.ProgressReport
+---@return uv.uv_timer_t
 function M.watch(report)
     local timer = assert(vim.uv.new_timer(), "a timer")
-    local last = vim.uv.now()
+    local last = now_ms()
     timer:start(
         TICK,
         TICK,
         vim.schedule_wrap(function()
-            local now = vim.uv.now()
+            if timer:is_closing() then
+                return
+            end
+            local now = now_ms()
             if now - last >= BLOCK then
                 report:block(now - last)
             end
@@ -75,6 +88,7 @@ function M.watch(report)
             end
         end)
     )
+    return timer
 end
 
 ---@param prefix string

@@ -1369,6 +1369,28 @@ describe("rfc", function()
             )
         end)
 
+        it("watches a report's blocks and lets the ticks queued behind a block run after the timer closed", function()
+            local progress = require("rfc.app.progress")
+            local report = require("cds.progress").new({ title = "T", plan = { "a" } })
+            local timer = progress.watch(report)
+            report:begin("a")
+            -- a block: the main loop busy for longer than a tick (hrtime,
+            -- since uv.now is the loop's cached time and would never move)
+            local t0 = vim.uv.hrtime()
+            while vim.uv.hrtime() - t0 < 200e6 do
+            end
+            report:finish()
+            assert.is_true(vim.wait(1000, function()
+                return timer:is_closing()
+            end))
+            vim.wait(200)
+            local blocks = vim.tbl_filter(function(row)
+                return row.kind == "block"
+            end, report:timeline())
+            assert.is_true(#blocks >= 1)
+            assert.is_true(blocks[1].duration >= 150)
+        end)
+
         it("says it is fetching the index, the first time only", function()
             vim.cmd("Crs R43397")
             assert.is_true(editor.wait_help("crs-r43397"))
