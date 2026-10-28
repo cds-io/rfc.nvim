@@ -52,7 +52,10 @@ test-nvim:
 	for spec in spec/*_nvim_spec.lua; do \
 		[ -e "$$spec" ] || continue; \
 		echo "$$spec"; \
-		$(BUSTED) --run=nvim --lua=$(NLUA) "$$spec" </dev/null || exit 1; \
+		out=$$($(BUSTED) --run=nvim --lua=$(NLUA) "$$spec" </dev/null 2>&1); status=$$?; \
+		echo "$$out"; \
+		[ $$status -eq 0 ] || exit 1; \
+		echo "$$out" | grep -qE ' (success|successes) / ' || { echo "$$spec: the run ended without a summary"; exit 1; }; \
 	done
 
 # Lints lua/ and the plugin entry point. spec/ is

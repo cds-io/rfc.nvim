@@ -12,6 +12,11 @@ local root = vim.fn.getcwd()
 function M.load_plugin()
     -- the reader's leader, which the ,tv key is spelled against
     vim.g.mapleader = ","
+    -- a picker no case captured must never reach the builtin, which reads
+    -- stdin: nlua takes the EOF as the end of the run and exits with no
+    -- summary and status 0, so every case after the stray pick is skipped
+    -- and the tier still reads green
+    vim.ui.select = function() end
     vim.opt.runtimepath:append(root)
     vim.cmd("runtime plugin/rfc.lua")
 end
@@ -36,14 +41,18 @@ function M.start()
             saved.fetch[name] = fn
         end
     end
-    local case = { dir = vim.fn.tempname(), notices = {}, fetched = {}, urls = {} }
+    -- what the plugin says, the index fetches ("fetching the RFC index")
+    -- kept apart in `index_notices`, so a case reads the message it is
+    -- about by position whether or not its index was cached
+    local case = { dir = vim.fn.tempname(), notices = {}, index_notices = {}, fetched = {}, urls = {} }
     function case.setup(sources, extra)
         require("rfc").setup(vim.tbl_extend("force", {
             cache_dir = case.dir,
             sources = sources,
             view = "rich", -- legacy help regressions explicitly exercise the help backend
             notify = function(msg, level, opts)
-                table.insert(case.notices, { msg = msg, level = level, title = opts.title })
+                local list = msg:match("^fetching the .* index$") and case.index_notices or case.notices
+                table.insert(list, { msg = msg, level = level, title = opts.title })
             end,
         }, extra or {}))
     end

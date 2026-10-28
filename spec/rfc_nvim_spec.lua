@@ -313,11 +313,15 @@ describe("rfc", function()
                 on_choice(chosen)
             end
             vim.cmd("Rfc")
-            vim.wait(500, function()
-                return #case.notices == 1
-            end)
-            assert.are.equal("RFC 31 has no text version", case.notices[1].msg)
-            assert.are.equal(vim.log.levels.WARN, case.notices[1].level)
+            local function declined()
+                return fp.find(case.notices, function(n)
+                    return n.msg == "RFC 31 has no text version"
+                end)
+            end
+            assert.is_true(vim.wait(500, function()
+                return declined() ~= nil
+            end))
+            assert.are.equal(vim.log.levels.WARN, declined().level)
             assert.are.same({ "index" }, case.fetched)
         end)
     end)
@@ -1368,16 +1372,16 @@ describe("rfc", function()
         it("says it is fetching the index, the first time only", function()
             vim.cmd("Crs R43397")
             assert.is_true(editor.wait_help("crs-r43397"))
-            local said = fp.filter(case.notices, function(n)
-                return n.msg == "fetching the CRS index"
-            end)
-            assert.are.equal(1, #said)
+            assert.are.same(
+                { "fetching the CRS index" },
+                fp.map(case.index_notices, function(n)
+                    return n.msg
+                end)
+            )
             vim.cmd("helpclose")
             vim.cmd("Crs subjects")
             assert.is_true(editor.wait_help("crs-subjects"))
-            assert.are.equal(1, #fp.filter(case.notices, function(n)
-                return n.msg == "fetching the CRS index"
-            end))
+            assert.are.equal(1, #case.index_notices)
         end)
 
         it("does not ask again for a cached report whose index date has not moved", function()
