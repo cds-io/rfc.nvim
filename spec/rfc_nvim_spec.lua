@@ -1283,6 +1283,63 @@ describe("rfc", function()
         end)
     end)
 
+    describe("clearing a source's cache", function()
+        local function readable(path)
+            return vim.fn.filereadable(path) == 1
+        end
+
+        it(
+            "removes the source's texts, documents, index and subjects, keeps the other sources', and fetches again",
+            function()
+                vim.cmd("Eip 1559")
+                assert.is_true(editor.wait_help("eip1559"))
+                vim.cmd("Eip subjects")
+                assert.is_true(editor.wait_help("eip-subjects"))
+                vim.cmd("Rfc 9110")
+                assert.is_true(editor.wait_help("9110"))
+                local cfg = config.get()
+                local eip = {
+                    store.raw_path(cfg, "eip1559", "md"),
+                    store.doc_path(cfg, "eip1559"),
+                    store.index_path(cfg, "eip-categories.html"),
+                    store.doc_path(cfg, "eip-subjects"),
+                }
+                for _, path in ipairs(eip) do
+                    assert.is_true(readable(path), path)
+                end
+                vim.cmd("Eip! cc")
+                assert.are.equal("EIP cache cleared: 4 files", case.notices[#case.notices].msg)
+                for _, path in ipairs(eip) do
+                    assert.is_false(readable(path), path)
+                end
+                assert.is_true(readable(store.raw_path(cfg, "rfc9110", "txt")))
+                assert.is_true(readable(store.doc_path(cfg, "rfc9110")))
+                local tags = table.concat(vim.fn.readfile(store.doc_dir(cfg) .. "/tags"), "\n")
+                assert.is_nil(tags:find("eip1559", 1, true))
+                assert.is_not_nil(tags:find("rfc9110-3.1", 1, true))
+                vim.cmd("helpclose")
+                vim.cmd("Eip 1559")
+                assert.is_true(editor.wait_help("eip1559"))
+                assert.are.equal(2, #fp.filter(case.fetched, function(f)
+                    return f == "eip1559"
+                end))
+            end
+        )
+
+        it("refuses without the bang and says what to type", function()
+            vim.cmd("Eip 1559")
+            assert.is_true(editor.wait_help("eip1559"))
+            vim.cmd("Eip cc")
+            assert.are.equal("add ! to clear the EIP cache: :Eip! cc", case.notices[#case.notices].msg)
+            assert.is_true(readable(store.doc_path(config.get(), "eip1559")))
+        end)
+
+        it("says so when there is nothing to clear", function()
+            vim.cmd("Bip! cc")
+            assert.are.equal("BIP cache cleared: 0 files", case.notices[#case.notices].msg)
+        end)
+    end)
+
     describe(":Crs", function()
         local sources = require("rfc.sources")
         local function fetched(pattern)

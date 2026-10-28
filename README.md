@@ -67,6 +67,8 @@ and a sixth, `subjects`, for a source that has them:
 :Rfc subjects            the RFCs by subject, as one help document
 :Rfc subjects dns        a subject by its slug or its name, else a search
                          over the subjects
+:Rfc! cc                 clears the RFC cache: its texts, documents, index
+                         and subjects; the bang is required
 
 :Eip                     EIPs and ERCs, one index
 :Eip token standard      a search over it

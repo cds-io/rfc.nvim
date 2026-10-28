@@ -1,3 +1,14 @@
+2026-10-28  A source's cache clears with its command and a bang
+
+  lua/rfc/app/clear.lua, lua/rfc/app/command.lua, plugin/rfc.lua, doc/manual.lua, README.md
+    :Rfc! cc (and :Eip! cc, :Bip! cc, :Simd! cc, :W3c! cc, :Crs! cc)
+    deletes the source's texts, documents, index files and subjects
+    document from the cache and rebuilds the tags file; the message counts
+    the files. Without the bang the command says what to type and touches
+    nothing. A file is the source's when its base name is one of the
+    source's tags or its prefix and a dash, which is how a tag's source is
+    read.
+
 2026-10-28  CRS reports are a source
 
   lua/rfc/sources/crs.lua, lua/rfc/source/crs/, lua/rfc/help/crs/model.lua, lua/rfc/fetch.lua,

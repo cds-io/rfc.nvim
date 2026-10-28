@@ -50,7 +50,8 @@ M.command = require("rfc.app.command")(
     subject_ui.status,
     picker.open_named,
     subject_ui.nodes,
-    completion.complete
+    completion.complete,
+    require("rfc.app.clear").clear
 )
 M._activity, M.activity, M.notify = session._activity, session.activity, session.notify
 M.ensure, M.index_lines, M.ensure_subjects = entries.ensure, entries.index_lines, cached.ensure_subjects

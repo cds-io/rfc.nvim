@@ -2,7 +2,8 @@
 local sources = require("rfc.sources")
 local fp = require("cds.fp")
 local statuses_of = require("rfc.app.entries").statuses_of
-return function(pick, jump, subjects, status, open_named, nodes, complete)
+local notify = require("rfc.app.session").notify
+return function(pick, jump, subjects, status, open_named, nodes, complete, clear)
     local M = {
         pick = pick,
         jump = jump,
@@ -11,13 +12,16 @@ return function(pick, jump, subjects, status, open_named, nodes, complete)
         open_named = open_named,
         nodes = nodes,
         complete = complete,
+        clear = clear,
     }
     --- The command for a source: a number, a tag (the source's own or an
     --- alias), `subjects` with a node after it or not, `status` with a status
-    --- after it or not, words to search its index, or nothing for its picker
-    --- (on the configured status, when one is set). A completed item carries its title
-    --- after the tag, so only the first word is the tag. After `subjects`,
-    --- completion is over the nodes of the cached subjects index.
+    --- after it or not, `cc` with the bang to clear the source's cache (and
+    --- without it, a line saying so), words to search its index, or nothing
+    --- for its picker (on the configured status, when one is set). A
+    --- completed item carries its title after the tag, so only the first
+    --- word is the tag. After `subjects`, completion is over the nodes of
+    --- the cached subjects index.
     ---@param source rfc.Source
     ---@return fun(cmd: table), fun(arglead: string, cmdline: string): string[]
     function M.command(source)
@@ -34,6 +38,17 @@ return function(pick, jump, subjects, status, open_named, nodes, complete)
                 M.subjects(source, vim.trim(arg:sub(#first + 1)))
             elseif first == "status" and source.status then
                 M.status(source, vim.trim(arg:sub(#first + 1)))
+            elseif first == "cc" then
+                if not cmd.bang then
+                    notify(("add ! to clear the %s cache: :%s! cc"):format(source.label, cmd.name), vim.log.levels.WARN)
+                    return
+                end
+                local gone, err = M.clear(source)
+                if not gone then
+                    notify(err, vim.log.levels.ERROR)
+                    return
+                end
+                notify(("%s cache cleared: %d files"):format(source.label, gone))
             elseif sources.of(first) == source then
                 M.jump(first)
             elseif source.key == "shortname" and arg == first then

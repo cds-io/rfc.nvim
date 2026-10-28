@@ -56,6 +56,9 @@
 ---   :Rfc status internet standard   the subjects filtered to that status
 ---   :Rfc subjects         the RFCs by subject, as one help document
 ---   :Rfc subjects dns     a subject by slug or name, else a search over them
+---   :Rfc! cc              clears the RFC cache: its texts, documents, index
+---                         and subjects document; without the bang, a line
+---                         saying so
 --- <
 --- The six commands: >
 ---
@@ -212,7 +215,8 @@
 --- An index is fetched again when more than a day old, and a stale copy
 --- stands in with a warning when the fetch fails; a document is rendered
 --- again when the render that wrote it is older than the plugin's or its
---- text is newer. Delete the directory to start over.
+--- text is newer. `:Rfc! cc` (`:Eip! cc`, and so on) clears one source's
+--- files and rebuilds the tags file; delete the directory to start over.
 ---
 --- `require("rfc").activity()` is a statusline segment naming the fetches
 --- out, with their seconds; `User RfcActivity` fires when one starts or ends.
