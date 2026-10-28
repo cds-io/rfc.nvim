@@ -1308,6 +1308,21 @@ describe("rfc", function()
             )
         end)
 
+        it("says it is fetching the index, the first time only", function()
+            vim.cmd("Crs R43397")
+            assert.is_true(editor.wait_help("crs-r43397"))
+            local said = fp.filter(case.notices, function(n)
+                return n.msg == "fetching the CRS index"
+            end)
+            assert.are.equal(1, #said)
+            vim.cmd("helpclose")
+            vim.cmd("Crs subjects")
+            assert.is_true(editor.wait_help("crs-subjects"))
+            assert.are.equal(1, #fp.filter(case.notices, function(n)
+                return n.msg == "fetching the CRS index"
+            end))
+        end)
+
         it("does not ask again for a cached report whose index date has not moved", function()
             vim.cmd("Crs R43397")
             assert.is_true(editor.wait_help("crs-r43397"))

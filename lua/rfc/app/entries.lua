@@ -153,7 +153,13 @@ end
 ---@param source rfc.Source
 ---@return cds.Task
 function M.index_lines(source)
-    return M.index_of(source):lines()
+    local index = M.index_of(source)
+    -- the index fetch is the long wait (the CRS index is 32 pages), so it
+    -- says so; a fresh copy reads silently
+    if not index:fresh() then
+        session.notify("fetching the " .. source.label .. " index")
+    end
+    return index:lines()
 end
 
 M.entry_of = entry_of
