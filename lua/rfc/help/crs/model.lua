@@ -10,6 +10,7 @@
 local crs = require("rfc.source.crs")
 local html = require("rfc.source.html")
 local plan = require("rfc.help.w3c.model")
+local converter = require("cds.html")
 
 ---@class rfc.help.crs.model
 local M = {}
@@ -94,9 +95,29 @@ local function head_html(title, sub, entries)
     return out
 end
 
+--- The note over a report the mirror rendered from its PDF with a text
+--- extractor (cds.html.flattened over the stored HTML): a labelled note
+--- both readers draw, the shared wording, and the publisher's PDF, else the
+--- mirror's, as the copy with the layout.
+---@param facts table|nil
+---@return string[]
+local function dump_note(facts)
+    local pdf = facts and (facts.pdf or (facts.mirror and crs.BASE .. facts.mirror)) or nil
+    local out = converter.FLATTENED_NOTICE
+    if pdf then
+        out = out .. ' Visit the PDF for the proper formatting: <a href="' .. pdf .. '">' .. pdf .. "</a>"
+    end
+    return {
+        '<div class="note"><p class="note-title">Upstream conversion error</p>',
+        "<p>" .. out .. "</p>",
+        "</div>",
+    }
+end
+
 --- The model for a report. `url` is what the cache passes a source that is
 --- not located, nil; the report's page on the mirror stands in, since the
---- Markdown render resolves relative links against it.
+--- Markdown render resolves relative links against it. A body that is a
+--- text dump opens with dump_note, ahead of its blocks in both views.
 ---@param id string         -- the lowercased number: r43397
 ---@param lines string[]    -- the stored text
 ---@return rfc.ReportModel
@@ -104,6 +125,13 @@ function M.model(id, lines)
     local facts = crs.read_facts(lines[1] or "")
     local body = facts and { unpack(lines, 2) } or lines
     local normalized, head = crs.normalize(body)
+    if converter.flattened(table.concat(body, "\n")) then
+        local noted = dump_note(facts)
+        for _, l in ipairs(normalized) do
+            table.insert(noted, l)
+        end
+        normalized = noted
+    end
     local number = (facts and facts.id ~= "" and facts.id) or (head.number ~= "" and head.number) or id:upper()
     local file_tag = "crs-" .. id
     local blocks = html.blocks(normalized)

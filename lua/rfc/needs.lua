@@ -10,7 +10,7 @@ return {
     document = { "unique_names", "target", "rendered", "new", "anchor", "link_at" },
     document_view = { "new" },
     window = { "close_or" },
-    html = { "document", "escape" },
+    html = { "document", "escape", "flattened", "FLATTENED_NOTICE" },
     navigator = { "new" },
     vellum = { "render", "restyle", "forget", "generation" },
     activity = { "new" },
