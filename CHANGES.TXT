@@ -1,3 +1,13 @@
+2026-10-28  The text-dump note is a caution in both views
+
+  lua/rfc/help/crs/model.lua, lua/rfc/source/html/walk.lua
+    The note over a CRS report handed over as a text dump is a quote
+    opening with GitHub's alert marker and its label, "[!CAUTION] Upstream
+    conversion error": the help reader draws a quote that opens so as a
+    callout labelled by the title (else the kind), and vellum draws the
+    Markdown document's quote as a caution box. The help reader's reading
+    of the marker holds for any HTML it reads.
+
 2026-10-28  A CRS report handed over as a text dump says so
 
   lua/rfc/help/crs/model.lua, lua/rfc/needs.lua

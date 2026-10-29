@@ -96,9 +96,10 @@ local function head_html(title, sub, entries)
 end
 
 --- The note over a report the mirror rendered from its PDF with a text
---- extractor (cds.html.flattened over the stored HTML): a labelled note
---- both readers draw, the shared wording, and the publisher's PDF, else the
---- mirror's, as the copy with the layout.
+--- extractor (cds.html.flattened over the stored HTML): a quote opening
+--- with GitHub's alert marker and the label, which the help reader draws
+--- as a callout and vellum as a caution box; the shared wording, and the
+--- publisher's PDF, else the mirror's, as the copy with the layout.
 ---@param facts table|nil
 ---@return string[]
 local function dump_note(facts)
@@ -107,11 +108,7 @@ local function dump_note(facts)
     if pdf then
         out = out .. ' Visit the PDF for the proper formatting: <a href="' .. pdf .. '">' .. pdf .. "</a>"
     end
-    return {
-        '<div class="note"><p class="note-title">Upstream conversion error</p>',
-        "<p>" .. out .. "</p>",
-        "</div>",
-    }
+    return { "<blockquote><p>[!CAUTION] Upstream conversion error</p>", "<p>" .. out .. "</p>", "</blockquote>" }
 end
 
 --- The model for a report. `url` is what the cache passes a source that is

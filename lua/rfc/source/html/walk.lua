@@ -122,7 +122,17 @@ local function blocks_of(children, ctx, buttons)
             callout(summary and squash(inline.inline(summary.children, ctx).text) or "Details", child.line, rest)
         elseif child.name == "blockquote" then
             flush()
-            put({ kind = "quote", line = child.line, blocks = blocks_of(child.children, ctx, buttons) })
+            -- GitHub's alert: a quote opening with a paragraph of `[!KIND]`,
+            -- a title after it on the line or none, is a callout labelled by
+            -- the title, else the kind
+            local first, rest = tree.split(child.children, tree.named("p"))
+            local kind, title = (first and squash(plain(first)) or ""):match("^%[!(%a+)%]%s*(.*)$")
+            if kind then
+                local label = title ~= "" and title or (kind:sub(1, 1):upper() .. kind:sub(2):lower())
+                callout(label, child.line, rest)
+            else
+                put({ kind = "quote", line = child.line, blocks = blocks_of(child.children, ctx, buttons) })
+            end
         elseif child.name == "hr" then
             flush()
             put({ kind = "rule", line = child.line })
