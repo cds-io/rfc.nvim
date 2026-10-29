@@ -1,3 +1,14 @@
+2026-10-28  A CRS report handed over as a text dump says so
+
+  lua/rfc/help/crs/model.lua, lua/rfc/needs.lua
+    A report whose mirror HTML is a flat run of line breaks (the mirror
+    rendered the PDF through a text extractor, so its tables and columns
+    arrive as one fragment per line) opens, in the help view and the
+    Markdown document alike, with a note labelled "Upstream conversion
+    error": the wording cds.html carries for both readers, and the
+    publisher's PDF, else the mirror's, as the copy with the layout. The
+    decision is cds.html.flattened over the stored HTML.
+
 2026-10-28  A document over styled_max_lines stays plain
 
   lua/rfc/config.lua, lua/rfc/reader/presentation.lua

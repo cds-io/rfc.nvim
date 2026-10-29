@@ -16,6 +16,18 @@ local function raw()
     return lines
 end
 
+--- The stored text of a report the mirror rendered from its PDF with a text
+--- extractor: the fact line, then one line a break and no block element.
+local function dumped()
+    local v = crs.version(table.concat(fixtures.read(fixtures.crs_r43397_json), "\n"))
+    local lines = { crs.facts(v), "<div><b>Title</b><br/>" }
+    for i = 1, 40 do
+        table.insert(lines, ("line %d of the report <br/>"):format(i))
+    end
+    table.insert(lines, "</div>")
+    return lines
+end
+
 local SUBTITLE = "CRS Report R43397 · Updated October 27, 2026 · 17 versions since March 9, 2016"
 
 describe("model", function()
@@ -90,6 +102,40 @@ describe("the help render", function()
         end)))
         assert.is_not_nil((fp.find(lines, function(l)
             return help.section_tag(l) == "crs-r43397#summary"
+        end)))
+    end)
+end)
+
+--- The number of the first line holding `text`, or nil.
+local function index_of(lines, text)
+    for i, l in ipairs(lines) do
+        if l:find(text, 1, true) then
+            return i
+        end
+    end
+    return nil
+end
+
+describe("a report handed over as a text dump", function()
+    it("opens the help view with a callout naming the PDF, before the body", function()
+        local lines = help_w3c.render_model(model.model("r43397", dumped())).lines
+        local label = index_of(lines, "Upstream conversion error ~")
+        assert.is_number(label)
+        local text = table.concat(lines, "\n", label)
+        assert.is_not_nil(text:find("Upstream (at source) conversion error.", 1, true))
+        assert.is_not_nil(
+            text:find("https://www.congress.gov/crs_external_products/R/PDF/R43397/R43397.37.pdf", 1, true)
+        )
+        assert.is_true(label < index_of(lines, "line 1 of the report"))
+    end)
+    it("says so in the Markdown document too", function()
+        local markdown = table.concat(document.from_model(model.model("r43397", dumped())).markdown, "\n")
+        assert.is_not_nil(markdown:find("Upstream (at source) conversion error.", 1, true))
+    end)
+    it("warns nothing over a report with paragraphs", function()
+        local lines = help_w3c.render_model(model.model("r43397", raw())).lines
+        assert.is_nil((fp.find(lines, function(l)
+            return l:find("Upstream conversion error", 1, true) ~= nil
         end)))
     end)
 end)
