@@ -180,6 +180,22 @@ describe("blocks", function()
     it("reads blockquote and hr", function()
         assert.are.same({ "quote", "rule" }, kinds(html.blocks({ "<blockquote><p>q</p></blockquote><hr>" })))
     end)
+    it("reads a quote opening with an alert marker as a callout, labelled by its title or its kind", function()
+        local b = html.blocks({
+            "<blockquote><p>[!CAUTION] Upstream conversion error</p><p>the text</p></blockquote>",
+            "<blockquote><p>[!note]</p><p>n</p></blockquote>",
+            "<blockquote><p>[!CAUTION] in prose</p></blockquote>",
+        })
+        assert.are.same({ "callout", "callout", "callout" }, kinds(b))
+        assert.are.same(
+            { "Upstream conversion error", "Note", "in prose" },
+            fp.map(b, function(x)
+                return x.label
+            end)
+        )
+        assert.are.equal("the text", b[1].blocks[1].text.text)
+        assert.are.same({}, b[3].blocks)
+    end)
 end)
 
 describe("inline mentions", function()
