@@ -13,7 +13,7 @@ end)
 
 describe("RFC shared document adapters", function()
     it("preserves RFC section and citation tags in Markdown", function()
-        local exported = require("rfc.help_rfc").render("9110", fixtures.read(fixtures.rfc9110))
+        local exported = require("rfc.sources.rfc.render").render("9110", fixtures.read(fixtures.rfc9110))
         local doc = contract.from_help(exported.lines)
         assert.matches("Resources", doc.markdown[assert(doc.anchors["rfc9110-3.1"])])
         assert.equals(1, doc.anchors.rfc9110)
@@ -28,7 +28,8 @@ describe("RFC shared document adapters", function()
     end)
 
     it("keeps proposal alias tags, code and cross-source references", function()
-        local doc = contract.from_help(require("rfc.help_eip").render("20", fixtures.read(fixtures.erc20)).lines)
+        local doc =
+            contract.from_help(require("rfc.sources.eip.render").render("20", fixtures.read(fixtures.erc20)).lines)
         assert.equals(1, doc.anchors.erc20)
         assert.equals(doc.anchors.eip20, doc.anchors.erc20)
         assert.is_not_nil(doc.anchors["eip20-abstract"])
@@ -36,7 +37,7 @@ describe("RFC shared document adapters", function()
     end)
 
     it("retains W3C native HTML IDs and numbered RFC tags at the same heading", function()
-        local model = require("rfc.help_w3c").model(
+        local model = require("rfc.sources.w3c.render").model(
             "css-grid-2",
             fixtures.read(fixtures.w3c_grid),
             "https://www.w3.org/TR/css-grid-2/"
@@ -106,7 +107,7 @@ describe("RFC shared document adapters", function()
     end)
 
     it("retains every MIME wildcard in the RFC 9110 fixture", function()
-        local exported = require("rfc.help_rfc").render("9110", fixtures.read(fixtures.rfc9110))
+        local exported = require("rfc.sources.rfc.render").render("9110", fixtures.read(fixtures.rfc9110))
         local doc = contract.from_help(exported.lines)
         local original = table.concat(exported.lines, "\n")
         local decoded = table.concat(doc.markdown, "\n"):gsub("\\(%p)", "%1")
@@ -115,17 +116,17 @@ describe("RFC shared document adapters", function()
         assert.equals(7, before)
         assert.equals(before, after)
         local direct =
-            table.concat(require("rfc.help_rfc").document(exported.model).markdown, "\n"):gsub("\\(%p)", "%1")
+            table.concat(require("rfc.sources.rfc.render").document(exported.model).markdown, "\n"):gsub("\\(%p)", "%1")
         local _, direct_count = direct:gsub("%*/%*", "")
         assert.equals(before, direct_count)
     end)
     it("shares source tag plans between native help and Markdown without mutating inputs", function()
         local cases = {
-            { require("rfc.help_rfc"), "9110", fixtures.rfc9110 },
-            { require("rfc.help_eip"), "20", fixtures.erc20 },
-            { require("rfc.help_bip"), "32", fixtures.bip32 },
-            { require("rfc.help_simd"), "64", fixtures.simd64 },
-            { require("rfc.help_w3c"), "css-grid-2", fixtures.w3c_grid, "https://www.w3.org/TR/css-grid-2/" },
+            { require("rfc.sources.rfc.render"), "9110", fixtures.rfc9110 },
+            { require("rfc.sources.eip.render"), "20", fixtures.erc20 },
+            { require("rfc.sources.bip.render"), "32", fixtures.bip32 },
+            { require("rfc.sources.simd.render"), "64", fixtures.simd64 },
+            { require("rfc.sources.w3c.render"), "css-grid-2", fixtures.w3c_grid, "https://www.w3.org/TR/css-grid-2/" },
         }
         for _, case in ipairs(cases) do
             local lines = fixtures.read(case[3])
@@ -145,7 +146,7 @@ describe("RFC shared document adapters", function()
     end)
 
     it("renders repeated proposal headings and literal wildcard prose directly from a source plan", function()
-        local spec = require("rfc.help_eip").spec
+        local spec = require("rfc.sources.eip.render").spec
         local lines =
             { "---", "title: Literal", "---", "# Same", "Accept: `*/*`", "# Same", "```http", "Accept: */*", "```" }
         local plan = require("rfc.format.proposal").model(spec, "99", lines)
@@ -161,7 +162,7 @@ describe("RFC shared document adapters", function()
     it("allocates distinct proposal tags even when headings already have numeric suffixes", function()
         local lines =
             { "---", "eip: 1", "title: Collision", "---", "## Foo", "## Foo", "## Foo-2", "## Foo", "## Foo-2" }
-        local exported = require("rfc.help_eip").render("1", lines)
+        local exported = require("rfc.sources.eip.render").render("1", lines)
         local doc = contract.from_model(exported.model)
         local seen, tags = {}, {}
         for _, tag in ipairs(exported.tags) do
@@ -179,7 +180,7 @@ describe("RFC shared document adapters", function()
 
     it("keeps literal metadata pipes separate from resolved proposal links", function()
         local proposal = require("rfc.format.proposal")
-        local spec = require("rfc.help_eip").spec
+        local spec = require("rfc.sources.eip.render").spec
         local lines = {
             "---",
             "eip: 20",
@@ -210,9 +211,9 @@ describe("RFC shared document adapters", function()
     it("renders both proposal formats without scanning mentions again", function()
         local proposal = require("rfc.format.proposal")
         for _, item in ipairs({
-            { require("rfc.help_eip").spec, "20", fixtures.erc20 },
-            { require("rfc.help_bip").spec, "32", fixtures.bip32 },
-            { require("rfc.help_simd").spec, "64", fixtures.simd64 },
+            { require("rfc.sources.eip.render").spec, "20", fixtures.erc20 },
+            { require("rfc.sources.bip.render").spec, "32", fixtures.bip32 },
+            { require("rfc.sources.simd.render").spec, "64", fixtures.simd64 },
         }) do
             local original, calls = item[1].mentions, 0
             local spec = {}
@@ -246,7 +247,7 @@ describe("RFC shared document adapters", function()
             '<h2 id="c">Foo-2</h2>',
             "</main></body></html>",
         }
-        local exported = require("rfc.help_w3c").render("test", lines, "https://www.w3.org/TR/test/")
+        local exported = require("rfc.sources.w3c.render").render("test", lines, "https://www.w3.org/TR/test/")
         local source = contract.from_model(exported.model)
         local seen = {}
         for _, h in ipairs(source.headings) do

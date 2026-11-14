@@ -1,5 +1,5 @@
 local help = require("rfc.help")
-local help_rfc = require("rfc.help_rfc")
+local help_rfc = require("rfc.sources.rfc.render")
 local fp = require("cds.fp")
 local fixtures = require("spec.fixtures")
 
@@ -40,16 +40,25 @@ end)
 
 describe("title", function()
     it("reads the centred title after the header block", function()
-        assert.are.equal("HTTP Semantics", help.title(fixtures.read(fixtures.rfc9110)))
-        assert.are.equal("Hypertext Transfer Protocol -- HTTP/1.1", help.title(fixtures.read(fixtures.rfc2616)))
+        assert.are.equal(
+            "HTTP Semantics",
+            require("rfc.sources.rfc.render.model").title(fixtures.read(fixtures.rfc9110))
+        )
+        assert.are.equal(
+            "Hypertext Transfer Protocol -- HTTP/1.1",
+            require("rfc.sources.rfc.render.model").title(fixtures.read(fixtures.rfc2616))
+        )
     end)
     it("reads an old-format title past lines of whitespace", function()
-        assert.are.equal("INTERNET PROTOCOL", help.title(fixtures.read(fixtures.rfc791)))
+        assert.are.equal(
+            "INTERNET PROTOCOL",
+            require("rfc.sources.rfc.render.model").title(fixtures.read(fixtures.rfc791))
+        )
     end)
     it("joins a title wrapped over two lines", function()
         assert.are.equal(
             "A Long Title Continued",
-            help.title({
+            require("rfc.sources.rfc.render.model").title({
                 "Network Working Group    X. Author",
                 "Request for Comments: 1",
                 "",
@@ -61,8 +70,8 @@ describe("title", function()
         )
     end)
     it("answers nil for text with no title", function()
-        assert.is_nil(help.title({}))
-        assert.is_nil(help.title({ "only a header line" }))
+        assert.is_nil(require("rfc.sources.rfc.render.model").title({}))
+        assert.is_nil(require("rfc.sources.rfc.render.model").title({ "only a header line" }))
     end)
 end)
 

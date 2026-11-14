@@ -1,4 +1,4 @@
-local bip = require("rfc.source.bip")
+local bip = require("rfc.sources.bip.reader")
 local fixtures = require("spec.fixtures")
 
 describe("format", function()

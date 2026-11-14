@@ -1,4 +1,4 @@
-local help_eip = require("rfc.help_eip")
+local help_eip = require("rfc.sources.eip.render")
 local help = require("rfc.help")
 local fixtures = require("spec.fixtures")
 

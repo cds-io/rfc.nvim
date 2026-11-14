@@ -34,11 +34,19 @@ end
 --- and its restore; `case.setup(sources, extra)` reconfigures the sources, with any
 --- other settings merged over.
 function M.start()
-    local fetch = require("rfc.fetch")
+    -- the transport and each source's own fetch module, every function kept
+    -- to put back
+    local fetch, net = require("rfc.fetch"), {}
+    for _, prefix in ipairs({ "rfc", "eip", "bip", "simd", "w3c", "crs" }) do
+        net[prefix] = require("rfc.sources." .. prefix .. ".fetch")
+    end
     local saved = { select = vim.ui.select, rtp = vim.o.runtimepath, fetch = {} }
-    for name, fn in pairs(fetch) do
-        if type(fn) == "function" then
-            saved.fetch[name] = fn
+    for _, module in ipairs({ fetch, net.rfc, net.eip, net.bip, net.simd, net.w3c, net.crs }) do
+        saved.fetch[module] = {}
+        for name, fn in pairs(module) do
+            if type(fn) == "function" then
+                saved.fetch[module][name] = fn
+            end
         end
     end
     -- what the plugin says, the index fetches ("fetching the RFC index")
@@ -82,10 +90,10 @@ function M.start()
         ["3986"] = fixtures.rfc3986,
         ["791"] = fixtures.rfc791,
     }
-    fetch.rfc = function(n)
+    net.rfc.rfc = function(n)
         return answer(n, rfcs[n], "RFC " .. n .. " does not exist")
     end
-    fetch.index = function()
+    net.rfc.index = function()
         return answer("index", fixtures.rfc_index)
     end
     local proposals = {
@@ -96,7 +104,7 @@ function M.start()
         -- an ERC filed since the repositories split: ERCs holds it, EIPs has no stub
         erc1123 = fixtures.erc1123,
     }
-    fetch.proposal = function(_, _, prefix, id)
+    net.eip.proposal = function(_, _, prefix, id)
         return answer(prefix .. id, proposals[prefix .. id], prefix:upper() .. " " .. id .. " does not exist")
     end
     -- the EIP site's category pages: four as fixtures, two as a page with
@@ -140,7 +148,7 @@ function M.start()
         local title = category:sub(1, 1):upper() .. category:sub(2)
         return Task.of('<h1 class="post-title">' .. title .. "</h1>\n")
     end
-    fetch.subjects = function()
+    net.rfc.subjects = function()
         return answer("subjects", fixtures.rfc_tags)
     end
     -- W3C reports by the URL asked for (the index's spelling), with a
@@ -152,7 +160,7 @@ function M.start()
         WCAG22 = fixtures.w3c_grid,
         ["dx-prof-0.9"] = fixtures.w3c_grid,
     }
-    fetch.w3c = function(url, shortname)
+    net.w3c.w3c = function(url, shortname)
         table.insert(case.urls, url)
         table.insert(case.fetched, "w3c-" .. shortname)
         if case.w3c_modified == false then
@@ -164,7 +172,7 @@ function M.start()
         end
         return Task.of({ body = table.concat(fixtures.read(fixture), "\n") .. "\n", modified = 1701666464 })
     end
-    fetch.simd_listing = function()
+    net.simd.simd_listing = function()
         return answer("simd-index", fixtures.simd_listing)
     end
     local simds = {
@@ -172,18 +180,18 @@ function M.start()
         ["0001-simd-process.md"] = fixtures.simd1,
         ["0268-raise-cpi-nesting-limit.md"] = fixtures.simd_related,
     }
-    fetch.simd = function(file, id)
+    net.simd.simd = function(file, id)
         return answer("simd" .. id, simds[file], "SIMD " .. id .. " does not exist")
     end
     local bips = { ["32"] = fixtures.bip32, ["22"] = fixtures.bip22, ["341"] = fixtures.bip341, ["3"] = fixtures.bip3 }
-    fetch.bip = function(id)
+    net.bip.bip = function(id)
         return answer("bip" .. id, bips[id], "BIP " .. id .. " does not exist")
     end
     -- CRS reports: the JSON record by number, the HTML by its file name;
     -- `case.crs_no_html = true` strips the HTML format from a record, as a
     -- PDF-only report would read
     local records = { R43397 = fixtures.crs_r43397_json, IF12345 = fixtures.crs_if12345_json }
-    fetch.crs_json = function(number)
+    net.crs.crs_json = function(number)
         table.insert(case.fetched, "crs-" .. number .. ".json")
         if not records[number] then
             return Task.fail("CRS " .. number .. " does not exist")
@@ -194,7 +202,7 @@ function M.start()
         end
         return Task.of(text)
     end
-    fetch.crs_html = function(filename, number)
+    net.crs.crs_html = function(filename, number)
         table.insert(case.fetched, "crs-" .. number .. ".html")
         if not filename:match("R43397") then
             return Task.fail("CRS " .. number .. " does not exist")
@@ -202,8 +210,10 @@ function M.start()
         return text_of(fixtures.crs_r43397)
     end
     local function restore()
-        for name, fn in pairs(saved.fetch) do
-            fetch[name] = fn
+        for module, fns in pairs(saved.fetch) do
+            for name, fn in pairs(fns) do
+                module[name] = fn
+            end
         end
         vim.ui.select = saved.select
         -- every sidebar, help window and document buffer goes, then the

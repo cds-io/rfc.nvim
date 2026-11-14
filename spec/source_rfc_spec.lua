@@ -1,4 +1,4 @@
-local rfc = require("rfc.source.rfc")
+local rfc = require("rfc.sources.rfc.reader")
 local fixtures = require("spec.fixtures")
 
 local function section(sections, number, title)

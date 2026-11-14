@@ -1,4 +1,4 @@
-local eip = require("rfc.source.eip")
+local eip = require("rfc.sources.eip.reader")
 local markdown = require("rfc.format.proposal.markdown")
 local fixtures = require("spec.fixtures")
 

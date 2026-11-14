@@ -1,8 +1,9 @@
 # Settings for lua-spec, the architecture checker beside this checkout
 # (make architecture-check): the module prefix whose lua/rfc.lua and
 # lua/rfc/init.lua are the public facade, the lines a production module may
-# run to, and the pure core, whose modules neither name vim nor import a
-# module outside it.
+# run to, the pure core, whose modules neither name vim nor import a module
+# outside it, and the sealed sources, each a directory only its own modules
+# and plugin/ import (the core reaches a source through rfc.sources).
 [architecture]
 plugin = "rfc"
 limit = 200
@@ -12,15 +13,30 @@ pure = [
     "lua/rfc/document",
     "lua/rfc/format",
     "lua/rfc/help",
-    "lua/rfc/help_rfc",
-    "lua/rfc/help_bip.lua",
-    "lua/rfc/help_eip.lua",
-    "lua/rfc/help_simd.lua",
-    "lua/rfc/help_w3c.lua",
     "lua/rfc/needs.lua",
     "lua/rfc/outline.lua",
     "lua/rfc/source",
     "lua/rfc/status.lua",
     "lua/rfc/subjects.lua",
     "lua/rfc/tables.lua",
+    "lua/rfc/sources/bip/reader",
+    "lua/rfc/sources/bip/render.lua",
+    "lua/rfc/sources/crs/model.lua",
+    "lua/rfc/sources/crs/reader",
+    "lua/rfc/sources/eip/reader",
+    "lua/rfc/sources/eip/render.lua",
+    "lua/rfc/sources/rfc/reader",
+    "lua/rfc/sources/rfc/render",
+    "lua/rfc/sources/simd/reader.lua",
+    "lua/rfc/sources/simd/render.lua",
+    "lua/rfc/sources/w3c/reader.lua",
+    "lua/rfc/sources/w3c/render.lua",
+]
+sealed = [
+    "lua/rfc/sources/bip",
+    "lua/rfc/sources/crs",
+    "lua/rfc/sources/eip",
+    "lua/rfc/sources/rfc",
+    "lua/rfc/sources/simd",
+    "lua/rfc/sources/w3c",
 ]

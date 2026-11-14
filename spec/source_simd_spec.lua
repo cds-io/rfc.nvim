@@ -1,4 +1,4 @@
-local simd = require("rfc.source.simd")
+local simd = require("rfc.sources.simd.reader")
 local markdown = require("rfc.format.proposal.markdown")
 local fixtures = require("spec.fixtures")
 

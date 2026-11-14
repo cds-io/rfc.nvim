@@ -1074,7 +1074,7 @@ describe("rfc", function()
             vim.fn.writefile(fixtures.read(fixtures.rfc_tags), store.index_path(cfg, "rfc-subjects.csv"))
             local old = os.time() - 2 * 24 * 60 * 60
             vim.uv.fs_utime(index, old, old)
-            require("rfc.fetch").subjects = function()
+            require("rfc.sources.rfc.fetch").subjects = function()
                 return require("cds.task").fail("boom")
             end
             vim.cmd("Rfc subjects")
@@ -1088,7 +1088,7 @@ describe("rfc", function()
         end)
 
         it("reports a failed fetch with no copy and opens nothing", function()
-            require("rfc.fetch").subjects = function()
+            require("rfc.sources.rfc.fetch").subjects = function()
                 return require("cds.task").fail("boom")
             end
             vim.cmd("Rfc subjects")
@@ -1558,7 +1558,7 @@ describe("rfc", function()
         end)
 
         it("parses the index once for an open by shortname", function()
-            local w3c = require("rfc.source.w3c")
+            local w3c = require("rfc.sources.w3c.reader")
             local index, parses = w3c.index, 0
             w3c.index = function(...)
                 parses = parses + 1

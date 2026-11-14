@@ -1,33 +1,6 @@
--- Help text cleanup, title, line formatting and wrapping.
+-- Help text cleanup, line formatting and wrapping.
 local WIDTH = 78
 local M = {}
-
---- The RFC's title: the centred lines after the header block. The header
---- block is the first run of column-0 lines; the title is the first run of
---- indented lines after the blank that ends it.
----@param lines string[]
----@return string|nil
-function M.title(lines)
-    local i = 1
-    while lines[i] and not lines[i]:match("^%S") do
-        i = i + 1
-    end
-    while lines[i] and lines[i]:match("%S") do
-        i = i + 1
-    end
-    while lines[i] and not lines[i]:match("%S") do
-        i = i + 1
-    end
-    local words = {}
-    while lines[i] and lines[i]:match("^%s+%S") do
-        table.insert(words, (lines[i]:match("^%s*(.-)%s*$")))
-        i = i + 1
-    end
-    if #words == 0 then
-        return nil
-    end
-    return table.concat(words, " ")
-end
 
 --- A fetched body as lines: form feeds and the byte-order mark removed,
 --- CRLF folded, the final newline dropped.
