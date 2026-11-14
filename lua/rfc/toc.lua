@@ -3,9 +3,10 @@
 -- teardown; RFC owns headings, selection and tag-stack navigation.
 local config = require("rfc.config")
 local outline = require("rfc.outline")
-local view = require("rfc.view")
 local M = {}
 local ns = vim.api.nvim_create_namespace("rfc.toc")
+-- the sidebar's labels, drawn in every view
+vim.api.nvim_set_hl(0, "rfcHeading", { link = "Title", default = true })
 local contents
 local actions
 function M.configure(deps)
@@ -23,7 +24,7 @@ end
 ---@param s cds.CompanionView
 ---@param doc_buf integer
 local function load(s, doc_buf)
-    s.data.headings = view.headings(doc_buf)
+    s.data.headings = require("rfc.headings").headings(doc_buf)
     local rows = outline.rows(s.data.headings)
     vim.bo[s.buf].modifiable = true
     vim.api.nvim_buf_set_lines(s.buf, 0, -1, false, rows.lines)
