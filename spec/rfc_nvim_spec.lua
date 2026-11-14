@@ -127,6 +127,26 @@ describe("rfc", function()
         end)
     end)
 
+    describe("a help buffer of ours", function()
+        it("is announced once, with its text, for what decorates it", function()
+            local seen = {}
+            local id = vim.api.nvim_create_autocmd("User", {
+                pattern = "RfcHelpBuffer",
+                callback = function(args)
+                    table.insert(seen, { buf = args.data.buf, lines = vim.api.nvim_buf_line_count(args.data.buf) })
+                end,
+            })
+            finally(function()
+                vim.api.nvim_del_autocmd(id)
+            end)
+            vim.cmd("Rfc 9110")
+            assert.is_true(editor.wait_help("9110"))
+            assert.are.equal(1, #seen)
+            assert.are.equal(vim.api.nvim_get_current_buf(), seen[1].buf)
+            assert.is_true(seen[1].lines > 1)
+        end)
+    end)
+
     describe("the rich view", function()
         local view = require("rfc.view")
         local function marks()
