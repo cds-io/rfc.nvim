@@ -174,6 +174,26 @@ describe("crs tags", function()
     end)
 end)
 
+describe("replace_file", function()
+    it("replaces one document's entries, leaving a tag that merely names the file", function()
+        local before = help.tags_file({
+            { file = "a.txt", tags = { { name = "a", line = 1 }, { name = "a-old", line = 3 } } },
+            { file = "b.txt", tags = { { name = "a.txt", line = 1 }, { name = "b", line = 1 } } },
+        })
+        local after = help.replace_file(before, "a.txt", { { name = "a", line = 1 }, { name = "a-new", line = 4 } })
+        assert.are.same(
+            help.tags_file({
+                { file = "a.txt", tags = { { name = "a", line = 1 }, { name = "a-new", line = 4 } } },
+                { file = "b.txt", tags = { { name = "a.txt", line = 1 }, { name = "b", line = 1 } } },
+            }),
+            after
+        )
+    end)
+    it("adds a new document's entries to an empty file", function()
+        assert.are.same({ "x\tx.txt\t/*x*" }, help.replace_file({}, "x.txt", { { name = "x", line = 1 } }))
+    end)
+end)
+
 describe("section_tag and row_tag", function()
     it("takes a node tag as a section and the file tag as none", function()
         assert.are.equal("rfc-subjects-web-http", help.section_tag("web / HTTP  (3)   *rfc-subjects-web-http*"))

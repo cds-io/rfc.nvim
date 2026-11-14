@@ -158,4 +158,26 @@ function M.tags_file(docs)
     return lines
 end
 
+--- A tags file with one document's entries replaced: every line naming the
+--- file dropped, the document's tags added, byte-sorted again. A render's
+--- declared tags are the tags its lines carry (spec/tags_invariant_spec.lua),
+--- so the result is the file a scan of every document would write.
+---@param lines string[]   -- the tags file as it stands
+---@param file string      -- the document's file name: rfc9110.txt
+---@param tags rfc.HelpTag[]
+---@return string[]
+function M.replace_file(lines, file, tags)
+    local out = {}
+    for _, line in ipairs(lines) do
+        if line:match("^[^\t]*\t([^\t]*)\t") ~= file then
+            table.insert(out, line)
+        end
+    end
+    for _, line in ipairs(M.tags_file({ { file = file, tags = tags } })) do
+        table.insert(out, line)
+    end
+    table.sort(out)
+    return out
+end
+
 return M

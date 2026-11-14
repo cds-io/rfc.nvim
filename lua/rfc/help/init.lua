@@ -19,6 +19,7 @@ local tags = require("rfc.help.tags")
 local text = require("rfc.help.text")
 M.slug, M.tag, M.ref_tag = tags.slug, tags.tag, tags.ref_tag
 M.tags_in, M.section_tag, M.row_tag, M.tags_file = tags.tags_in, tags.section_tag, tags.row_tag, tags.tags_file
+M.replace_file = tags.replace_file
 M.clean, M.with_tag = text.clean, text.with_tag
 
 return M

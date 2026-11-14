@@ -1,3 +1,15 @@
+2026-11-14  The tags file takes a document's declared tags
+
+  lua/rfc/store.lua, lua/rfc/help/tags.lua, spec/tags_invariant_spec.lua
+    Writing a document updates the tags file from the tags its render
+    declared: the file's lines for the document are replaced and the file
+    sorted again, and no other document is read (1.7 ms against a 33
+    document store, where a scan of every document took 112 ms). A render's
+    declared tags are the tags its lines carry, which a spec holds for every
+    source's render and the subjects document. The full scan rebuilds the
+    file when there is none yet, when earlier layouts are retired, and when
+    a source's cache is cleared.
+
 2026-11-14  A Markdown page is the model's projection alone
 
   lua/rfc/document/
