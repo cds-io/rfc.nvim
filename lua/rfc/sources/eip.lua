@@ -46,11 +46,8 @@ local function moved(lines)
     return markdown.frontmatter(lines).status == "Moved"
 end
 
----@type rfc.Source
+---@type rfc.SourceRecord
 M.eip = {
-    prefix = "eip",
-    aliases = { "erc" },
-    label = "EIP",
     raw_ext = "md",
     index_file = "eip-categories.html",
     -- the EIPs repository first, then ERCs: a moved stub says the text is

@@ -1,3 +1,20 @@
+2026-11-13  The sources register
+
+  lua/rfc/sources/init.lua, plugin/rfc.lua, lua/rfc/config.lua,
+  lua/rfc/help/tags.lua
+    rfc.sources is a registry. A source registers a spec, its identity
+    (prefix, aliases, key, label) and its command; the record, how its texts
+    and index are fetched, read and rendered, is required the first time the
+    source is used and answers with the spec's identity merged in.
+    plugin/rfc.lua registers the six shipped sources and defines a command
+    for each registered spec. A prefix stays the first module's that took
+    it. The tag shapes read the shortname sources the registry names.
+    setup's `sources` turns a source on or off by prefix and defaults to {}:
+    a source left out is on as its spec says (rfc on, the rest off), and a
+    prefix no source registered fails setup, naming the registered ones. A
+    source whose model kind no shared format draws carries its Markdown
+    projection (the RFC's, rfc.help_rfc.document).
+
 2026-11-13  The formats carry their names
 
   lua/rfc/help_rfc/, lua/rfc/format/report/, lua/rfc/format/proposal/

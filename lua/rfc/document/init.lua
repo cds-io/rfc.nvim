@@ -1,9 +1,9 @@
--- Source-specific projections onto the shared document contract.
+-- The shared formats' projections onto the document contract, by model kind;
+-- a source whose kind no format draws carries its own (rfc.Source.document).
 local M = {}
 M.from_help = require("rfc.document.help")
 local render = {
     html = require("rfc.document.report"),
-    rfc = require("rfc.document.rfc"),
     proposal = require("rfc.document.proposal"),
     subjects = require("rfc.document.subjects"),
 }

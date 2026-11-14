@@ -53,10 +53,16 @@ function M.ensure_setup()
     end
 end
 
+--- Whether the source is on: as setup's `sources` says, else as its spec
+--- says (default_on), else off.
 ---@param source rfc.Source
 ---@return boolean
 function M.enabled(source)
-    return config.get().sources[source.prefix] == true
+    local on = config.get().sources[source.prefix]
+    if on == nil then
+        return source.default_on == true
+    end
+    return on == true
 end
 --- Runs a Task on the main loop, tracked in the activity segment, and hands
 --- `done(value, err)` its outcome; a thrown error arrives as the err.

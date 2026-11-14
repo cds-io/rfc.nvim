@@ -84,12 +84,8 @@ end
 --- report number: the 32 topic pages are the index, a report is fetched
 --- through its JSON record to the mirror's HTML, normalized by
 --- rfc.source.crs and rendered as a W3C report is.
----@type rfc.Source
+---@type rfc.SourceRecord
 M.crs = {
-    prefix = "crs",
-    aliases = {},
-    label = "CRS",
-    key = "shortname",
     raw_ext = "html",
     index_file = "crs-topics.html",
     fetch = fetch_report,

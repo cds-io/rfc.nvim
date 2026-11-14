@@ -15,6 +15,7 @@ local model = require("rfc.help_rfc.model")
 local M = {}
 M.target, M.model = model.target, model.model
 M.render_model = require("rfc.help_rfc.render").render_model
+M.document = require("rfc.help_rfc.document")
 
 ---@param rfc_num string
 ---@param lines string[]

@@ -560,7 +560,7 @@ describe("the shared RFC document reader", function()
     end)
 
     it("prepares a cold document once for its help export and Markdown view", function()
-        local source = require("rfc.sources").rfc
+        local source = require("rfc.sources").get("rfc")
         local original, calls = source.prepare, 0
         source.prepare = function(...)
             calls = calls + 1
@@ -585,7 +585,7 @@ describe("the shared RFC document reader", function()
         { "w3c", "W3c wcag22", "w3c-wcag22" },
     }) do
         it("reuses the prepared " .. item[1] .. " model when reopening a document", function()
-            local source = require("rfc.sources")[item[1]]
+            local source = require("rfc.sources").get(item[1])
             local original, calls = source.prepare, 0
             source.prepare = function(...)
                 calls = calls + 1

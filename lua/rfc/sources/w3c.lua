@@ -18,12 +18,8 @@ end
 --- a report is fetched at the URL the page spells (89 shortnames carry
 --- uppercase letters, and the lowercased URL only redirects), asked
 --- conditionally when a copy is on disk, and rendered through rfc.source.html.
----@type rfc.Source
+---@type rfc.SourceRecord
 M.w3c = {
-    prefix = "w3c",
-    aliases = {},
-    label = "W3C",
-    key = "shortname",
     raw_ext = "html",
     index_file = "w3c-index.html",
     located = true,

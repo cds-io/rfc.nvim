@@ -12,11 +12,8 @@ local M = {}
 --- on GitHub. The proposals directory is the index, and a number finds its
 --- file there, since the file name carries a slug too; the rim keeps the
 --- directory a day, as it keeps every index.
----@type rfc.Source
+---@type rfc.SourceRecord
 M.simd = {
-    prefix = "simd",
-    aliases = {},
-    label = "SIMD",
     raw_ext = "md",
     index_file = "simd-index.json",
     located = true,

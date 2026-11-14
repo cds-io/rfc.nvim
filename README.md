@@ -383,7 +383,7 @@ make test
 
 ```lua
 require("rfc").setup({
-    sources = { rfc = true, eip = false, bip = false, simd = false, w3c = false },
+    sources = { eip = true }, -- by prefix; rfc is on and the rest off unless named
     cache_dir = nil, -- stdpath("cache") .. "/rfc"
     view = "document", -- Markdown/vellum; "rich" or "plain" for legacy help
     toc = { width = 44 }, -- the contents sidebar

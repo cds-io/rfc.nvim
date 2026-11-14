@@ -6,6 +6,15 @@ local help = require("rfc.help")
 local fp = require("cds.fp")
 local fixtures = require("spec.fixtures")
 
+-- the shortname shapes are the registry's to set; these cases read W3C and CRS
+-- tags, so they set the two prefixes and put the empty set back
+before_each(function()
+    require("rfc.help.tags").set_shortnames({ "w3c", "crs" })
+end)
+after_each(function()
+    require("rfc.help.tags").set_shortnames({})
+end)
+
 --- The stored text as the fetch writes it: the fact line, then the HTML.
 local function raw()
     local v = crs.version(table.concat(fixtures.read(fixtures.crs_r43397_json), "\n"))
