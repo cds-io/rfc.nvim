@@ -2,7 +2,7 @@
 -- entry form the rich view lays a wide one out in: each row as its first
 -- cell over the other cells as labelled lines. Plain lines in, plain
 -- tables out; nothing here names the editor.
-local help_w3c = require("rfc.help_w3c")
+local wrap = require("rfc.help.text").wrap
 local fp = require("cds.fp")
 
 local M = {}
@@ -98,7 +98,7 @@ function M.entries(t, width)
         table.insert(out, row[1] or "")
         for c = 2, #row do
             local label = t.header and t.header[c] or tostring(c)
-            for _, l in ipairs(help_w3c.wrap(label .. ": " .. row[c], "    ", width)) do
+            for _, l in ipairs(wrap(label .. ": " .. row[c], "    ", width)) do
                 table.insert(out, l)
             end
         end

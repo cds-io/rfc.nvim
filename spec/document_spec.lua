@@ -27,7 +27,12 @@ describe("RFC shared document adapters", function()
     end)
 
     it("retains W3C native HTML IDs and numbered RFC tags at the same heading", function()
-        local doc = contract.report("css-grid-2", fixtures.read(fixtures.w3c_grid), "https://www.w3.org/TR/css-grid-2/")
+        local model = require("rfc.help_w3c").model(
+            "css-grid-2",
+            fixtures.read(fixtures.w3c_grid),
+            "https://www.w3.org/TR/css-grid-2/"
+        )
+        local doc = contract.from_model(model)
         assert.equals(doc.anchors.intro, doc.anchors["w3c-css-grid-2#1"])
         assert.matches("Introduction", doc.markdown[assert(document.anchor(doc, "intro"))])
         assert.is_not_nil(doc.anchors["w3c-css-grid-2#1.1"])

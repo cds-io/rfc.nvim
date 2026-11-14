@@ -2,7 +2,7 @@
 local config = require("rfc.config")
 local cache = require("rfc.cache")
 local help = require("rfc.help")
-local w3c = require("rfc.source.w3c")
+local dates = require("rfc.dates")
 local fp = require("cds.fp")
 local Task = require("cds.task")
 local lifecycle = require("rfc.status")
@@ -91,7 +91,7 @@ function M.raw_of(source, id)
         label = source.label .. " " .. id,
         placeholder = source.placeholder,
         -- a report republished after the copy was taken is asked for again
-        modified = entry and entry.date and w3c.date_time(entry.date) or nil,
+        modified = entry and entry.date and dates.date_time(entry.date) or nil,
     })
 end
 

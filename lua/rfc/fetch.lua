@@ -6,7 +6,7 @@
 local Task = require("cds.task")
 local http = require("cds.http")
 local status = http.status
-local w3c = require("rfc.source.w3c")
+local dates = require("rfc.dates")
 
 local M = {}
 
@@ -139,7 +139,7 @@ end
 ---@return cds.Task
 function M.w3c(url, shortname, since)
     return Task.new(function()
-        local headers = since and { ["If-Modified-Since"] = w3c.http_time(since) } or nil
+        local headers = since and { ["If-Modified-Since"] = dates.http_time(since) } or nil
         local res, err = http.request({ method = "GET", url = url, headers = headers, timeout = 30 })
         if not res then
             assert(err, "a refused request carries its error")
@@ -151,7 +151,7 @@ function M.w3c(url, shortname, since)
         if res.status ~= status.OK then
             return nil, describe({ status = res.status }, "W3C " .. shortname)
         end
-        local modified = res.headers["last-modified"] and w3c.parse_http_time(res.headers["last-modified"])
+        local modified = res.headers["last-modified"] and dates.parse_http_time(res.headers["last-modified"])
         return { body = res.body, modified = modified or os.time() }
     end)
 end

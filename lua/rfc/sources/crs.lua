@@ -2,7 +2,7 @@ local fetch = require("rfc.fetch")
 local help_w3c = require("rfc.help_w3c")
 local model = require("rfc.help.crs.model")
 local crs = require("rfc.source.crs")
-local w3c = require("rfc.source.w3c")
+local dates = require("rfc.dates")
 local subjects = require("rfc.source.subjects")
 local Task = require("cds.task")
 local fp = require("cds.fp")
@@ -75,7 +75,7 @@ local function fetch_report(id)
             )
         end
         return fetch.crs_html(v.html, v.number):map(function(html)
-            return { body = crs.facts(v) .. "\n" .. html, modified = w3c.date_time(v.date) }
+            return { body = crs.facts(v) .. "\n" .. html, modified = dates.date_time(v.date) }
         end)
     end)
 end

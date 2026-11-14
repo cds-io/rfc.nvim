@@ -3,6 +3,7 @@ local help = require("rfc.help")
 local proposal = require("rfc.proposal")
 local fp = require("cds.fp")
 local formatting = require("rfc.help.w3c.text")
+local wrap = require("rfc.help.text").wrap
 local link, absolute = formatting.link, formatting.absolute
 local WIDTH = 78
 local M = {}
@@ -23,7 +24,7 @@ local function render_blocks(blocks, indent, ctx)
         end
     end
     local function paragraph(t, ind)
-        for _, l in ipairs(formatting.wrap(link(t, ctx), ind)) do
+        for _, l in ipairs(wrap(link(t, ctx), ind)) do
             put(l)
         end
     end
@@ -68,7 +69,7 @@ local function render_blocks(blocks, indent, ctx)
                 local inner = indent .. string.rep(" ", #marker)
                 local first = item[1]
                 if first and first.kind == "para" then
-                    local wrapped = formatting.wrap(link(first.text, ctx), inner)
+                    local wrapped = wrap(link(first.text, ctx), inner)
                     wrapped[1] = indent .. marker .. wrapped[1]:sub(#inner + 1)
                     for _, l in ipairs(wrapped) do
                         put(l)
@@ -95,7 +96,7 @@ local function render_blocks(blocks, indent, ctx)
         elseif b.kind == "figure" then
             put(indent .. (b.caption or "Figure") .. " ~")
             if b.alt ~= "" then
-                for _, l in ipairs(formatting.wrap(b.alt, indent .. "    ")) do
+                for _, l in ipairs(wrap(b.alt, indent .. "    ")) do
                     put(l)
                 end
             end
@@ -106,7 +107,7 @@ local function render_blocks(blocks, indent, ctx)
         elseif b.kind == "callout" then
             -- a label may be a sentence (a details summary): wrapped, each
             -- line a column heading
-            for _, l in ipairs(formatting.wrap(b.label, indent, WIDTH - 2)) do
+            for _, l in ipairs(wrap(b.label, indent, WIDTH - 2)) do
                 put(l .. " ~")
             end
             render_blocks(b.blocks, indent .. "  ", ctx)
