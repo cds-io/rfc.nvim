@@ -1,4 +1,4 @@
-local w3c = require("rfc.source.w3c")
+local w3c = require("rfc.sources.w3c.reader")
 local fp = require("cds.fp")
 local fixtures = require("spec.fixtures")
 

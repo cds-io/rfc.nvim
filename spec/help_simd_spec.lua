@@ -1,4 +1,4 @@
-local help_simd = require("rfc.help_simd")
+local help_simd = require("rfc.sources.simd.render")
 local help = require("rfc.help")
 local fixtures = require("spec.fixtures")
 

@@ -1,3 +1,16 @@
+2026-11-13  A source is one directory, sealed
+
+  lua/rfc/sources/<prefix>/, lua/rfc/fetch.lua, lua-spec.toml
+    Each source is a directory under lua/rfc/sources/: init.lua is its
+    record, fetch.lua its documents over the network, reader its text's
+    reader, and render (or model, for CRS) its help render. rfc.fetch is the
+    transport every source fetches through: a GET, a listing page, and
+    request, text and describe for a source's own fetch module.
+    rfc.source holds the readers every source may use (HTML, CSV, mentions,
+    subjects). make architecture-check seals each source's directory: only
+    its own modules and plugin/ import it, so the core reaches a source
+    through rfc.sources alone. The RFC's title reader is the RFC render's.
+
 2026-11-13  The sources register
 
   lua/rfc/sources/init.lua, plugin/rfc.lua, lua/rfc/config.lua,

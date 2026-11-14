@@ -1,4 +1,4 @@
-local crs = require("rfc.source.crs")
+local crs = require("rfc.sources.crs.reader")
 local fp = require("cds.fp")
 local fixtures = require("spec.fixtures")
 

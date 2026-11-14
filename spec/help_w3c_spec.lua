@@ -1,4 +1,4 @@
-local help_w3c = require("rfc.help_w3c")
+local help_w3c = require("rfc.sources.w3c.render")
 local help = require("rfc.help")
 local outline = require("rfc.outline")
 local fp = require("cds.fp")

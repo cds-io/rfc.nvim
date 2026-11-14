@@ -143,7 +143,7 @@ describe("the shared RFC document reader", function()
     end)
 
     it("only lands the latest pending tag follow in a window", function()
-        local fetch = require("rfc.fetch")
+        local fetch = require("rfc.sources.rfc.fetch")
         local callbacks = {}
         fetch.rfc = function(id)
             return Task.new(function()
@@ -368,7 +368,7 @@ describe("the shared RFC document reader", function()
         vim.cmd("Rfc 9110")
         assert.is_true(wait_document("rfc9110"))
         local pending
-        require("rfc.fetch").rfc = function()
+        require("rfc.sources.rfc.fetch").rfc = function()
             return Task.new(function()
                 require("cds.async").await(1, function(done)
                     pending = done

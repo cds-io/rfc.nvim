@@ -2,7 +2,7 @@
 local cache = require("rfc.cache")
 local store = require("rfc.store")
 local help = require("rfc.help")
-local help_rfc = require("rfc.help_rfc")
+local help_rfc = require("rfc.sources.rfc.render")
 local Task = require("cds.task")
 
 describe("cache", function()

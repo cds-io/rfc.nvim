@@ -1,6 +1,6 @@
 local outline = require("rfc.outline")
-local help_rfc = require("rfc.help_rfc")
-local help_eip = require("rfc.help_eip")
+local help_rfc = require("rfc.sources.rfc.render")
+local help_eip = require("rfc.sources.eip.render")
 local fixtures = require("spec.fixtures")
 
 local function render(fixture, id)

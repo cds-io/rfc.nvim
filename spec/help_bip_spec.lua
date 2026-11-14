@@ -1,4 +1,4 @@
-local help_bip = require("rfc.help_bip")
+local help_bip = require("rfc.sources.bip.render")
 local help = require("rfc.help")
 local fixtures = require("spec.fixtures")
 
