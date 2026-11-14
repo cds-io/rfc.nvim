@@ -16,7 +16,9 @@ local REQUIREMENTS = {
     "NOT RECOMMENDED", "RECOMMENDED", "MAY NOT", "MAY", "NOT OPTIONAL", "OPTIONAL",
 }
 
-return function(reader, follow, follow_line, status)
+---@param deps { reader: table, follow: function, follow_line: function, status: function }
+return function(deps)
+    local reader, follow, follow_line, status = deps.reader, deps.follow, deps.follow_line, deps.status
     local M = { follow = follow, follow_line = follow_line, status = status, owns = owns }
     --- The cursor to the heading `count` headings away (back for a negative
     --- count), on the jumplist; nothing when none lies that way.

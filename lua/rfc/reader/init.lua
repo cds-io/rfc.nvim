@@ -10,15 +10,14 @@ function Reader.new(deps)
     local navigation
     local bind = require("rfc.reader.keys")
     function M.attach(buf)
-        bind(
-            buf,
-            navigation.follow,
-            navigation.back,
-            navigation.step,
-            deps.toc.toggle,
-            navigation.cancel,
-            navigation.target
-        )
+        bind(buf, {
+            follow = navigation.follow,
+            back = navigation.back,
+            step = navigation.step,
+            toggle_toc = deps.toc.toggle,
+            cancel = navigation.cancel,
+            target = navigation.target,
+        })
     end
     local reporting = require("rfc.reader.progress")
     local presentation
@@ -47,13 +46,13 @@ function Reader.new(deps)
             return M.image_wait
         end,
     })
-    navigation = require("rfc.reader.navigation")(
-        presentation.model,
-        presentation.fresh,
-        presentation.show,
-        resolve,
-        deps.notify
-    )
+    navigation = require("rfc.reader.navigation")({
+        model_of = presentation.model,
+        fresh = presentation.fresh,
+        show = presentation.show,
+        resolve = resolve,
+        notify = deps.notify,
+    })
     M.read, M.reload, M.model, M.attach_window =
         presentation.read, presentation.reload, presentation.model, presentation.attach_window
     M.dashboard_window, M.progress_report = reporting.dashboard_window, reporting.progress_report

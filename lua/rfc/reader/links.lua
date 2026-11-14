@@ -1,5 +1,7 @@
 -- Follow application tags, local fragments and external URLs.
-return function(model_of, navigate, jump, notify, cancel)
+---@param deps { model_of: function, navigate: function, jump: function, notify: function, cancel: function }
+return function(deps)
+    local model_of, navigate, jump, notify, cancel = deps.model_of, deps.navigate, deps.jump, deps.notify, deps.cancel
     return function(target)
         local tag = target:match("^rfc%-tag:(.+)$")
         if tag then

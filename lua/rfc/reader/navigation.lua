@@ -3,7 +3,9 @@ local document = require("cds.document")
 local navigator = require("cds.navigator")
 local sources = require("rfc.sources")
 local names = require("rfc.app.names")
-return function(model_of, fresh, show, resolve, notify)
+---@param deps { model_of: function, fresh: function, show: function, resolve: function, notify: function }
+return function(deps)
+    local model_of, fresh, show, resolve, notify = deps.model_of, deps.fresh, deps.show, deps.resolve, deps.notify
     local M = {}
     local nav = navigator.new()
     local follow
@@ -158,7 +160,13 @@ return function(model_of, fresh, show, resolve, notify)
         end
     end
 
-    follow = require("rfc.reader.links")(model_of, M.jump, jump, notify, nav.cancel)
+    follow = require("rfc.reader.links")({
+        model_of = model_of,
+        navigate = M.jump,
+        jump = jump,
+        notify = notify,
+        cancel = nav.cancel,
+    })
     M.target, M.cancel, M.forget = link_under_cursor, nav.cancel, nav.forget
     return M
 end

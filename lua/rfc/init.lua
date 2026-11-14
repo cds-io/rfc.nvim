@@ -36,27 +36,27 @@ subject_ui = require("rfc.app.subject_ui")(navigation.help_tag, refresh, functio
 end)
 local picker = require("rfc.app.picker")(navigation.open, navigation.jump, subject_ui.subjects)
 local completion = require("rfc.app.completion")
-bindings = require("rfc.app.bindings")(
-    { model = reader.model, step = reader.step, attach = reader.attach },
-    navigation.follow,
-    navigation.follow_line,
-    subject_ui.status
-)
+bindings = require("rfc.app.bindings")({
+    reader = { model = reader.model, step = reader.step, attach = reader.attach },
+    follow = navigation.follow,
+    follow_line = navigation.follow_line,
+    status = subject_ui.status,
+})
 require("rfc.headings").configure(reader.headings)
 toc.configure({ owns = owns, document_model = reader.model, jump = navigation.jump })
-M.command = require("rfc.app.command")(
-    picker.pick,
-    navigation.jump,
-    subject_ui.subjects,
-    subject_ui.status,
-    picker.open_named,
-    subject_ui.nodes,
-    completion.complete,
-    require("rfc.app.clear").clear,
-    function(source)
+M.command = require("rfc.app.command")({
+    pick = picker.pick,
+    jump = navigation.jump,
+    subjects = subject_ui.subjects,
+    status = subject_ui.status,
+    open_named = picker.open_named,
+    nodes = subject_ui.nodes,
+    complete = completion.complete,
+    clear = require("rfc.app.clear").clear,
+    times = function(source)
         require("rfc.app.times").show(source, session.notify)
-    end
-)
+    end,
+})
 M._activity, M.activity, M.notify = session._activity, session.activity, session.notify
 M.ensure, M.index_lines, M.ensure_subjects = entries.ensure, entries.index_lines, cached.ensure_subjects
 M.open, M.jump, M.follow, M.follow_line = navigation.open, navigation.jump, navigation.follow, navigation.follow_line

@@ -3,18 +3,23 @@ local sources = require("rfc.sources")
 local fp = require("cds.fp")
 local statuses_of = require("rfc.app.entries").statuses_of
 local notify = require("rfc.app.session").notify
-return function(pick, jump, subjects, status, open_named, nodes, complete, clear, times)
-    local M = {
-        pick = pick,
-        jump = jump,
-        subjects = subjects,
-        status = status,
-        open_named = open_named,
-        nodes = nodes,
-        complete = complete,
-        clear = clear,
-        times = times,
-    }
+---@class rfc.CommandDeps
+---@field pick function
+---@field jump function
+---@field subjects function
+---@field status function
+---@field open_named function
+---@field nodes function
+---@field complete function
+---@field clear function
+---@field times function
+
+---@param deps rfc.CommandDeps
+return function(deps)
+    local M = {}
+    for name, fn in pairs(deps) do
+        M[name] = fn
+    end
     --- The command for a source: a number, a tag (the source's own or an
     --- alias), `subjects` with a node after it or not, `status` with a status
     --- after it or not, `cc` with the bang to clear the source's cache (and
