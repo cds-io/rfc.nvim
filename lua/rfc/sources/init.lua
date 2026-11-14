@@ -10,7 +10,7 @@ local tags = require("rfc.help.tags")
 local M = {}
 local specs, records = {}, {}
 
-local IDENTITY = { "prefix", "key", "aliases", "label", "command", "desc", "default_on" }
+local IDENTITY = { "prefix", "key", "aliases", "label", "command", "desc", "default_on", "module" }
 
 --- Registers a source, or answers why not: a prefix taken by another module,
 --- or a spec missing a field. Registering the same spec again replaces it.

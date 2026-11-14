@@ -1,7 +1,7 @@
 -- Source cache descriptors and cached metadata lookups.
 local config = require("rfc.config")
 local cache = require("rfc.cache")
-local help = require("rfc.help")
+local store = require("rfc.store")
 local dates = require("rfc.dates")
 local fp = require("cds.fp")
 local Task = require("cds.task")
@@ -108,7 +108,7 @@ function M.document_of(source, id)
     return cache.derived(config.get(), {
         name = tag_of(source, id),
         from = { M.raw_of(source, id) },
-        version = help.RENDER,
+        version = store.source_version(source),
         context = url,
         prepare = function(lines)
             return assert(source.prepare, "document source supplies a source plan")(id, lines, url())

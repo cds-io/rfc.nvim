@@ -1,7 +1,7 @@
 -- Subjects preparation and cache dependency policies.
 local config = require("rfc.config")
 local cache = require("rfc.cache")
-local help = require("rfc.help")
+local store = require("rfc.store")
 local subjects = require("rfc.subjects")
 local cds_subjects = require("rfc.source.subjects")
 local lifecycle = require("rfc.status")
@@ -30,7 +30,7 @@ function M.subjects_of(source)
         lifecycle.named(source.status or {}, lifecycle.get(source.prefix, config.get().status[source.prefix]))
     local doc = { prefix = source.prefix, title = s.title, about = s.about, key = source.key, status = status }
     local name = source.prefix .. "-subjects"
-    local version = help.RENDER .. subjects.suffix(status)
+    local version = store.source_version(source) .. subjects.suffix(status)
     if s.texts then
         local listed = index_of(source):memo("entries", source.entries) or {}
         local function prepare(...)

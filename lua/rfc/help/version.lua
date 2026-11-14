@@ -7,13 +7,23 @@ M.MODELINE = " vim:tw=78:ts=8:ft=help:norl:"
 -- rim sets it to a fingerprint of the plugin's code (store.render_version)
 -- at setup, so no hand keeps count; alone, the core writes "dev".
 M.RENDER = "dev"
-M.FOOTER = " rfc.nvim render " .. M.RENDER
 
---- Sets the render version and the footer that writes it.
+--- The footer line that names a render version.
+---@param version string
+---@return string
+function M.footer(version)
+    return " rfc.nvim render " .. version
+end
+
+M.FOOTER = M.footer(M.RENDER)
+
+--- Sets the core's render version and the footer every render writes; the
+--- cache entry that writes a document stamps the footer with the version
+--- the document is checked against, its source's.
 ---@param version string
 function M.set_render(version)
     M.RENDER = version
-    M.FOOTER = " rfc.nvim render " .. version
+    M.FOOTER = M.footer(version)
 end
 
 --- The render version a document's last line names, "" when it names none.
