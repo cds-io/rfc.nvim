@@ -261,23 +261,29 @@ and no ERC to tell apart from an EIP.
 
 ## How it works
 
-A source is one record (`lua/rfc/sources.lua`): where its text and its
-index come from, how the index reads, and how the text renders. The
-pipeline is the same for both: fetch, clean, render, write, then `:help`.
+A source is a directory under `lua/rfc/sources/<prefix>/`, registered by
+a spec in `plugin/rfc.lua`. Its record (`init.lua`) says where its text and
+its index come from, how the index reads, and how the text renders; the
+rest of the plugin reaches it through the registry (`rfc.sources`) without
+knowing which source it holds. The pipeline is the same for every source:
+fetch, clean, render, write, then `:help`.
 
-An RFC's text is parsed by `cds.rfc` and rendered by a pure, total function
-(`lua/rfc/help.lua`) into a help document: a tag on every heading and reference
+An RFC's text is read by `rfc.sources.rfc.reader` and rendered by a pure,
+total function (`rfc.sources.rfc.render`) into a help document: a tag on every heading and reference
 entry, the table of contents' numbers turned into links, and every "Section
 3.1", "RFC 2616" and "[CACHING]" in the body turned into a link to its target.
 Nothing in the text is changed otherwise.
 
-A proposal's markdown is parsed by `cds.eip` (frontmatter, headings,
-fenced code, the EIPs and ERCs a line names, the listing page) and rendered
-by `lua/rfc/help_eip.lua`: the frontmatter becomes a header block, the
-headings get tags and a table of contents of links, fenced code becomes
-help code blocks, an ordered list written `1. 1. 1.` is numbered as
-markdown means it, and every `[EIP-2718](./eip-2718.md)` or bare `EIP-155`
-becomes a link.
+A proposal's markdown is read by the proposal format's Markdown reader
+(`rfc.format.proposal.markdown`: frontmatter, headings, fenced code,
+tables) and drawn by the proposal format (`rfc.format.proposal`), which an
+EIP, a BIP and a SIMD each declare in a few lines: the frontmatter becomes
+a header block, the headings get tags and a table of contents of links,
+fenced code becomes help code blocks, an ordered list written `1. 1. 1.` is
+numbered as markdown means it, and the source's mentions become links (for
+an EIP, every `[EIP-2718](./eip-2718.md)` or bare `EIP-155`, found by
+`rfc.sources.eip.reader`). A W3C or CRS report is HTML, drawn the same way
+by the report format (`rfc.format.report`).
 
 The rendered document is written under the cache directory's `doc/`, and
 that directory is appended to the runtimepath, so `:help` reads it as it
@@ -301,13 +307,15 @@ caption, with each row laid out as its first cell over `Label: text`
 lines in virtual text; `zo` shows the aligned rows, and `,tv` puts both
 back as written.
 
-Everything in it is one of three cache entries (`lua/rfc/cache.lua`): a
+Everything in it is one of three cache entries (`lua/rfc/cache/`): a
 fetched file, served from disk while young enough and fetched otherwise
 (the stale copy stands in, with a warning, when the fetch fails); a
-derived document, rebuilt when the render that wrote it is older than
-the current one or an input is newer, missing or no longer fresh; and a
-memo, a parse of a file that
-completion redoes only when the file changes. A new source or a new
+derived document, rebuilt when its render version differs from its
+source's or an input is newer, missing or no longer fresh; and a memo, a
+parse of a file that completion redoes only when the file changes. A
+source's render version is a fingerprint of the core's code and of the
+source's own, so a change to one source renders that source's documents
+again and leaves the rest on disk as they are. A new source or a new
 derived document declares its entry in a few lines and reimplements none
 of this.
 
@@ -322,6 +330,113 @@ own sidebar, even when two windows show the same document. The library
 owns the split, buffer, subscriptions, and teardown; RFC supplies heading
 rows, section tracking, and help-tag navigation. Closing a document releases
 its sidebar safely on the next editor turn.
+
+## Adding a source
+
+A source is one directory and one spec; nothing else in the plugin changes.
+Here is a whole one, a toy (TIP, an index of `N title` lines and a Markdown
+file per proposal), drawn by the proposal format.
+
+`lua/rfc/sources/tip/fetch.lua` is its documents over the network, through
+the shared transport (`rfc.fetch`). A spec stubs these functions with
+fixture text, so the module is a table of functions looked up at call time:
+
+```lua
+local fetch = require("rfc.fetch")
+local M = {}
+M.base = "https://example.org/tips/"
+function M.tip(id)
+    return fetch.text(M.base .. "tip-" .. id .. ".md", "TIP " .. id)
+end
+function M.index()
+    return fetch.text(M.base .. "index.txt", "the TIP index")
+end
+return M
+```
+
+`lua/rfc/sources/tip/render.lua` declares how the proposal format draws it:
+the header, the number, how the Markdown reads, which rows and mentions it
+has.
+
+```lua
+local markdown = require("rfc.format.proposal.markdown")
+local proposal = require("rfc.format.proposal")
+local M = {}
+M.spec = {
+    prefix = "tip",
+    label = function() return "TIP" end,
+    number = function(_, id) return "TIP-" .. id end,
+    read = function(lines)
+        local fields, body = markdown.frontmatter(lines)
+        return fields, markdown.blocks(lines, body)
+    end,
+    header = { "status" },
+    rows = {},
+    mentions = function() return {} end,
+}
+function M.render(id, lines)
+    return proposal.render(M.spec, id, lines)
+end
+return M
+```
+
+`lua/rfc/sources/tip/init.lua` is the record (`rfc.SourceRecord`):
+
+```lua
+local net = require("rfc.sources.tip.fetch")
+local proposal = require("rfc.format.proposal")
+local help_tip = require("rfc.sources.tip.render")
+local fp = require("cds.fp")
+local M = {
+    raw_ext = "md",
+    index_file = "tip-index.txt",
+    fetch = function(id) return net.tip(id) end,
+    index = function() return net.index() end,
+    entries = function(lines)
+        return fp.filter_map(lines, function(line)
+            local id, title = line:match("^(%d+)%s+(.+)$")
+            return id and { id = id, label = title, text = true } or nil
+        end)
+    end,
+    render = help_tip.render,
+    render_model = proposal.render_model,
+}
+M.prepare = function(id, lines)
+    return proposal.model(help_tip.spec, id, lines)
+end
+return M
+```
+
+The spec in `plugin/rfc.lua`'s shipped list is the source's identity and
+its command. Registering it loads nothing; the record loads the first time
+`:Tip` runs, with the spec's identity merged in.
+
+```lua
+{ prefix = "tip", label = "TIP", command = "Tip", module = "rfc.sources.tip",
+  desc = "Open a toy proposal as help" },
+```
+
+Last, `lua-spec.toml` seals the directory (only its own modules and
+`plugin/` may import it) and lists the render as pure (it never names
+`vim` nor imports a module outside the pure core):
+
+```toml
+sealed = [ ..., "lua/rfc/sources/tip" ]
+pure = [ ..., "lua/rfc/sources/tip/render.lua" ]
+```
+
+That is the whole change: `:Tip 1` fetches, renders through the proposal
+format and opens, `tip1-abstract` resolves to its section, and
+`setup({ sources = { tip = true } })` turns it on (a spec with
+`default_on = true` is on unless turned off). A source whose documents are
+HTML declares a model over the report format instead (`rfc.sources.w3c`
+is the example), and a source whose text is its own shape carries its own
+render and, for the Markdown document view, its own projection
+(`rfc.sources.rfc`).
+
+`make architecture-check` holds the boundary: a module outside
+`lua/rfc/sources/tip/` that requires one inside it fails the check, naming
+the file and the line.
 
 ## Installation
 
