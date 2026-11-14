@@ -2,6 +2,7 @@
 local cache = require("rfc.cache")
 local store = require("rfc.store")
 local help = require("rfc.help")
+local help_rfc = require("rfc.help_rfc")
 local Task = require("cds.task")
 
 describe("cache", function()
@@ -264,9 +265,9 @@ describe("cache", function()
                     context = context,
                     prepare = function(lines)
                         parses = parses + 1
-                        return help.model("7", lines)
+                        return help_rfc.model("7", lines)
                     end,
-                    render_model = help.render_model,
+                    render_model = help_rfc.render_model,
                 })
             end
             local d = entry()
@@ -276,7 +277,7 @@ describe("cache", function()
             assert.is_true(model == entry():source_model())
             assert.equals(1, parses)
             assert.equals(before, reads)
-            assert.same(help.render_model(model).lines, vim.fn.readfile(d:path()))
+            assert.same(help_rfc.render_model(model).lines, vim.fn.readfile(d:path()))
             assert.is_not_nil(require("rfc.document").from_model(model).anchors.rfc7)
             assert.is_not_nil(entry("next-version"):source_model())
             assert.equals(2, parses)
@@ -298,9 +299,9 @@ describe("cache", function()
                     end,
                     prepare = function(lines)
                         parses = parses + 1
-                        return help.model("7", lines)
+                        return help_rfc.model("7", lines)
                     end,
-                    render_model = help.render_model,
+                    render_model = help_rfc.render_model,
                 })
             end
             local d = entry()
@@ -330,9 +331,9 @@ describe("cache", function()
                     version = help.RENDER,
                     prepare = function(first, second)
                         parses = parses + 1
-                        return help.model("7", { first[1], second[1] })
+                        return help_rfc.model("7", { first[1], second[1] })
                     end,
-                    render_model = help.render_model,
+                    render_model = help_rfc.render_model,
                 })
             end
             local first = entry({ a, b }):source_model()
@@ -351,9 +352,9 @@ describe("cache", function()
                 version = help.RENDER,
                 prepare = function(lines)
                     parses = parses + 1
-                    return help.model("7", lines)
+                    return help_rfc.model("7", lines)
                 end,
-                render_model = help.render_model,
+                render_model = help_rfc.render_model,
             })
             assert.equals("rfc7", wait(d:ensure()))
             local previous = d:source_model()
@@ -383,14 +384,14 @@ describe("cache", function()
                 if parses == 1 then
                     return nil, "try again"
                 end
-                return help.model("7", lines)
+                return help_rfc.model("7", lines)
             end
             local d = cache.derived(cfg, {
                 name = "rfc7",
                 from = { input },
                 version = help.RENDER,
                 prepare = prepare,
-                render_model = help.render_model,
+                render_model = help_rfc.render_model,
             })
             local model, err = d:source_model()
             assert.is_nil(model)
@@ -402,7 +403,7 @@ describe("cache", function()
                 from = { input },
                 version = help.RENDER,
                 prepare = prepare,
-                render_model = help.render_model,
+                render_model = help_rfc.render_model,
             })
             assert.is_not_nil(other:source_model())
             assert.equals(3, parses)
@@ -485,9 +486,9 @@ describe("cache", function()
                 from = { input, other },
                 version = help.RENDER,
                 prepare = function(lines)
-                    return help.model("7", lines)
+                    return help_rfc.model("7", lines)
                 end,
-                render_model = help.render_model,
+                render_model = help_rfc.render_model,
             })
             assert.equals("rfc7", wait(d:ensure()))
             assert.is_false(d:current())

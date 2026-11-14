@@ -1,10 +1,10 @@
 local outline = require("rfc.outline")
-local help = require("rfc.help")
+local help_rfc = require("rfc.help_rfc")
 local help_eip = require("rfc.help_eip")
 local fixtures = require("spec.fixtures")
 
 local function render(fixture, id)
-    return help.render(id, fixtures.read(fixture)).lines
+    return help_rfc.render(id, fixtures.read(fixture)).lines
 end
 
 describe("outline.of", function()

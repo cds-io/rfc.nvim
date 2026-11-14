@@ -1,5 +1,5 @@
 -- Markdown projection of rfc source plans.
-local help = require("rfc.help.model")
+local help = require("rfc.help_rfc.model")
 local builder = require("rfc.document.builder")
 return function(model)
     local doc = builder.new(model)

@@ -4,7 +4,7 @@ local fixtures = require("spec.fixtures")
 
 describe("RFC shared document adapters", function()
     it("preserves RFC section and citation tags in Markdown", function()
-        local exported = require("rfc.help").render("9110", fixtures.read(fixtures.rfc9110))
+        local exported = require("rfc.help_rfc").render("9110", fixtures.read(fixtures.rfc9110))
         local doc = contract.from_help(exported.lines)
         assert.matches("Resources", doc.markdown[assert(doc.anchors["rfc9110-3.1"])])
         assert.equals(1, doc.anchors.rfc9110)
@@ -97,7 +97,7 @@ describe("RFC shared document adapters", function()
     end)
 
     it("retains every MIME wildcard in the RFC 9110 fixture", function()
-        local exported = require("rfc.help").render("9110", fixtures.read(fixtures.rfc9110))
+        local exported = require("rfc.help_rfc").render("9110", fixtures.read(fixtures.rfc9110))
         local doc = contract.from_help(exported.lines)
         local original = table.concat(exported.lines, "\n")
         local decoded = table.concat(doc.markdown, "\n"):gsub("\\(%p)", "%1")
@@ -111,7 +111,7 @@ describe("RFC shared document adapters", function()
     end)
     it("shares source tag plans between native help and Markdown without mutating inputs", function()
         local cases = {
-            { require("rfc.help"), "9110", fixtures.rfc9110 },
+            { require("rfc.help_rfc"), "9110", fixtures.rfc9110 },
             { require("rfc.help_eip"), "20", fixtures.erc20 },
             { require("rfc.help_bip"), "32", fixtures.bip32 },
             { require("rfc.help_simd"), "64", fixtures.simd64 },
