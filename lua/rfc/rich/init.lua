@@ -1,4 +1,5 @@
--- The rich view of a document: a rule drawn above every heading and the
+-- The rich view, a decoration over the help buffers the core announces
+-- (User RfcHelpBuffer): a rule drawn above every heading and the
 -- heading's text highlighted, as extmarks over the help buffer, so the
 -- document on disk stays the text as written and the view goes on and off
 -- without a reload. A W3C report gets two more: its figures drawn below
@@ -8,11 +9,11 @@
 -- draws over are rfc.headings'.
 local outline = require("rfc.outline")
 local headings_of = require("rfc.headings").headings
-local report = require("rfc.view.report")
+local report = require("rfc.rich.report")
 local show_report, hide_report, is_report = report.show, report.hide, report.is_report
 local M = {}
 
-M.ns = vim.api.nvim_create_namespace("rfc.view")
+M.ns = vim.api.nvim_create_namespace("rfc.rich")
 
 local WIDTH = 78
 
@@ -24,7 +25,7 @@ vim.api.nvim_set_hl(0, "rfcRule", { link = "@markup.heading.1.delimiter.vimdoc",
 vim.api.nvim_set_hl(0, "rfcEntry", { link = "Normal", default = true })
 M.foldtext = report.foldtext
 local function group(buf)
-    return "rfc.view." .. buf
+    return "rfc.rich." .. buf
 end
 
 --- Draws the view: a rule of = above a level-one heading, of - above any
@@ -114,6 +115,24 @@ function M.reveal(win)
             vim.fn.winrestview({ topline = line, topfill = 1 })
         end
     end)
+end
+
+--- Decorates every help buffer of ours as the core announces it: binds
+--- <leader>tv to the toggle, and draws unless vim.g.rfc_rich is false.
+function M.listen()
+    vim.api.nvim_create_autocmd("User", {
+        pattern = "RfcHelpBuffer",
+        group = vim.api.nvim_create_augroup("rfc.rich", { clear = true }),
+        callback = function(args)
+            local buf = args.data.buf
+            vim.keymap.set("n", "<leader>tv", function()
+                M.toggle(buf)
+            end, { buffer = buf, desc = "rfc: [T]oggle the rich [v]iew" })
+            if vim.g.rfc_rich ~= false then
+                M.show(buf)
+            end
+        end,
+    })
 end
 
 return M

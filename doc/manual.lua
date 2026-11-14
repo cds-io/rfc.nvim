@@ -14,8 +14,9 @@
 ---   :help rfc9110-3.1
 ---   :helpgrep MUST NOT
 --- <
---- Direct :help retains native help/tag-stack navigation. Set view="rich"
---- or view="plain" for commands to use the legacy help backend too.
+--- Direct :help retains native help/tag-stack navigation. Set view="help"
+--- for commands to open the help export too; the rich view decorates it
+--- (,tv toggles it; vim.g.rfc_rich = false keeps help buffers plain).
 --- The default view="document" uses shared document rendering and history.
 --- Vellum is an optional dependency of this plugin; cds-lua never requires it.
 --- Requires Neovim 0.13 (vim.async), curl, and the house cds-lua libraries.

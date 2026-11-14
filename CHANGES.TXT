@@ -1,3 +1,18 @@
+2026-11-14  The rich view is a plugin of the plugin
+
+  lua/rfc/rich/, lua/rfc/config.lua, plugin/rfc.lua, lua-spec.toml
+    The rich view (rfc.rich) decorates the help buffers the core announces:
+    a rule above every heading and its text highlighted, a W3C report's
+    figures drawn and its wide tables folded. plugin/rfc.lua wires it;
+    <leader>tv toggles it, and vim.g.rfc_rich = false keeps help buffers
+    plain until toggled. make architecture-check seals lua/rfc/rich, so the
+    core runs without it. setup's view is "document" (the default) or
+    "help", which opens the help export.
+
+    Breaking: view = "rich" is view = "help"; view = "plain" is view =
+    "help" with vim.g.rfc_rich = false. Either old value fails setup,
+    naming the two.
+
 2026-11-14  A help buffer of ours is announced
 
   lua/rfc/app/bindings.lua, plugin/rfc.lua

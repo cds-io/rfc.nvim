@@ -72,7 +72,7 @@ local function show_report(buf, lines, ns)
                 -- a help window opens with folds disabled
                 vim.wo[win].foldenable = true
                 vim.wo[win].foldmethod = "manual"
-                vim.wo[win].foldtext = "v:lua.require'rfc.view'.foldtext()"
+                vim.wo[win].foldtext = "v:lua.require'rfc.rich'.foldtext()"
                 vim.cmd(("%d,%dfold"):format(t.first, t.last))
                 vim.cmd(("%dfoldclose"):format(t.first))
             end)

@@ -33,6 +33,7 @@ pure = [
     "lua/rfc/sources/w3c/render.lua",
 ]
 sealed = [
+    "lua/rfc/rich",
     "lua/rfc/sources/bip",
     "lua/rfc/sources/crs",
     "lua/rfc/sources/eip",
