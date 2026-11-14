@@ -24,7 +24,8 @@ vim.fn.writefile({
         ["runtime.pathStrict"] = true,
         ["runtime.path"] = { "lua/?.lua", "lua/?/init.lua" },
         ["workspace.library"] = { vim.env.VIMRUNTIME .. "/lua", "${3rd}/luv/library", cds, rock },
-        ["workspace.ignoreDir"] = { "spec", "doc", ".git" },
+        -- NOTES is a link into the private notes, whose scripts are no part of the plugin
+        ["workspace.ignoreDir"] = { "spec", "doc", ".git", "NOTES" },
         ["workspace.checkThirdParty"] = false,
         ["diagnostics.globals"] = { "vim", "MiniDoc" },
     }),
