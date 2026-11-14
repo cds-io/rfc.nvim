@@ -1,3 +1,12 @@
+2026-11-14  A buffer's headings are the core's
+
+  lua/rfc/headings.lua, lua/rfc/toc.lua
+    rfc.headings answers a buffer's headings in every view: a document
+    page's from the reader's model, a help buffer's from its text, parsed
+    once per changedtick. The contents sidebar, ]] and [[, and a refresh's
+    section restore read them there; the rich view draws over them. The
+    sidebar defines its own label highlight (rfcHeading).
+
 2026-11-14  The tags file takes a document's declared tags
 
   lua/rfc/store.lua, lua/rfc/help/tags.lua, spec/tags_invariant_spec.lua

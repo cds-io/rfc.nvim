@@ -4,10 +4,10 @@
 -- without a reload. A W3C report gets two more: its figures drawn below
 -- their URL lines through the images adapter where a backend can, and a
 -- table wider than the page folded under its caption with the entry form
--- as virtual lines, so the file keeps the aligned table. The model is per
--- buffer (the outline is text-derived) and revalidated by the buffer's
--- changedtick, since :help sets the filetype before it reads the file.
+-- as virtual lines, so the file keeps the aligned table. The headings it
+-- draws over are rfc.headings'.
 local outline = require("rfc.outline")
+local headings_of = require("rfc.headings").headings
 local report = require("rfc.view.report")
 local show_report, hide_report, is_report = report.show, report.hide, report.is_report
 local M = {}
@@ -16,8 +16,6 @@ M.ns = vim.api.nvim_create_namespace("rfc.view")
 
 local WIDTH = 78
 
----@type table<integer, { tick: integer, headings: rfc.Heading[] }>
-local cache = {}
 ---@type table<integer, boolean>  -- the buffers the view is drawn in
 local rich = {}
 
@@ -25,44 +23,8 @@ vim.api.nvim_set_hl(0, "rfcHeading", { link = "Title", default = true })
 vim.api.nvim_set_hl(0, "rfcRule", { link = "@markup.heading.1.delimiter.vimdoc", default = true })
 vim.api.nvim_set_hl(0, "rfcEntry", { link = "Normal", default = true })
 M.foldtext = report.foldtext
-local document_headings = function(_)
-    return nil
-end
-function M.configure(headings)
-    document_headings = headings
-end
 local function group(buf)
     return "rfc.view." .. buf
-end
-
-local function forget(buf)
-    cache[buf] = nil
-    rich[buf] = nil
-    pcall(vim.api.nvim_del_augroup_by_name, group(buf))
-end
-
---- The buffer's headings, parsed once per text.
----@param buf integer
----@return rfc.Heading[]
-function M.headings(buf)
-    local found = document_headings(buf)
-    if found then
-        return found
-    end
-    local tick = vim.api.nvim_buf_get_changedtick(buf)
-    if not cache[buf] then
-        vim.api.nvim_create_autocmd("BufWipeout", {
-            buffer = buf,
-            once = true,
-            callback = function()
-                forget(buf)
-            end,
-        })
-    end
-    if not cache[buf] or cache[buf].tick ~= tick then
-        cache[buf] = { tick = tick, headings = outline.of(vim.api.nvim_buf_get_lines(buf, 0, -1, false)) }
-    end
-    return cache[buf].headings
 end
 
 --- Draws the view: a rule of = above a level-one heading, of - above any
@@ -73,6 +35,16 @@ end
 ---@param buf integer
 function M.show(buf)
     vim.api.nvim_buf_clear_namespace(buf, M.ns, 0, -1)
+    if rich[buf] == nil then
+        vim.api.nvim_create_autocmd("BufWipeout", {
+            buffer = buf,
+            once = true,
+            callback = function()
+                rich[buf] = nil
+                pcall(vim.api.nvim_del_augroup_by_name, group(buf))
+            end,
+        })
+    end
     vim.api.nvim_create_autocmd({ "CursorMoved", "WinScrolled" }, {
         group = vim.api.nvim_create_augroup(group(buf), { clear = true }),
         buffer = buf,
@@ -80,7 +52,7 @@ function M.show(buf)
             M.reveal(0)
         end,
     })
-    for _, h in ipairs(M.headings(buf)) do
+    for _, h in ipairs(headings_of(buf)) do
         local rule = string.rep(h.level == 1 and "=" or "-", WIDTH)
         vim.api.nvim_buf_set_extmark(buf, M.ns, h.line - 1, 0, {
             end_col = #h.text,
@@ -130,7 +102,7 @@ function M.reveal(win)
     if not rich[buf] then
         return
     end
-    local headings = M.headings(buf)
+    local headings = headings_of(buf)
     local line = vim.api.nvim_win_get_cursor(win)[1]
     local i = outline.at(headings, line)
     if not i or headings[i].line ~= line then

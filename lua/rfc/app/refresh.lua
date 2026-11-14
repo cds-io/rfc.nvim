@@ -1,5 +1,4 @@
 -- Preserve sections across document exports and reloads.
-local view = require("rfc.view")
 local outline = require("rfc.outline")
 local redraw = require("cds.redraw")
 local fp = require("cds.fp")
@@ -14,7 +13,7 @@ return function(reload)
     local function section_of(file_tag)
         return {
             key = function(win)
-                local headings = view.headings(vim.api.nvim_win_get_buf(win))
+                local headings = require("rfc.headings").headings(vim.api.nvim_win_get_buf(win))
                 local at = outline.at(headings, vim.api.nvim_win_get_cursor(win)[1])
                 return at and headings[at].tag or file_tag
             end,

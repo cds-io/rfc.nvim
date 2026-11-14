@@ -28,7 +28,7 @@ return function(reader, follow, follow_line, status)
             return
         end
         local buf = vim.api.nvim_get_current_buf()
-        local headings = view.headings(buf)
+        local headings = require("rfc.headings").headings(buf)
         local i = outline.step(headings, vim.api.nvim_win_get_cursor(0)[1], count)
         if not i then
             return

@@ -2,7 +2,6 @@
 local session = require("rfc.app.session")
 local entries = require("rfc.app.entries")
 local cached = require("rfc.app.subjects_cache")
-local view = require("rfc.view")
 local toc = require("rfc.toc")
 local owns = require("rfc.app.ownership").owns
 local root = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":h:h:h")
@@ -43,7 +42,7 @@ bindings = require("rfc.app.bindings")(
     navigation.follow_line,
     subject_ui.status
 )
-view.configure(reader.headings)
+require("rfc.headings").configure(reader.headings)
 toc.configure({ owns = owns, document_model = reader.model, jump = navigation.jump })
 M.command = require("rfc.app.command")(
     picker.pick,
