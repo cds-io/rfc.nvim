@@ -1,3 +1,16 @@
+2026-11-13  A render version per source
+
+  lua/rfc/store.lua, lua/rfc/cache/derived.lua, lua/rfc/help/version.lua
+    A document's render version is its source's: the core's fingerprint, a
+    dot, and a fingerprint of the source's own code (its directory under
+    lua/rfc/sources/, or wherever its module sits on the runtimepath), so
+    a change to one source's code renders that source's documents again and
+    leaves the rest where they are; a change to the core renders them all.
+    The core's fingerprint covers lua/ but the sources' directories. The
+    cache entry that writes a document stamps its footer with the version
+    it is checked against. Every document cached before renders again once,
+    since its footer names the core's version alone.
+
 2026-11-13  A source is one directory, sealed
 
   lua/rfc/sources/<prefix>/, lua/rfc/fetch.lua, lua-spec.toml

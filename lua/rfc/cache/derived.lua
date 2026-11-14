@@ -107,6 +107,15 @@ function Derived:ensure()
             if not doc then
                 return nil, err
             end
+            -- the render writes the core's footer; the document carries the
+            -- version it is checked against, which is this entry's
+            assert(help.render_of(doc.lines) ~= "", "a render ends with its footer")
+            local lines = {}
+            for i, line in ipairs(doc.lines) do
+                lines[i] = line
+            end
+            lines[#lines] = help.footer(self.version)
+            doc = { lines = lines, tags = doc.tags, model = doc.model }
             local ok, werr = store.write_doc(self.cfg, self.name, doc)
             if ok and self.render_model then
                 models.export(self:path(), prepared.key)

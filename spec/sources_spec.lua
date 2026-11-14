@@ -43,10 +43,15 @@ describe("register", function()
         assert.is_nil(loads["spec.fake.alpha"])
         local record = sources.get("alp")
         assert.are.equal(1, loads["spec.fake.alpha"])
-        assert.are.same(
-            { "alp", "ALP", "Alp", { "alq" }, true, "txt" },
-            { record.prefix, record.label, record.command, record.aliases, record.default_on, record.raw_ext }
-        )
+        assert.are.same({ "alp", "ALP", "Alp", { "alq" }, true, "spec.fake.alpha", "txt" }, {
+            record.prefix,
+            record.label,
+            record.command,
+            record.aliases,
+            record.default_on,
+            record.module,
+            record.raw_ext,
+        })
         assert.are.equal(record, sources.get("alp"))
         assert.are.equal(1, loads["spec.fake.alpha"])
     end)

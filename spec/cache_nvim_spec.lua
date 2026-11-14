@@ -236,11 +236,11 @@ describe("cache", function()
     end)
 
     describe("a derived entry", function()
-        local function derived(input, body)
+        local function derived(input, body, version)
             return cache.derived(cfg, {
                 name = "rfc7",
                 from = { input },
-                version = help.RENDER,
+                version = version or help.RENDER,
                 produce = function(lines)
                     return {
                         lines = { "*rfc7.txt*  D  *rfc7*", body or lines[1], "", help.MODELINE, help.FOOTER },
@@ -416,6 +416,13 @@ describe("cache", function()
             assert.are.equal("a", vim.fn.readfile(d:path())[2])
             local tags = vim.fn.readfile(store.doc_dir(cfg) .. "/tags")
             assert.is_truthy(vim.tbl_contains(tags, "rfc7\trfc7.txt\t/*rfc7*"))
+        end)
+        it("writes its own version as the footer, whatever footer the render wrote", function()
+            local d = derived(fetched({}), nil, help.RENDER .. ".0badc0de")
+            wait(d:ensure())
+            assert.are.equal(" rfc.nvim render " .. help.RENDER .. ".0badc0de", vim.fn.readfile(d:path())[5])
+            assert.is_true(d:current())
+            assert.is_false(derived(fetched({}), nil, help.RENDER .. ".feedface"):current())
         end)
         it("produces again when the document carries an older render", function()
             local d = derived(fetched({}))

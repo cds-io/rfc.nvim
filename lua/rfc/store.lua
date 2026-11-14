@@ -14,19 +14,58 @@ local M = {}
 -- Roots already appended to the runtimepath, so a second setup() adds nothing.
 local registered = {}
 
---- A fingerprint of the lua tree under `root`: the first twelve hex digits
---- of a SHA-256 over every .lua file's relative path and content, in path
---- order. Any change to the code that renders changes it, so a cached
---- document's render is compared against the code and not a number.
----@param root string   -- the plugin's directory
+local own_versions = {}
+
+--- The first twelve hex digits of a SHA-256 over the files' paths (relative
+--- to `root`) and contents, in path order.
+---@param root string
+---@param files string[]
 ---@return string
-function M.render_version(root)
-    local files = vim.fn.glob(root .. "/lua/**/*.lua", true, true)
+local function fingerprint(root, files)
     table.sort(files)
     local parts = fp.map(files, function(path)
         return path:sub(#root + 2) .. "\n" .. table.concat(vim.fn.readfile(path, "b"), "\n")
     end)
     return vim.fn.sha256(table.concat(parts, "\0")):sub(1, 12)
+end
+
+--- A fingerprint of the core's lua tree under `root`: every .lua file but
+--- those in a shipped source's directory (lua/rfc/sources/<prefix>/), which
+--- each source's version fingerprints for itself. Any change to the code
+--- that renders changes it, so a cached document's render is compared
+--- against the code and not a number.
+---@param root string   -- the plugin's directory
+---@return string
+function M.render_version(root)
+    -- a setup starts the session's source versions over
+    own_versions = {}
+    local files = vim.tbl_filter(function(path)
+        return not path:sub(#root + 2):match("^lua/rfc/sources/[^/]+/")
+    end, vim.fn.glob(root .. "/lua/**/*.lua", true, true))
+    return fingerprint(root, files)
+end
+
+--- A source's render version: the core's, a dot, and a fingerprint of the
+--- source's own code, the directory of its module (or the module's one
+--- file), found on the runtimepath. A change to one source's code changes
+--- its documents' version alone; a change to the core changes them all.
+---@param source rfc.Source
+---@return string
+function M.source_version(source)
+    local key = help.RENDER .. " " .. source.module
+    if not own_versions[key] then
+        local stem = "lua/" .. source.module:gsub("%.", "/")
+        local init = vim.api.nvim_get_runtime_file(stem .. "/init.lua", false)[1]
+        local file = init or vim.api.nvim_get_runtime_file(stem .. ".lua", false)[1]
+        if not file then
+            own_versions[key] = "unknown"
+        else
+            local dir = vim.fn.fnamemodify(file, ":h")
+            local files = init and vim.fn.glob(dir .. "/**/*.lua", true, true) or { file }
+            own_versions[key] = fingerprint(dir, files):sub(1, 8)
+        end
+    end
+    return help.RENDER .. "." .. own_versions[key]
 end
 
 ---@param cfg rfc.Config
