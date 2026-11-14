@@ -878,6 +878,35 @@ describe("rfc", function()
     end)
 
     describe("the store", function()
+        it("keeps the tags file a scan of every document would write, reading none but the one written", function()
+            vim.cmd("Rfc 9110")
+            assert.is_true(editor.wait_help("rfc9110"))
+            vim.cmd("Eip 1559")
+            assert.is_true(editor.wait_help("eip1559"))
+            local cfg = config.get()
+            local tags_path = store.doc_dir(cfg) .. "/tags"
+            -- the older 9110 render goes, so its entries are written again
+            local doc = store.doc_path(cfg, "rfc9110")
+            local lines = vim.fn.readfile(doc)
+            lines[#lines] = " rfc.nvim render 1"
+            vim.fn.writefile(lines, doc)
+            local reads, readfile = {}, vim.fn.readfile
+            vim.fn.readfile = function(path, ...)
+                table.insert(reads, vim.fn.fnamemodify(path, ":t"))
+                return readfile(path, ...)
+            end
+            finally(function()
+                vim.fn.readfile = readfile
+            end)
+            vim.cmd("Rfc 9110")
+            assert.is_true(editor.wait_help("rfc9110"))
+            vim.fn.readfile = readfile
+            assert.is_false(vim.tbl_contains(reads, "eip1559.txt"))
+            local incremental = readfile(tags_path)
+            assert.is_true(store.write_tags(cfg))
+            assert.are.same(readfile(tags_path), incremental)
+        end)
+
         it("renders a document again from the stored text when an older render wrote it", function()
             vim.cmd("Eip 1559")
             assert.is_true(editor.wait_help("eip1559"))

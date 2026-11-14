@@ -168,7 +168,9 @@ function M.write_tags(cfg)
     return write(M.doc_dir(cfg) .. "/tags", help.tags_file(docs))
 end
 
---- Writes a document, then the tags file.
+--- Writes a document, then its entries in the tags file: the render's
+--- declared tags replace the file's lines for the document, so no other
+--- document is read. Without a tags file yet, every document is scanned.
 ---@param cfg rfc.Config
 ---@param name string
 ---@param doc rfc.HelpDoc
@@ -179,7 +181,11 @@ function M.write_doc(cfg, name, doc)
     if not ok then
         return nil, err
     end
-    return M.write_tags(cfg)
+    local tags_path = M.doc_dir(cfg) .. "/tags"
+    if vim.fn.filereadable(tags_path) == 0 then
+        return M.write_tags(cfg)
+    end
+    return write(tags_path, help.replace_file(vim.fn.readfile(tags_path), name .. ".txt", doc.tags))
 end
 
 ---@param cfg rfc.Config
