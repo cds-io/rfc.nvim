@@ -1,5 +1,5 @@
 local fetch = require("rfc.fetch")
-local help_w3c = require("rfc.help_w3c")
+local report = require("rfc.format.report")
 local model = require("rfc.help.crs.model")
 local crs = require("rfc.source.crs")
 local dates = require("rfc.dates")
@@ -100,9 +100,9 @@ M.crs = {
         end)
     end,
     render = function(id, lines)
-        return help_w3c.render_model(model.model(id, lines))
+        return report.render_model(model.model(id, lines))
     end,
-    render_model = help_w3c.render_model,
+    render_model = report.render_model,
     prepare = model.model,
     -- two roots: the topics a report is listed under, and its product type
     -- read from its number

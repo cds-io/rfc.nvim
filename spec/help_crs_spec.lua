@@ -1,5 +1,5 @@
 local model = require("rfc.help.crs.model")
-local help_w3c = require("rfc.help_w3c")
+local report = require("rfc.format.report")
 local document = require("rfc.document")
 local crs = require("rfc.source.crs")
 local help = require("rfc.help")
@@ -64,7 +64,7 @@ describe("model", function()
         assert.are.equal("CRS Report R43397 · Updated October 27, 2026", m.head.subtitle)
         assert.are.same({}, m.head.meta)
         assert.are.equal("https://www.everycrsreport.com/reports/R43397.html", m.url)
-        assert.is_table(help_w3c.render_model(m).lines)
+        assert.is_table(report.render_model(m).lines)
     end)
     it("says one version for a report never revised", function()
         local lines =
@@ -86,7 +86,7 @@ end)
 describe("the help render", function()
     local lines
     before_each(function()
-        lines = help_w3c.render_model(model.model("r43397", raw())).lines
+        lines = report.render_model(model.model("r43397", raw())).lines
     end)
     it("writes the title line, the subtitle, the citation as a tag and the summary's tag", function()
         assert.are.equal(
@@ -118,7 +118,7 @@ end
 
 describe("a report handed over as a text dump", function()
     it("opens the help view with a callout naming the PDF, before the body", function()
-        local lines = help_w3c.render_model(model.model("r43397", dumped())).lines
+        local lines = report.render_model(model.model("r43397", dumped())).lines
         local label = index_of(lines, "Upstream conversion error ~")
         assert.is_number(label)
         local text = table.concat(lines, "\n", label)
@@ -133,7 +133,7 @@ describe("a report handed over as a text dump", function()
         assert.is_not_nil(markdown:find("Upstream (at source) conversion error.", 1, true))
     end)
     it("warns nothing over a report with paragraphs", function()
-        local lines = help_w3c.render_model(model.model("r43397", raw())).lines
+        local lines = report.render_model(model.model("r43397", raw())).lines
         assert.is_nil((fp.find(lines, function(l)
             return l:find("Upstream conversion error", 1, true) ~= nil
         end)))

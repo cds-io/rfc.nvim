@@ -8,7 +8,7 @@ local TD = "https://www.w3.org/TR/wot-thing-description11/"
 
 describe("link", function()
     it("writes a tag mention as the tag itself", function()
-        local text = require("rfc.help.w3c.text")
+        local text = require("rfc.format.report.text")
         local t = {
             text = "See CRS Report 97-1011.",
             mentions = { { kind = "tag", id = "crs-97-1011", first = 5, last = 22 } },

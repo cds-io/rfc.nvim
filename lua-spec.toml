@@ -10,6 +10,7 @@ pure = [
     "lua/rfc/cache/rules.lua",
     "lua/rfc/dates.lua",
     "lua/rfc/document",
+    "lua/rfc/format",
     "lua/rfc/help",
     "lua/rfc/help_rfc",
     "lua/rfc/help_bip.lua",
