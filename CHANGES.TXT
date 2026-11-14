@@ -1,3 +1,14 @@
+2026-11-13  The pure core is declared and checked
+
+  lua-spec.toml, Makefile
+    make architecture-check holds the pure core to its rule: the readers
+    under source/, the document, help and proposal renders, the outline,
+    the statuses, the subjects and the tables neither name vim nor import a
+    module outside the core. The fetch and the source records that wire it
+    to a reader, the cache, the views and the app are the rims. A pure
+    entry that matches no module fails the check, so a rename updates the
+    list.
+
 2026-10-28  The text-dump note is a caution in both views
 
   lua/rfc/help/crs/model.lua, lua/rfc/source/html/walk.lua
