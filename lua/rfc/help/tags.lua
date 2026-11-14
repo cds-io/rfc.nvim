@@ -42,30 +42,40 @@ end
 -- CRS number does: crs-98-684). These are the shapes every render declares
 -- and no text contains by accident: the shortname shape is spelled per
 -- prefix, since any three letters and a dash (*not-a-tag*) would read as
--- one otherwise, so a new source keyed by shortname adds its prefix here.
-local SHORTNAME = { "w3c", "crs" }
+-- one otherwise. The registry names the shortname sources through
+-- set_shortnames as each registers; until one does, only the number and
+-- subjects shapes read.
 
+---@param shortnames string[]
 ---@param suffix string
 ---@return string[]
-local function shortname_shapes(suffix)
+local function shortname_shapes(shortnames, suffix)
     local out = {}
-    for _, prefix in ipairs(SHORTNAME) do
+    for _, prefix in ipairs(shortnames) do
         table.insert(out, prefix .. "%-[%l%d%-%.]+" .. suffix)
     end
     return out
 end
 
-M.TAG = { "%l%l%l%l?%d[%w%.%-]*", "%l[%l%d][%l%d]?%l%-subjects[%w%.%-]*", unpack(shortname_shapes("#?[%w%.%-]*")) }
+--- Sets the prefixes whose documents a shortname names (w3c, crs), and with
+--- them the tag shapes: TAG and SECTION are rebuilt.
+---@param shortnames string[]
+function M.set_shortnames(shortnames)
+    M.TAG = { "%l%l%l%l?%d[%w%.%-]*", "%l[%l%d][%l%d]?%l%-subjects[%w%.%-]*" }
+    for _, shape in ipairs(shortname_shapes(shortnames, "#?[%w%.%-]*")) do
+        table.insert(M.TAG, shape)
+    end
+    -- A section tag: a tag with a dash and a name after its number
+    -- (rfc9110-3.1, eip1559-abstract), after -subjects (rfc-subjects-web),
+    -- or after a shortname's # (w3c-css-grid-2#5.3). The file tags and the
+    -- reference entries' tags are not sections.
+    M.SECTION = { "%l%l%l%l?%d+%-[%w%.%-]*", "%l[%l%d][%l%d]?%l%-subjects%-[%w%.%-]*" }
+    for _, shape in ipairs(shortname_shapes(shortnames, "#[%w%.%-]+")) do
+        table.insert(M.SECTION, shape)
+    end
+end
 
--- A section tag: a tag with a dash and a name after its number
--- (rfc9110-3.1, eip1559-abstract), after -subjects (rfc-subjects-web),
--- or after a shortname's # (w3c-css-grid-2#5.3). The file tags and the
--- reference entries' tags are not sections.
-M.SECTION = {
-    "%l%l%l%l?%d+%-[%w%.%-]*",
-    "%l[%l%d][%l%d]?%l%-subjects%-[%w%.%-]*",
-    unpack(shortname_shapes("#[%w%.%-]+")),
-}
+M.set_shortnames({})
 
 --- The tags a rendered document carries: every `*tag*` of a shape in TAG,
 --- in line order. The store reads every document back through this to

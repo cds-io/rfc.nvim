@@ -11,10 +11,11 @@ local M = {}
 ---@field cache_dir string|nil   -- where documents live; stdpath("cache")/rfc by default
 ---@field notify fun(msg: string, level: integer, opts: { title: string })|nil  -- where messages go;
 ---   vim.notify with an "rfc: " prefix by default
----@field sources table<string, boolean>  -- which commands are defined, by prefix: rfc (the RFC
----   Editor, :Rfc), eip (Ethereum's EIPs and ERCs, :Eip), bip (Bitcoin's BIPs, :Bip), simd
----   (Solana's SIMDs, :Simd), w3c (the W3C's technical reports, :W3c), crs (the US Congressional
----   Research Service's reports, :Crs)
+---@field sources table<string, boolean>  -- which sources are on, by prefix; a source left out is on as
+---   its spec says (rfc on, the rest off). The shipped sources: rfc (the RFC Editor, :Rfc), eip
+---   (Ethereum's EIPs and ERCs, :Eip), bip (Bitcoin's BIPs, :Bip), simd (Solana's SIMDs, :Simd), w3c
+---   (the W3C's technical reports, :W3c), crs (the US Congressional Research Service's reports, :Crs);
+---   every registered source has its command, and an off source's command says how to turn it on
 ---@field view rfc.View   -- how a document opens: "document" through Markdown/vellum; legacy "rich" rules or
 ---   "plain" help, as written
 ---@field toc { width: integer }   -- the contents sidebar
@@ -30,7 +31,7 @@ local M = {}
 M.defaults = {
     cache_dir = nil,
     notify = nil,
-    sources = { rfc = true, eip = false, bip = false, simd = false, w3c = false, crs = false },
+    sources = {},
     view = "document",
     toc = { width = 44 },
     status = {},
@@ -48,6 +49,15 @@ function M.set(opts)
     vim.validate("cache_dir", current.cache_dir, "string", true)
     vim.validate("notify", current.notify, "function", true)
     vim.validate("sources", current.sources, "table")
+    local registered = vim.tbl_map(function(spec)
+        return spec.prefix
+    end, require("rfc.sources").specs())
+    for prefix, on in pairs(current.sources) do
+        vim.validate("sources." .. prefix, prefix, function(p)
+            return vim.tbl_contains(registered, p)
+        end, "a registered source: " .. table.concat(registered, ", "))
+        vim.validate("sources." .. prefix, on, "boolean")
+    end
     vim.validate("view", current.view, function(v)
         return v == "document" or v == "rich" or v == "plain"
     end, "document, rich or plain")

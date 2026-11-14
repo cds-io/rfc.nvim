@@ -43,7 +43,7 @@ return function(open, jump, subjects)
     ---@param from? rfc.Source[]
     function M.pick(query, from)
         ensure_setup()
-        local on = fp.filter(from or sources.all, enabled)
+        local on = fp.filter(from or sources.all(), enabled)
         -- the door into a source's subjects: first in the list, as `tag  title`
         -- like every other item
         local doors = fp.map(

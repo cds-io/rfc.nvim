@@ -6,6 +6,15 @@ local fixtures = require("spec.fixtures")
 
 local TD = "https://www.w3.org/TR/wot-thing-description11/"
 
+-- the shortname shapes are the registry's to set; these cases read W3C and CRS
+-- tags, so they set the two prefixes and put the empty set back
+before_each(function()
+    require("rfc.help.tags").set_shortnames({ "w3c", "crs" })
+end)
+after_each(function()
+    require("rfc.help.tags").set_shortnames({})
+end)
+
 describe("link", function()
     it("writes a tag mention as the tag itself", function()
         local text = require("rfc.format.report.text")

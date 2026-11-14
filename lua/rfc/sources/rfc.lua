@@ -6,11 +6,8 @@ local fp = require("cds.fp")
 
 local M = {}
 
----@type rfc.Source
+---@type rfc.SourceRecord
 M.rfc = {
-    prefix = "rfc",
-    aliases = {},
-    label = "RFC",
     raw_ext = "txt",
     index_file = "rfc-index.txt",
     fetch = function(id)
@@ -41,6 +38,7 @@ M.rfc = {
     },
     render = help_rfc.render,
     render_model = help_rfc.render_model,
+    document = help_rfc.document,
     -- the RFC Editor's subject tags: a tree of 19 roots, four levels at
     -- most, published daily as a CSV by rfc-editor/rfc-subject-tags
     subjects = {

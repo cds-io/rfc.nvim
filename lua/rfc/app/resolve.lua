@@ -8,8 +8,12 @@ local document_of, raw_of = entries.document_of, entries.raw_of
 local subjects = require("rfc.app.subjects_cache")
 local subjects_of, subjects_fresh = subjects.subjects_of, subjects.subjects_fresh
 -- one Markdown document per source plan: a plan held in memory gives the
--- same document, so a wiped buffer costs a draw and nothing else
-local from_model = require("cds.fp").memoize(require("rfc.document").from_model)
+-- same document, so a wiped buffer costs a draw and nothing else; the plan's
+-- source projects it when it carries a projection, a shared format otherwise
+local project = require("rfc.document").from_model
+local from_model = require("cds.fp").memoize(function(model, source)
+    return (source.document or project)(model)
+end)
 local M = { notify = session.notify, ensure = entries.ensure, ensure_subjects = subjects.ensure_subjects }
 return function(tag, done)
     local source = sources.of(tag)
@@ -31,7 +35,7 @@ return function(tag, done)
         run(
             derived:source_model_task():tick():map(function(model)
                 progress.phase(source.prefix, "building the page")
-                return from_model(model)
+                return from_model(model, source)
             end),
             source.label .. " " .. name,
             function(doc, err)

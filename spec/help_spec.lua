@@ -3,6 +3,15 @@ local help_rfc = require("rfc.help_rfc")
 local fp = require("cds.fp")
 local fixtures = require("spec.fixtures")
 
+-- the shortname shapes are the registry's to set; these cases read W3C and CRS
+-- tags, so they set the two prefixes and put the empty set back
+before_each(function()
+    require("rfc.help.tags").set_shortnames({ "w3c", "crs" })
+end)
+after_each(function()
+    require("rfc.help.tags").set_shortnames({})
+end)
+
 local function ends_with(s, suffix)
     return s:sub(-#suffix) == suffix
 end
@@ -118,6 +127,21 @@ describe("w3c tags", function()
         assert.is_nil(help.section_tag(lines[1]))
         assert.is_nil(help.section_tag(lines[4]))
         assert.are.same({ "  ", "w3c-css-grid-2#5.3" }, { help.row_tag("  |w3c-css-grid-2#5.3|  5.3 Title") })
+    end)
+end)
+
+describe("shortname tags", function()
+    it("reads no shortname source's tag until the registry names its prefix", function()
+        local tags = require("rfc.help.tags")
+        tags.set_shortnames({})
+        assert.are.same({}, help.tags_in({ "*w3c-css-grid-2*", "*crs-r43397#summary*" }))
+        tags.set_shortnames({ "crs" })
+        assert.are.same(
+            { "crs-r43397#summary" },
+            fp.map(help.tags_in({ "*w3c-css-grid-2*", "*crs-r43397#summary*" }), function(t)
+                return t.name
+            end)
+        )
     end)
 end)
 

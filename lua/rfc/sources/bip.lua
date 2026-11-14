@@ -11,11 +11,8 @@ local M = {}
 --- Bitcoin's proposals, from bitcoin/bips on GitHub: most written in
 --- MediaWiki, a few in markdown, the render telling them apart; the
 --- repository's README is the index.
----@type rfc.Source
+---@type rfc.SourceRecord
 M.bip = {
-    prefix = "bip",
-    aliases = {},
-    label = "BIP",
     raw_ext = "txt",
     index_file = "bip-index.mediawiki",
     fetch = function(id)

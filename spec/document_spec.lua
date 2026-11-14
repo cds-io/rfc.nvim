@@ -2,6 +2,15 @@ local contract = require("rfc.document")
 local document = require("cds.document")
 local fixtures = require("spec.fixtures")
 
+-- the shortname shapes are the registry's to set; these cases read W3C and CRS
+-- tags, so they set the two prefixes and put the empty set back
+before_each(function()
+    require("rfc.help.tags").set_shortnames({ "w3c", "crs" })
+end)
+after_each(function()
+    require("rfc.help.tags").set_shortnames({})
+end)
+
 describe("RFC shared document adapters", function()
     it("preserves RFC section and citation tags in Markdown", function()
         local exported = require("rfc.help_rfc").render("9110", fixtures.read(fixtures.rfc9110))
@@ -105,7 +114,8 @@ describe("RFC shared document adapters", function()
         local _, after = decoded:gsub("%*/%*", "")
         assert.equals(7, before)
         assert.equals(before, after)
-        local direct = table.concat(contract.from_model(exported.model).markdown, "\n"):gsub("\\(%p)", "%1")
+        local direct =
+            table.concat(require("rfc.help_rfc").document(exported.model).markdown, "\n"):gsub("\\(%p)", "%1")
         local _, direct_count = direct:gsub("%*/%*", "")
         assert.equals(before, direct_count)
     end)
@@ -123,7 +133,7 @@ describe("RFC shared document adapters", function()
             local exported = case[1].render(case[2], lines, case[4])
             local plan = assert(exported.model)
             local name, first_block = plan.name, plan.blocks[1]
-            local source = contract.from_model(plan)
+            local source = (case[1].document or contract.from_model)(plan)
             assert.equals(1, source.anchors[name])
             for _, heading in ipairs(require("rfc.outline").of(exported.lines)) do
                 assert.is_not_nil(source.anchors[heading.tag], heading.tag)
