@@ -1,9 +1,10 @@
 local eip = require("rfc.source.eip")
+local markdown = require("rfc.format.proposal.markdown")
 local fixtures = require("spec.fixtures")
 
 describe("frontmatter", function()
     it("reads the fields and where the body starts", function()
-        local fields, body = eip.frontmatter(fixtures.read(fixtures.eip1559))
+        local fields, body = markdown.frontmatter(fixtures.read(fixtures.eip1559))
         assert.are.equal("1559", fields.eip)
         assert.are.equal("Fee market change for ETH 1.0 chain", fields.title)
         assert.are.equal("Final", fields.status)
@@ -14,17 +15,17 @@ describe("frontmatter", function()
         assert.are.equal(12, body)
     end)
     it("reads a moved stub", function()
-        local fields = eip.frontmatter(fixtures.read(fixtures.eip20_moved))
+        local fields = markdown.frontmatter(fixtures.read(fixtures.eip20_moved))
         assert.are.equal("Moved", fields.status)
         assert.are.equal("ERC", fields.category)
     end)
     it("joins a value continued on indented lines", function()
-        local fields = eip.frontmatter({ "---", "author: A", "  B", "title: T", "---", "body" })
+        local fields = markdown.frontmatter({ "---", "author: A", "  B", "title: T", "---", "body" })
         assert.are.equal("A B", fields.author)
         assert.are.equal("T", fields.title)
     end)
     it("is empty without a frontmatter", function()
-        local fields, body = eip.frontmatter({ "## Heading", "text" })
+        local fields, body = markdown.frontmatter({ "## Heading", "text" })
         assert.are.same({}, fields)
         assert.are.equal(1, body)
     end)
@@ -32,31 +33,37 @@ end)
 
 describe("fences", function()
     it("finds a fenced block with its language", function()
-        assert.are.same({ { first = 53, last = 302, lang = "python" } }, eip.fences(fixtures.read(fixtures.eip1559)))
+        assert.are.same(
+            { { first = 53, last = 302, lang = "python" } },
+            markdown.fences(fixtures.read(fixtures.eip1559))
+        )
     end)
     it("reads a language after a space and a fence without one", function()
-        local fences = eip.fences(fixtures.read(fixtures.erc20))
+        local fences = markdown.fences(fixtures.read(fixtures.erc20))
         assert.are.same({ first = 45, last = 47, lang = "js" }, fences[1])
-        assert.are.same({ first = 42, last = 44, lang = "" }, eip.fences(fixtures.read(fixtures.eip1))[1])
+        assert.are.same({ first = 42, last = 44, lang = "" }, markdown.fences(fixtures.read(fixtures.eip1))[1])
     end)
     it("runs an unterminated fence to the end", function()
-        assert.are.same({ { first = 2, last = 3, lang = "" } }, eip.fences({ "a", "```", "b" }))
+        assert.are.same({ { first = 2, last = 3, lang = "" } }, markdown.fences({ "a", "```", "b" }))
     end)
 end)
 
 describe("headings", function()
     it("reads every heading with its level, outside fenced code", function()
-        local headings = eip.headings(fixtures.read(fixtures.eip1559))
+        local headings = markdown.headings(fixtures.read(fixtures.eip1559))
         assert.are.equal(13, #headings)
         assert.are.same({ level = 2, title = "Simple Summary", line = 13 }, headings[1])
         assert.are.same({ level = 3, title = "Block Hash Changing", line = 307 }, headings[6])
     end)
     it("reads four levels", function()
-        local headings = eip.headings(fixtures.read(fixtures.erc20))
+        local headings = markdown.headings(fixtures.read(fixtures.erc20))
         assert.are.same({ level = 4, title = "name", line = 37 }, headings[7])
     end)
     it("ignores a # inside a fence", function()
-        assert.are.same({ { level = 2, title = "A", line = 1 } }, eip.headings({ "## A", "```py", "# comment", "```" }))
+        assert.are.same(
+            { { level = 2, title = "A", line = 1 } },
+            markdown.headings({ "## A", "```py", "# comment", "```" })
+        )
     end)
 end)
 
@@ -102,20 +109,20 @@ describe("plain", function()
     it("drops tags, turns a code tag into backticks and unescapes entities", function()
         assert.are.equal(
             "`0x` prefixed hex &amp; more.",
-            eip.plain("<td><p><code>0x</code> prefixed hex &amp;amp; more.</p></td>")
+            markdown.plain("<td><p><code>0x</code> prefixed hex &amp;amp; more.</p></td>")
         )
-        assert.are.equal("Definitions", eip.plain('<a href="#definitions">Definitions</a>'))
+        assert.are.equal("Definitions", markdown.plain('<a href="#definitions">Definitions</a>'))
     end)
     it("turns emphasis into its text and keeps code spans and autolinks", function()
-        assert.are.equal("bold and em, `*/*` as is", eip.plain("**bold** and *em*, `*/*` as is"))
-        assert.are.equal("see <https://example.org/a> now", eip.plain("see <https://example.org/a> now"))
-        assert.are.equal("2 * 3 * 4", eip.plain("2 * 3 * 4"))
+        assert.are.equal("bold and em, `*/*` as is", markdown.plain("**bold** and *em*, `*/*` as is"))
+        assert.are.equal("see <https://example.org/a> now", markdown.plain("see <https://example.org/a> now"))
+        assert.are.equal("2 * 3 * 4", markdown.plain("2 * 3 * 4"))
     end)
 end)
 
 describe("tables", function()
     it("reads an HTML table's rows as plain cells", function()
-        local tables = eip.tables(fixtures.read(fixtures.erc1123))
+        local tables = markdown.tables(fixtures.read(fixtures.erc1123))
         assert.are.equal(44, #tables)
         assert.are.same({
             first = 124,
@@ -125,25 +132,32 @@ describe("tables", function()
         }, tables[1])
     end)
     it("reads a markdown table with its heading row", function()
-        local tables =
-            eip.tables({ "text", "| Constant | Value |", "| - | - |", "| `A` | `1` |", "| `B` | `2` |", "", "more" })
+        local tables = markdown.tables({
+            "text",
+            "| Constant | Value |",
+            "| - | - |",
+            "| `A` | `1` |",
+            "| `B` | `2` |",
+            "",
+            "more",
+        })
         local rows = { { "Constant", "Value" }, { "`A`", "`1`" }, { "`B`", "`2`" } }
         assert.are.same({ { first = 2, last = 5, header = true, rows = rows } }, tables)
     end)
     it("marks an HTML heading row", function()
         local tables =
-            eip.tables({ "<table>", "<tr><th>A</th><th>B</th></tr>", "<tr><td>1</td><td>2</td></tr>", "</table>" })
+            markdown.tables({ "<table>", "<tr><th>A</th><th>B</th></tr>", "<tr><td>1</td><td>2</td></tr>", "</table>" })
         assert.is_true(tables[1].header)
         assert.are.same({ { "A", "B" }, { "1", "2" } }, tables[1].rows)
     end)
     it("finds none in plain text", function()
-        assert.are.same({}, eip.tables({ "a | b", "no table here" }))
+        assert.are.same({}, markdown.tables({ "a | b", "no table here" }))
     end)
 end)
 
 describe("blocks", function()
     it("reads the body as headings, fences, tables and lines, every text plain", function()
-        local blocks = eip.blocks({
+        local blocks = markdown.blocks({
             "## The *Compiler* Object",
             "Some **bold** text.",
             "",
@@ -163,7 +177,7 @@ describe("blocks", function()
         }, blocks)
     end)
     it("starts at the given line and runs an open fence to the end", function()
-        local blocks = eip.blocks({ "---", "x: 1", "---", "## A", "```", "code" }, 4)
+        local blocks = markdown.blocks({ "---", "x: 1", "---", "## A", "```", "code" }, 4)
         assert.are.same({
             { kind = "heading", line = 4, level = 2, title = "A" },
             { kind = "fence", line = 5, lang = "", code = { "code" } },
@@ -182,26 +196,26 @@ describe("ordered lists in blocks", function()
     it("numbers a run of items written as 1. in sequence, a blank line between items allowed", function()
         assert.are.same(
             { "1. a", "2. b", "", "3. c", "text", "1. d", "2. e" },
-            texts(eip.blocks({ "1. a", "1. b", "", "1. c", "text", "1. d", "1. e" }))
+            texts(markdown.blocks({ "1. a", "1. b", "", "1. c", "text", "1. d", "1. e" }))
         )
     end)
     it("numbers a nested list on its own, by indent", function()
         assert.are.same(
             { "1. a", "   1. x", "   2. y", "2. b", "   1. z" },
-            texts(eip.blocks({ "1. a", "   1. x", "   1. y", "1. b", "   1. z" }))
+            texts(markdown.blocks({ "1. a", "   1. x", "   1. y", "1. b", "   1. z" }))
         )
     end)
     it("starts where the author starts and keeps a sequence the author wrote", function()
-        assert.are.same({ "3. a", "4. b" }, texts(eip.blocks({ "3. a", "3. b" })))
-        assert.are.same({ "1. a", "2. b", "3. c" }, texts(eip.blocks({ "1. a", "2. b", "3. c" })))
+        assert.are.same({ "3. a", "4. b" }, texts(markdown.blocks({ "3. a", "3. b" })))
+        assert.are.same({ "1. a", "2. b", "3. c" }, texts(markdown.blocks({ "1. a", "2. b", "3. c" })))
     end)
     it("leaves a numbered line inside a fence alone, and a fence ends the list", function()
-        local blocks = eip.blocks({ "1. a", "```", "1. x", "1. y", "```", "1. b" })
+        local blocks = markdown.blocks({ "1. a", "```", "1. x", "1. y", "```", "1. b" })
         assert.are.same({ "1. x", "1. y" }, blocks[2].code)
         assert.are.same({ "1. a", "fence", "1. b" }, texts(blocks))
     end)
     it("is not fooled by a number that is not an item", function()
-        assert.are.same({ "1.5 is a ratio", "1.b" }, texts(eip.blocks({ "1.5 is a ratio", "1.b" })))
+        assert.are.same({ "1.5 is a ratio", "1.b" }, texts(markdown.blocks({ "1.5 is a ratio", "1.b" })))
     end)
 end)
 

@@ -1,5 +1,5 @@
 -- Reads Solana improvement documents. The body is markdown behind a YAML
--- frontmatter, which rfc.source.eip.frontmatter reads into one string per field,
+-- frontmatter, which rfc.format.proposal.markdown.frontmatter reads into one string per field,
 -- joining a list onto one line; `list` and `number` then read those strings.
 -- SIMD-0064 opens with
 --
@@ -82,7 +82,7 @@ function M.index(lines)
     return entries
 end
 
---- Splits a frontmatter list as rfc.source.eip.frontmatter joins it ("- A - B"), or an
+--- Splits a frontmatter list as rfc.format.proposal.markdown.frontmatter joins it ("- A - B"), or an
 --- inline value at its commas; an empty or missing value gives none.
 ---@param value string|nil
 ---@return string[]

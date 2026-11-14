@@ -1,8 +1,8 @@
 -- Recursive report help projection.
 local help = require("rfc.help")
-local proposal = require("rfc.proposal")
+local proposal = require("rfc.format.proposal")
 local fp = require("cds.fp")
-local formatting = require("rfc.help.w3c.text")
+local formatting = require("rfc.format.report.text")
 local wrap = require("rfc.help.text").wrap
 local link, absolute = formatting.link, formatting.absolute
 local WIDTH = 78

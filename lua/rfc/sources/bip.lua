@@ -1,5 +1,5 @@
 local fetch = require("rfc.fetch")
-local proposal = require("rfc.proposal")
+local proposal = require("rfc.format.proposal")
 local help_bip = require("rfc.help_bip")
 local bip = require("rfc.source.bip")
 local subjects = require("rfc.source.subjects")

@@ -1,5 +1,5 @@
 local fetch = require("rfc.fetch")
-local help = require("rfc.help")
+local help_rfc = require("rfc.help_rfc")
 local rfc = require("rfc.source.rfc")
 local subjects = require("rfc.source.subjects")
 local fp = require("cds.fp")
@@ -39,8 +39,8 @@ M.rfc = {
         "HISTORIC",
         "UNKNOWN",
     },
-    render = help.render,
-    render_model = help.render_model,
+    render = help_rfc.render,
+    render_model = help_rfc.render_model,
     -- the RFC Editor's subject tags: a tree of 19 roots, four levels at
     -- most, published daily as a CSV by rfc-editor/rfc-subject-tags
     subjects = {
@@ -54,5 +54,5 @@ M.rfc = {
     },
 }
 
-M.rfc.prepare = help.model
+M.rfc.prepare = help_rfc.model
 return M.rfc

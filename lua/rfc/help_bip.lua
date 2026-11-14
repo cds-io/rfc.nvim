@@ -4,8 +4,8 @@
 -- preamble's own lines are left out of it. Nothing here touches the
 -- editor.
 local bip = require("rfc.source.bip")
-local eip = require("rfc.source.eip")
-local proposal = require("rfc.proposal")
+local markdown = require("rfc.format.proposal.markdown")
+local proposal = require("rfc.format.proposal")
 
 local M = {}
 
@@ -21,7 +21,7 @@ M.spec = {
     read = function(lines)
         local fields, first, last = bip.preamble(lines)
         if bip.format(lines) == "markdown" then
-            return fields, eip.blocks(lines, last and last + 1 or 1)
+            return fields, markdown.blocks(lines, last and last + 1 or 1)
         end
         return fields, bip.blocks(lines, first and { first = first, last = last } or nil)
     end,

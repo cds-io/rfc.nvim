@@ -1,5 +1,5 @@
 -- A CRS report's document model: the same `html` report model a W3C report
--- gets, so rfc.help_w3c renders it as help and rfc.document.report as the
+-- gets, so rfc.format.report renders it as help and rfc.document.report as the
 -- Markdown document, built from the stored text the fetch wrote (the fact
 -- line, then the mirror's HTML). The lines are normalized here, on every
 -- render, so the raw file stays the site's HTML and a render upgrade meets
@@ -9,7 +9,7 @@
 -- fact line the head says what the header alone says. Pure and total.
 local crs = require("rfc.source.crs")
 local html = require("rfc.source.html")
-local plan = require("rfc.help.w3c.model")
+local plan = require("rfc.format.report.plan")
 local converter = require("cds.html")
 
 ---@class rfc.help.crs.model

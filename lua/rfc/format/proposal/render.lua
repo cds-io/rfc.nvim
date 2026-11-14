@@ -1,8 +1,8 @@
 -- Help projection of a prepared proposal.
 local help = require("rfc.help")
-local inline = require("rfc.proposal.inline")
+local inline = require("rfc.format.proposal.inline")
 local help_link = inline.help_link
-local projection = require("rfc.proposal.body")
+local projection = require("rfc.format.proposal.body")
 local M = {}
 
 ---@param model rfc.ProposalModel

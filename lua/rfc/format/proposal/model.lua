@@ -1,8 +1,8 @@
 -- Prepare a proposal once for help and Markdown.
 local fp = require("cds.fp")
-local inline = require("rfc.proposal.inline")
+local inline = require("rfc.format.proposal.inline")
 local row_parts, label = inline.row_parts, inline.label
-local body = require("rfc.proposal.plan")
+local body = require("rfc.format.proposal.plan")
 local M = {}
 
 --- The document for a proposal's text, total: an empty text gives the

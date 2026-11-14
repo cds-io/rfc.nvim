@@ -1,7 +1,7 @@
 -- Vim help projection of an RFC plan.
 local formatting = require("rfc.help.text")
 local with_tag = formatting.with_tag
-local target = require("rfc.help.model").target
+local target = require("rfc.help_rfc.model").target
 local version = require("rfc.help.version")
 local M = {}
 

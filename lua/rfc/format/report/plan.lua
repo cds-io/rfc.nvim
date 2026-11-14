@@ -1,5 +1,4 @@
--- Report headings, references and shared source plan.
-local html = require("rfc.source.html")
+-- A report's heading and reference tags, the plan every report model shares.
 local help = require("rfc.help.tags")
 local document = require("cds.document")
 local M = {}
@@ -40,7 +39,7 @@ end
 ---@param file_tag string
 ---@return table<string, string> refs       -- key -> tag
 ---@return table<string, string> ref_tag    -- term as written -> tag
-local function reference_tags(blocks, file_tag)
+function M.reference_tags(blocks, file_tag)
     local refs, ref_tag, in_refs, depth = {}, {}, false, nil
     for _, b in ipairs(blocks) do
         if b.kind == "heading" then
@@ -60,30 +59,4 @@ local function reference_tags(blocks, file_tag)
     end
     return refs, ref_tag
 end
---- The document for a report: the head, the contents, the body.
----@param id string       -- the lowercased shortname
----@param lines string[]  -- the report's HTML
----@param url string      -- the report's URL, for the figures
----@return rfc.ReportModel
-function M.model(id, lines, url)
-    local head = html.head(lines)
-    local blocks = html.blocks(lines)
-    local file_tag = "w3c-" .. id
-    local tag_of, sections = M.heading_tags(blocks, file_tag)
-    local refs, ref_tag = reference_tags(blocks, file_tag)
-    return {
-        kind = "html",
-        name = file_tag,
-        id = id,
-        lines = lines,
-        url = url,
-        head = head,
-        blocks = blocks,
-        tag_of = tag_of,
-        sections = sections,
-        refs = refs,
-        ref_tag = ref_tag,
-    }
-end
-
 return M
