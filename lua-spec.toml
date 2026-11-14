@@ -19,7 +19,6 @@ pure = [
     "lua/rfc/help_w3c.lua",
     "lua/rfc/needs.lua",
     "lua/rfc/outline.lua",
-    "lua/rfc/proposal",
     "lua/rfc/source",
     "lua/rfc/status.lua",
     "lua/rfc/subjects.lua",

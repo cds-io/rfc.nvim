@@ -1,8 +1,9 @@
 local fetch = require("rfc.fetch")
 local help = require("rfc.help")
 local help_eip = require("rfc.help_eip")
-local proposal = require("rfc.proposal")
+local proposal = require("rfc.format.proposal")
 local eip = require("rfc.source.eip")
+local markdown = require("rfc.format.proposal.markdown")
 local subjects = require("rfc.source.subjects")
 local Task = require("cds.task")
 local fp = require("cds.fp")
@@ -42,7 +43,7 @@ end
 ---@param lines string[]
 ---@return boolean
 local function moved(lines)
-    return eip.frontmatter(lines).status == "Moved"
+    return markdown.frontmatter(lines).status == "Moved"
 end
 
 ---@type rfc.Source

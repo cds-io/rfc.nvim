@@ -36,7 +36,7 @@ end
 
 --- Finds the fenced code blocks, so a # inside one is not read as a heading.
 ---@param lines string[]
----@return rfc.source.eip.Fence[]
+---@return rfc.format.proposal.markdown.Fence[]
 function M.fences(lines)
     local fences, open = {}, nil
     for i, line in ipairs(lines) do
@@ -58,7 +58,7 @@ function M.fences(lines)
     return fences
 end
 
----@param fences rfc.source.eip.Fence[]
+---@param fences rfc.format.proposal.markdown.Fence[]
 ---@return fun(i: integer): boolean
 local function fenced(fences)
     return function(i)
@@ -73,7 +73,7 @@ end
 
 --- Finds the headings of the body, outside fenced code.
 ---@param lines string[]
----@return rfc.source.eip.Heading[]
+---@return rfc.format.proposal.markdown.Heading[]
 function M.headings(lines)
     local headings, inside = {}, fenced(M.fences(lines))
     for i, line in ipairs(lines) do

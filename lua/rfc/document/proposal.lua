@@ -1,5 +1,5 @@
 -- Markdown projection of proposal source plans.
-local proposal = require("rfc.proposal.inline")
+local proposal = require("rfc.format.proposal.inline")
 local builder = require("rfc.document.builder")
 return function(model)
     local doc = builder.new(model)

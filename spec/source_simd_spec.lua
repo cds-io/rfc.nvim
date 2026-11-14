@@ -1,5 +1,5 @@
 local simd = require("rfc.source.simd")
-local eip = require("rfc.source.eip")
+local markdown = require("rfc.format.proposal.markdown")
 local fixtures = require("spec.fixtures")
 
 describe("mentions", function()
@@ -51,7 +51,7 @@ end)
 
 describe("list", function()
     it("splits a frontmatter list the reader joined into one value", function()
-        local fields = eip.frontmatter(fixtures.read(fixtures.simd64))
+        local fields = markdown.frontmatter(fixtures.read(fixtures.simd64))
         assert.are.same(
             { "Anoushk Kharangate (Tinydancer)", "Richard Patel (Jump)", "Harsh Patel (Tinydancer)" },
             simd.list(fields.authors)

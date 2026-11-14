@@ -39,12 +39,12 @@
 ---@field tags nil|fun(fields: table<string, string>, id: string): string[]  -- other names the file is tagged by: erc20 for an ERC
 ---@field mentions fun(line: string): rfc.source.Mention[]    -- what the text names
 local M = {}
-local inline = require("rfc.proposal.inline")
-local body = require("rfc.proposal.body")
+local inline = require("rfc.format.proposal.inline")
+local body = require("rfc.format.proposal.body")
 M.format, M.inline, M.links, M.row, M.linker = inline.format, inline.inline, inline.links, inline.row, inline.linker
 M.layout, M.plan_body, M.body = body.layout, body.plan_body, body.body
-M.model = require("rfc.proposal.model").model
-M.render_model = require("rfc.proposal.render").render_model
+M.model = require("rfc.format.proposal.model").model
+M.render_model = require("rfc.format.proposal.render").render_model
 
 ---@param spec rfc.ProposalSpec
 ---@param id string

@@ -138,7 +138,7 @@ describe("RFC shared document adapters", function()
         local spec = require("rfc.help_eip").spec
         local lines =
             { "---", "title: Literal", "---", "# Same", "Accept: `*/*`", "# Same", "```http", "Accept: */*", "```" }
-        local plan = require("rfc.proposal").model(spec, "99", lines)
+        local plan = require("rfc.format.proposal").model(spec, "99", lines)
         local source = contract.from_model(plan)
         assert.is_not_nil(source.anchors["eip99-same"])
         assert.is_not_nil(source.anchors["eip99-same-2"])
@@ -168,7 +168,7 @@ describe("RFC shared document adapters", function()
     end)
 
     it("keeps literal metadata pipes separate from resolved proposal links", function()
-        local proposal = require("rfc.proposal")
+        local proposal = require("rfc.format.proposal")
         local spec = require("rfc.help_eip").spec
         local lines = {
             "---",
@@ -198,7 +198,7 @@ describe("RFC shared document adapters", function()
     end)
 
     it("renders both proposal formats without scanning mentions again", function()
-        local proposal = require("rfc.proposal")
+        local proposal = require("rfc.format.proposal")
         for _, item in ipairs({
             { require("rfc.help_eip").spec, "20", fixtures.erc20 },
             { require("rfc.help_bip").spec, "32", fixtures.bip32 },

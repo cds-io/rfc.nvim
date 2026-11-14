@@ -1,11 +1,11 @@
 -- A Solana improvement document as a Vim help document: the declaration
 -- the proposal render takes. The frontmatter becomes the header block,
 -- the number written as the document writes it (four digits), the authors
--- as one line; the body is read by rfc.source.eip. Nothing here touches the
+-- as one line; the body is read by rfc.format.proposal.markdown. Nothing here touches the
 -- editor.
-local eip = require("rfc.source.eip")
+local markdown = require("rfc.format.proposal.markdown")
 local simd = require("rfc.source.simd")
-local proposal = require("rfc.proposal")
+local proposal = require("rfc.format.proposal")
 
 local M = {}
 
@@ -19,8 +19,8 @@ M.spec = {
         return ("SIMD-%04d"):format(tonumber(simd.number(fields.simd) or id))
     end,
     read = function(lines)
-        local fields, body = eip.frontmatter(lines)
-        return fields, eip.blocks(lines, body)
+        local fields, body = markdown.frontmatter(lines)
+        return fields, markdown.blocks(lines, body)
     end,
     header = { "category", "type", "status", "created" },
     rows = {

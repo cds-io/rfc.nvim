@@ -1,7 +1,7 @@
 local fetch = require("rfc.fetch")
-local proposal = require("rfc.proposal")
+local proposal = require("rfc.format.proposal")
 local help_simd = require("rfc.help_simd")
-local eip = require("rfc.source.eip")
+local markdown = require("rfc.format.proposal.markdown")
 local simd = require("rfc.source.simd")
 local subjects = require("rfc.source.subjects")
 local fp = require("cds.fp")
@@ -38,7 +38,7 @@ M.simd = {
     -- it, stagnant and withdrawn out of it
     status = { "Idea", "Draft", "Review", "Accepted", "Implemented", "Activated", "Living", "Stagnant", "Withdrawn" },
     status_of = function(lines)
-        return eip.frontmatter(lines).status
+        return markdown.frontmatter(lines).status
     end,
     -- each proposal's status, from its frontmatter, so the subjects' inputs
     -- are the proposals' own texts; the category and the type are one
@@ -46,7 +46,7 @@ M.simd = {
     subjects = {
         texts = true,
         entry = function(id, lines)
-            local fields = eip.frontmatter(lines)
+            local fields = markdown.frontmatter(lines)
             local status = fields.status or ""
             local title = fields.title or ("SIMD " .. id)
             return subjects.entry(id, title .. " (" .. status .. ")", { { "Status", status } })

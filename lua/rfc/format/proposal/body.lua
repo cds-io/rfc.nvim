@@ -2,7 +2,7 @@
 local help = require("rfc.help")
 local fp = require("cds.fp")
 local M = {}
-M.plan_body = require("rfc.proposal.plan").plan_body
+M.plan_body = require("rfc.format.proposal.plan").plan_body
 
 --- A table as aligned columns: its caption on a line of its own, cells
 --- padded to their column, two spaces apart, indented by two, and a rule

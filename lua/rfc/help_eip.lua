@@ -4,7 +4,8 @@
 -- since the texts of other proposals use both, and one that moved says
 -- where. Nothing here touches the editor.
 local eip = require("rfc.source.eip")
-local proposal = require("rfc.proposal")
+local markdown = require("rfc.format.proposal.markdown")
+local proposal = require("rfc.format.proposal")
 
 local M = {}
 
@@ -22,8 +23,8 @@ M.spec = {
         return label(fields) .. "-" .. id
     end,
     read = function(lines)
-        local fields, body = eip.frontmatter(lines)
-        return fields, eip.blocks(lines, body)
+        local fields, body = markdown.frontmatter(lines)
+        return fields, markdown.blocks(lines, body)
     end,
     header = { "status", "type", "category", "created" },
     rows = {

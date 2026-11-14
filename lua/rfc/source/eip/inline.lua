@@ -1,5 +1,6 @@
--- Proposal inline text, references and index listings.
+-- An EIP's references and the index listings.
 local mentions = require("rfc.source.mentions")
+local unescape = require("rfc.format.proposal.markdown.inline").unescape
 local M = {}
 
 ---@param s string
@@ -37,38 +38,6 @@ function M.mentions(line)
     return mentions.scan(line, { { LINK, named } }, { "(E[IR][PC])%-(%d+)", named })
 end
 
-local ENTITIES =
-    { ["&amp;"] = "&", ["&lt;"] = "<", ["&gt;"] = ">", ["&quot;"] = '"', ["&#39;"] = "'", ["&nbsp;"] = " " }
-
----@param s string
----@return string
-local function unescape(s)
-    return (s:gsub("&[%w#]+;", function(e)
-        return ENTITIES[e] or e
-    end))
-end
-
---- Turns markdown inline markup and inline HTML into plain text: tags are
---- dropped (a <code> span becomes backticks), entities unescaped, **bold** and
---- *em* reduced to their text. A code span is kept as written, and so is an
---- autolink (<https://...>), which is no tag.
----@param s string
----@return string
-function M.plain(s)
-    local spans = {}
-    s = s:gsub("`[^`]*`", function(span)
-        table.insert(spans, span)
-        return "\1" .. #spans .. "\1"
-    end)
-    s = s:gsub("<code>(.-)</code>", "`%1`")
-    s = s:gsub("</?%a[%w%-]*%s[^>]*>", ""):gsub("</?%a[%w%-]*/?>", "")
-    s = unescape(s)
-    s = s:gsub("%*%*([^*]-)%*%*", "%1")
-    s = s:gsub("%*([^%s*][^*]-)%*", "%1")
-    return (s:gsub("\1(%d+)\1", function(n)
-        return spans[tonumber(n)]
-    end))
-end
 --- Reads the listing page as entries: each table row's number and title, under
 --- the status heading the row sits beneath and the category the page's title
 --- names (a category page reads "Core"; the all page reads "All").

@@ -1,5 +1,5 @@
 -- Markdown and HTML proposal tables.
-local plain = require("rfc.source.eip.inline").plain
+local plain = require("rfc.format.proposal.markdown.inline").plain
 local trim = function(s)
     return (s:match("^%s*(.-)%s*$"))
 end
@@ -21,7 +21,7 @@ end
 --- (<table>...</table>, as pandoc writes them) or markdown (a row of bars, then
 --- the |---|---| rule, then rows).
 ---@param lines string[]
----@return rfc.source.eip.Table[]
+---@return rfc.format.proposal.markdown.Table[]
 function M.tables(lines)
     local tables = {}
     local i = 1
