@@ -148,7 +148,7 @@ describe("rfc", function()
     end)
 
     describe("the rich view", function()
-        local view = require("rfc.view")
+        local view = require("rfc.rich")
         local function marks()
             return #vim.api.nvim_buf_get_extmarks(0, view.ns, 0, -1, {})
         end
@@ -208,8 +208,34 @@ describe("rfc", function()
             assert.are.equal(305, marks())
         end)
 
-        it("stays off when setup says plain", function()
-            case.setup({ rfc = true, eip = true }, { view = "plain" })
+        it("is a plugin the core runs without: unwired, a help buffer opens plain", function()
+            vim.api.nvim_del_augroup_by_name("rfc.rich")
+            finally(function()
+                require("rfc.rich").listen()
+            end)
+            vim.cmd("Rfc 9110")
+            assert.is_true(editor.wait_help("9110"))
+            assert.are.equal(0, marks())
+            -- the fetch says so; nothing warns or fails
+            assert.are.same(
+                {},
+                vim.tbl_filter(function(n)
+                    return n.level >= vim.log.levels.WARN
+                end, case.notices)
+            )
+        end)
+
+        it("leaves the view setting: a view of rich fails setup, naming the two", function()
+            local ok, err = pcall(require("rfc").setup, { cache_dir = case.dir, view = "rich" })
+            assert.is_false(ok)
+            assert.is_truthy(tostring(err):match("document or help"))
+        end)
+
+        it("stays off when vim.g.rfc_rich is false, and ,tv still draws it", function()
+            vim.g.rfc_rich = false
+            finally(function()
+                vim.g.rfc_rich = nil
+            end)
             vim.cmd("Rfc 9110")
             assert.is_true(editor.wait_help("9110"))
             assert.are.equal(0, marks())
@@ -1787,7 +1813,7 @@ describe("rfc", function()
                 return vim.fn.foldclosed(4) == 4
             end))
             assert.are.equal(7, vim.fn.foldclosedend(4))
-            local marks = vim.api.nvim_buf_get_extmarks(0, require("rfc.view").ns, 0, -1, { details = true })
+            local marks = vim.api.nvim_buf_get_extmarks(0, require("rfc.rich").ns, 0, -1, { details = true })
             local below = vim.tbl_filter(function(m)
                 return m[2] == 2 and m[4].virt_lines ~= nil
             end, marks)

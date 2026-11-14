@@ -38,10 +38,13 @@ it. Rendered links and anchors map through vellum's source blocks. Fetches
 are guarded per window, and a late answer cannot replace a newer follow.
 
 Help documents and tags are still exported to disk. Direct `:help` uses
-Neovim's help/tag stack. To make commands use that backend too, configure
-`view = "rich"` (heading rules and the existing `,tv` toggle) or
-`view = "plain"` (unadorned help). The default is `view = "document"`.
-The demos below show the legacy help backend.
+Neovim's help/tag stack. To make commands open that export too, configure
+`view = "help"`. The default is `view = "document"`. A help buffer of ours
+is decorated by the rich view (a rule above every heading, a W3C report's
+figures and folded wide tables), a plugin of the plugin under
+`lua/rfc/rich/` that listens for the buffers the core announces; `,tv`
+toggles it, and `vim.g.rfc_rich = false` keeps help buffers plain. The
+demos below show the help view.
 
 Two demos, documenting typical (for me) workflows. A ticket drafted against RFC
 5841.
@@ -500,7 +503,7 @@ make test
 require("rfc").setup({
     sources = { eip = true }, -- by prefix; rfc is on and the rest off unless named
     cache_dir = nil, -- stdpath("cache") .. "/rfc"
-    view = "document", -- Markdown/vellum; "rich" or "plain" for legacy help
+    view = "document", -- Markdown/vellum; "help" opens the help export
     toc = { width = 44 }, -- the contents sidebar
     -- where messages go; vim.notify with an "rfc: " prefix by default
     notify = function(msg, level, opts) end,

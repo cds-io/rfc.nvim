@@ -57,7 +57,7 @@ function M.start()
         require("rfc").setup(vim.tbl_extend("force", {
             cache_dir = case.dir,
             sources = sources,
-            view = "rich", -- legacy help regressions explicitly exercise the help backend
+            view = "help", -- the help regressions exercise the help backend, which the rich view decorates
             -- no dashboard unless a case asks for one: a fixture's styled
             -- render can run past the reader's half-second gate, and a
             -- dashboard left up would reach into the next case's windows

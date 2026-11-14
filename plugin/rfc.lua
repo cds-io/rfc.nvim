@@ -106,21 +106,9 @@ for _, spec in ipairs(sources.specs()) do
     })
 end
 
--- The rich view decorates a help buffer of ours as the core announces it:
--- drawn when setup's view is rich, toggled with <leader>tv.
-vim.api.nvim_create_autocmd("User", {
-    pattern = "RfcHelpBuffer",
-    group = vim.api.nvim_create_augroup("rfc.rich", { clear = true }),
-    callback = function(args)
-        local buf = args.data.buf
-        vim.keymap.set("n", "<leader>tv", function()
-            require("rfc.view").toggle(buf)
-        end, { buffer = buf, desc = "rfc: [T]oggle the rich [v]iew" })
-        if require("rfc.config").get().view == "rich" then
-            require("rfc.view").show(buf)
-        end
-    end,
-})
+-- The rich view, a plugin of the plugin: it decorates the help buffers the
+-- core announces (vim.g.rfc_rich = false keeps them plain).
+require("rfc.rich").listen()
 
 vim.api.nvim_create_autocmd("FileType", {
     pattern = "help",

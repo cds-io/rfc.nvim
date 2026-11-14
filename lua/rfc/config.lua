@@ -2,8 +2,8 @@
 -- rims read the result, and the core takes what it needs as arguments.
 local M = {}
 
---- Commands use shared documents by default; rich/plain retain legacy help.
----@alias rfc.View "document"|"rich"|"plain"
+--- Commands open a Markdown page by default; "help" opens the help export.
+---@alias rfc.View "document"|"help"
 
 ---@tag rfc.Config
 ---@text The settings `setup` takes; every field is optional.
@@ -16,8 +16,8 @@ local M = {}
 ---   (Ethereum's EIPs and ERCs, :Eip), bip (Bitcoin's BIPs, :Bip), simd (Solana's SIMDs, :Simd), w3c
 ---   (the W3C's technical reports, :W3c), crs (the US Congressional Research Service's reports, :Crs);
 ---   every registered source has its command, and an off source's command says how to turn it on
----@field view rfc.View   -- how a document opens: "document" through Markdown/vellum; legacy "rich" rules or
----   "plain" help, as written
+---@field view rfc.View   -- how a document opens: "document" through Markdown/vellum, or "help" as the help
+---   export (which the rich view decorates unless vim.g.rfc_rich is false)
 ---@field toc { width: integer }   -- the contents sidebar
 ---@field status table<string, string>  -- the status a source's subjects document opens filtered to,
 ---   by prefix: { eip = "Final" }; every entry when unset
@@ -59,8 +59,8 @@ function M.set(opts)
         vim.validate("sources." .. prefix, on, "boolean")
     end
     vim.validate("view", current.view, function(v)
-        return v == "document" or v == "rich" or v == "plain"
-    end, "document, rich or plain")
+        return v == "document" or v == "help"
+    end, "document or help")
     vim.validate("toc", current.toc, "table")
     vim.validate("toc.width", current.toc.width, "number")
     vim.validate("status", current.status, "table")

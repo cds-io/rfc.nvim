@@ -14,8 +14,9 @@ Help documents and tags remain on disk: >
   :help rfc9110-3.1
   :helpgrep MUST NOT
 <
-Direct :help retains native help/tag-stack navigation. Set view="rich"
-or view="plain" for commands to use the legacy help backend too.
+Direct :help retains native help/tag-stack navigation. Set view="help"
+for commands to open the help export too; the rich view decorates it
+(,tv toggles it; vim.g.rfc_rich = false keeps help buffers plain).
 The default view="document" uses shared document rendering and history.
 Vellum is an optional dependency of this plugin; cds-lua never requires it.
 Requires Neovim 0.13 (vim.async), curl, and the house cds-lua libraries.
@@ -266,8 +267,8 @@ Fields ~
   (Ethereum's EIPs and ERCs, :Eip), bip (Bitcoin's BIPs, :Bip), simd (Solana's SIMDs, :Simd), w3c
   (the W3C's technical reports, :W3c), crs (the US Congressional Research Service's reports, :Crs);
   every registered source has its command, and an off source's command says how to turn it on
-{view} `(rfc.View)` how a document opens: "document" through Markdown/vellum; legacy "rich" rules or
-  "plain" help, as written
+{view} `(rfc.View)` how a document opens: "document" through Markdown/vellum, or "help" as the help
+  export (which the rich view decorates unless vim.g.rfc_rich is false)
 {toc} `({ width: integer })` the contents sidebar
 {status} `(table<string, string>)` the status a source's subjects document opens filtered to,
   by prefix: { eip = "Final" }; every entry when unset

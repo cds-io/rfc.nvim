@@ -36,9 +36,9 @@ end)
 
 describe("the contents sidebar's highlight", function()
     it("is defined without the rich view loaded", function()
-        package.loaded["rfc.view"] = nil
+        package.loaded["rfc.rich"] = nil
         require("rfc.toc")
-        assert.is_nil(package.loaded["rfc.view"])
+        assert.is_nil(package.loaded["rfc.rich"])
         assert.are.equal("Title", vim.api.nvim_get_hl(0, { name = "rfcHeading" }).link)
     end)
 end)
