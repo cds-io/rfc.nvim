@@ -1,7 +1,10 @@
 -- The shared formats' projections onto the document contract, by model kind;
 -- a source whose kind no format draws carries its own (rfc.Source.document).
 local M = {}
-M.from_help = require("rfc.document.help")
+
+---@class rfc.Document: cds.Document
+---@field headings rfc.Heading[]
+
 local render = {
     html = require("rfc.document.report"),
     proposal = require("rfc.document.proposal"),

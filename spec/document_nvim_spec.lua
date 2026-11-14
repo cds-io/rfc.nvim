@@ -400,23 +400,6 @@ describe("the shared RFC document reader", function()
         assert.matches("Accept%-Language", vim.api.nvim_get_current_line())
     end)
 
-    it("renders from cached source plans even when the help-import adapter is unavailable", function()
-        local document = require("rfc.document")
-        local old = document.from_help
-        document.from_help = function()
-            error("formatted help must not be reparsed")
-        end
-        local ok, err = pcall(function()
-            vim.cmd("Rfc 9110")
-            assert.is_true(wait_document("rfc9110"))
-            vim.cmd("Eip subjects")
-            assert.is_true(wait_document("eip-subjects"))
-            assert.is_true(#model().document.headings > 0)
-        end)
-        document.from_help = old
-        assert.is_true(ok, err)
-    end)
-
     describe("with vellum", function()
         local fake, saved
         before_each(function()
