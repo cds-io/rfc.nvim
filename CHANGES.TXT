@@ -1,3 +1,17 @@
+2026-11-13  The formats carry their names
+
+  lua/rfc/help_rfc/, lua/rfc/format/report/, lua/rfc/format/proposal/
+    Two formats render the documents more than one source shares: the
+    report format (rfc.format.report) draws an HTML report, a W3C or a CRS
+    report alike, and the proposal format (rfc.format.proposal) draws a
+    Markdown proposal, an EIP, a BIP or a SIMD, over its own Markdown
+    reader (rfc.format.proposal.markdown). The RFC's render is
+    rfc.help_rfc, beside the other sources' renders; rfc.help is the
+    projection every render writes through (the version, the tags, the
+    text). rfc.help_w3c builds the W3C report's model over the report
+    format, and rfc.source.eip reads what is Ethereum's: the mentions, the
+    requires field and the listing. Every document renders as before.
+
 2026-11-13  The helpers every source may use are the core's
 
   lua/rfc/dates.lua, lua/rfc/help/text.lua, lua/rfc/document/init.lua
