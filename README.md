@@ -37,14 +37,22 @@ numbered tag navigate to the same source heading when the report defines
 it. Rendered links and anchors map through vellum's source blocks. Fetches
 are guarded per window, and a late answer cannot replace a newer follow.
 
-Help documents and tags are still exported to disk. Direct `:help` uses
-Neovim's help/tag stack. To make commands open that export too, configure
-`view = "help"`. The default is `view = "document"`. A help buffer of ours
-is decorated by the rich view (a rule above every heading, a W3C report's
-figures and folded wide tables), a plugin of the plugin under
-`lua/rfc/rich/` that listens for the buffers the core announces; `,tv`
-toggles it, and `vim.g.rfc_rich = false` keeps help buffers plain. The
-demos below show the help view.
+Two views read the same documents. `view = "document"`, the default and
+the preferred one, opens a Markdown page drawn by vellum: tables lay out
+with their cells wrapped, and the page navigates with the plugin's own keys
+(CTRL-] and CTRL-T over its links and history, `]]`, `[[`, `gO`) and
+commands (`:Rfc rfc9110-3.1` opens a section). `view = "help"` opens the
+help export instead, a fine fallback wherever a document is mostly prose; a
+table wider than the 78-column page reads poorly there, since help is
+fixed-width text.
+
+The help export is written in either view, so Vim's own help (`:help
+rfc9110-3.1`, `:helpgrep MUST NOT`, its tag stack) reaches every document as
+help, whichever view the commands use. A help buffer of ours is decorated by
+the rich view (a rule above every heading, a W3C report's figures and folded
+wide tables), a plugin of the plugin under `lua/rfc/rich/` that listens for
+the buffers the core announces; `,tv` toggles it, and `vim.g.rfc_rich =
+false` keeps help buffers plain. The demos below show the help view.
 
 Two demos, documenting typical (for me) workflows. A ticket drafted against RFC
 5841.

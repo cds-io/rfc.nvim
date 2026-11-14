@@ -14,10 +14,13 @@ Help documents and tags remain on disk: >
   :help rfc9110-3.1
   :helpgrep MUST NOT
 <
-Direct :help retains native help/tag-stack navigation. Set view="help"
-for commands to open the help export too; the rich view decorates it
-(,tv toggles it; vim.g.rfc_rich = false keeps help buffers plain).
-The default view="document" uses shared document rendering and history.
+The default view="document" is the preferred one: a Markdown page drawn
+by vellum, navigated with the plugin's keys and commands and its shared
+document history. Set view="help" for commands to open the help export
+instead, a fine fallback except where a table is wider than the page.
+Vim's own :help, :helpgrep and tag stack read the export in either view;
+the rich view decorates it (,tv toggles it; vim.g.rfc_rich = false keeps
+it plain).
 Vellum is an optional dependency of this plugin; cds-lua never requires it.
 Requires Neovim 0.13 (vim.async), curl, and the house cds-lua libraries.
 With lazy.nvim 11+, cds-lua automatically brings lua-gumbo for W3C HTML.
