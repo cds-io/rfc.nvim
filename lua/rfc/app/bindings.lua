@@ -1,8 +1,7 @@
--- Buffer bindings, lifecycle cycling and help highlighting.
+-- Buffer bindings, lifecycle cycling, help highlighting, and the announcement of a help buffer of ours.
 local config = require("rfc.config")
 local sources = require("rfc.sources")
 local outline = require("rfc.outline")
-local view = require("rfc.view")
 local toc = require("rfc.toc")
 local lifecycle = require("rfc.status")
 local fp = require("cds.fp")
@@ -89,13 +88,6 @@ return function(reader, follow, follow_line, status)
                 end,
                 "the contents beside the document",
             },
-            {
-                "<leader>tv",
-                function()
-                    view.toggle(buf)
-                end,
-                "[T]oggle the rich [v]iew",
-            },
         }
         fp.each(bindings, function(binding)
             vim.keymap.set("n", binding[1], binding[2], { buffer = buf, desc = "rfc: " .. binding[3] })
@@ -113,20 +105,17 @@ return function(reader, follow, follow_line, status)
             vim.wo[win].breakindent = true
             vim.wo[win].breakindentopt = "list:-1"
         end)
-        if config.get().view == "rich" then
-            -- :help sets the filetype before it reads the file, so the view is
-            -- drawn now for a buffer that has its text and after the read otherwise
-            if vim.api.nvim_buf_line_count(buf) > 1 then
-                view.show(buf)
-            else
-                vim.api.nvim_create_autocmd("BufReadPost", {
-                    buffer = buf,
-                    once = true,
-                    callback = function()
-                        view.show(buf)
-                    end,
-                })
-            end
+        -- the buffer is announced (User RfcHelpBuffer, data.buf) once it has
+        -- its text, for whatever decorates a help buffer of ours: :help sets
+        -- the filetype before it reads the file, so a buffer still empty is
+        -- announced after the read
+        local function announce()
+            vim.api.nvim_exec_autocmds("User", { pattern = "RfcHelpBuffer", data = { buf = buf }, modeline = false })
+        end
+        if vim.api.nvim_buf_line_count(buf) > 1 then
+            announce()
+        else
+            vim.api.nvim_create_autocmd("BufReadPost", { buffer = buf, once = true, callback = announce })
         end
         local alternates = table.concat(REQUIREMENTS, "\\|"):gsub(" ", "\\\\_s\\\\+")
         vim.api.nvim_buf_call(buf, function()

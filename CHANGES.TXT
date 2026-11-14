@@ -1,3 +1,12 @@
+2026-11-14  A help buffer of ours is announced
+
+  lua/rfc/app/bindings.lua, plugin/rfc.lua
+    A help buffer of ours fires User RfcHelpBuffer (data.buf) once it has
+    its text, after the read when :help set the filetype first, for
+    whatever decorates it. The rich view listens: it draws when setup's
+    view is rich and binds <leader>tv to toggle itself. The buffer's own
+    keys, wrapping and requirement highlights stay the core's.
+
 2026-11-14  A buffer's headings are the core's
 
   lua/rfc/headings.lua, lua/rfc/toc.lua
