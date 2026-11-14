@@ -527,8 +527,8 @@ The help and Markdown renderers share pure source plans: RFC sections and
 citations, proposal headings and aliases, subject trees and counts, and W3C
 section identities are prepared once per source revision. Markdown is rendered from these
 plans rather than recovered from formatted help files. Cached-source preparation
-never needs a help-file import or a network request. The old `from_help` adapter
-is retained for compatibility imports. W3C plans select the full report body so
+never needs a help-file import or a network request, and nothing reads a help
+file back into a plan. W3C plans select the full report body so
 abstract/status anchors outside main remain available.
 
 Proposal plans carry literal text and resolved tag targets, including their

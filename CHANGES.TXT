@@ -1,3 +1,11 @@
+2026-11-14  A Markdown page is the model's projection alone
+
+  lua/rfc/document/
+    A Markdown page comes from its source's model: the shared formats'
+    projections by model kind, or the source's own (the RFC's). rfc.document
+    is those projections and the rfc.Document class; nothing reads a help
+    export back into a page.
+
 2026-11-13  A render version per source
 
   lua/rfc/store.lua, lua/rfc/cache/derived.lua, lua/rfc/help/version.lua

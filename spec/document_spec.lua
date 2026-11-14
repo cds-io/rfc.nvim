@@ -14,7 +14,7 @@ end)
 describe("RFC shared document adapters", function()
     it("preserves RFC section and citation tags in Markdown", function()
         local exported = require("rfc.sources.rfc.render").render("9110", fixtures.read(fixtures.rfc9110))
-        local doc = contract.from_help(exported.lines)
+        local doc = require("rfc.sources.rfc.render").document(exported.model)
         assert.matches("Resources", doc.markdown[assert(doc.anchors["rfc9110-3.1"])])
         assert.equals(1, doc.anchors.rfc9110)
         local found = false
@@ -29,7 +29,7 @@ describe("RFC shared document adapters", function()
 
     it("keeps proposal alias tags, code and cross-source references", function()
         local doc =
-            contract.from_help(require("rfc.sources.eip.render").render("20", fixtures.read(fixtures.erc20)).lines)
+            contract.from_model(require("rfc.sources.eip.render").render("20", fixtures.read(fixtures.erc20)).model)
         assert.equals(1, doc.anchors.erc20)
         assert.equals(doc.anchors.eip20, doc.anchors.erc20)
         assert.is_not_nil(doc.anchors["eip20-abstract"])
@@ -50,18 +50,6 @@ describe("RFC shared document adapters", function()
         assert.truthy(table.concat(doc.markdown, "\n"):find("!%["))
     end)
 
-    it("keeps subject tags navigable without leaking help modelines or render footers", function()
-        local doc = contract.from_help({
-            "*rfc-subjects.txt*  Subjects *rfc-subjects*",
-            "Web *rfc-subjects-web*",
-            "|rfc9110| HTTP",
-            " vim:tw=78:ft=help:",
-            " rfc.nvim render v1",
-        })
-        assert.equals(2, doc.anchors["rfc-subjects-web"])
-        assert.equals("rfc-tag:rfc9110", doc.links[1].target)
-        assert.equals(3, #doc.markdown)
-    end)
     it("writes a subjects document's contents and entries as Markdown lists, nested by level", function()
         local source = require("rfc.source.subjects")
         local forest = source.tree({
@@ -86,35 +74,11 @@ describe("RFC shared document adapters", function()
         assert.is_not_nil(text:find("\n- [crs-if2](rfc-tag:crs-if2)  Farm Bill (2026)\n", 1, true))
     end)
 
-    it("removes only known help declarations and preserves wildcard and note prose", function()
-        local lines = {
-            "*rfc1.txt* Example *rfc1*",
-            "Accept: */*",
-            "A *Note:* is meaningful.",
-            "Literal *not-a-tag* and |rfc2|.",
-            ">http",
-            "Accept: */*",
-            "<",
-        }
-        local doc = contract.from_help(lines)
-        assert.equals("# Example", doc.markdown[1])
-        assert.equals("Accept: \\*/\\*", doc.markdown[2])
-        assert.equals("A \\*Note:\\* is meaningful.", doc.markdown[3])
-        assert.equals("Literal \\*not-a-tag\\* and [rfc2](rfc-tag:rfc2).", doc.markdown[4])
-        assert.equals("Accept: */*", doc.markdown[6])
-        assert.equals("Accept: */*", lines[2])
-        assert.equals(1, doc.anchors.rfc1)
-    end)
-
     it("retains every MIME wildcard in the RFC 9110 fixture", function()
         local exported = require("rfc.sources.rfc.render").render("9110", fixtures.read(fixtures.rfc9110))
-        local doc = contract.from_help(exported.lines)
         local original = table.concat(exported.lines, "\n")
-        local decoded = table.concat(doc.markdown, "\n"):gsub("\\(%p)", "%1")
         local _, before = original:gsub("%*/%*", "")
-        local _, after = decoded:gsub("%*/%*", "")
         assert.equals(7, before)
-        assert.equals(before, after)
         local direct =
             table.concat(require("rfc.sources.rfc.render").document(exported.model).markdown, "\n"):gsub("\\(%p)", "%1")
         local _, direct_count = direct:gsub("%*/%*", "")
