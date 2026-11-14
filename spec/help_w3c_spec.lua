@@ -17,19 +17,6 @@ describe("link", function()
     end)
 end)
 
-describe("wrap", function()
-    it("wraps at spaces within the width, keeping the indent and never splitting a tag", function()
-        assert.are.same({ "    aaa bbb", "    ccc" }, help_w3c.wrap("aaa bbb ccc", "    ", 11))
-        assert.are.same(
-            { "x", "|w3c-a#1.2.3.4.5.6.7.8.9|", "y" },
-            help_w3c.wrap("x |w3c-a#1.2.3.4.5.6.7.8.9| y", "", 10)
-        )
-    end)
-    it("keeps a hard break", function()
-        assert.are.same({ "a b", "c" }, help_w3c.wrap("a b\nc", "", 78))
-    end)
-end)
-
 describe("render over the Thing Description excerpt", function()
     local doc, lines
     before_each(function()

@@ -8,6 +8,7 @@ plugin = "rfc"
 limit = 200
 pure = [
     "lua/rfc/cache/rules.lua",
+    "lua/rfc/dates.lua",
     "lua/rfc/document",
     "lua/rfc/help",
     "lua/rfc/help_bip.lua",

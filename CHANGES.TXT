@@ -1,3 +1,16 @@
+2026-11-13  The helpers every source may use are the core's
+
+  lua/rfc/dates.lua, lua/rfc/help/text.lua, lua/rfc/document/init.lua
+    rfc.dates reads and writes the dates the plugin compares: an index's
+    YYYY-MM-DD at noon UTC, an HTTP Last-Modified header, and the
+    If-Modified-Since a conditional fetch sends; the fetch, the app's
+    entries and the CRS record read them there. rfc.help.text.wrap wraps
+    help prose at 78 for every render, the table forms included. The
+    W3C reader reads the index and the W3C's group names, and the report
+    text module answers image URLs and mention links. rfc.document is the
+    projection by model kind alone; a render reaches it through its
+    source's model.
+
 2026-11-13  The pure core is declared and checked
 
   lua-spec.toml, Makefile

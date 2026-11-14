@@ -19,11 +19,12 @@
 -- block. Sections, other reports and reference entries link. Nothing here
 -- touches the editor; render is pure and total.
 local text = require("rfc.help.w3c.text")
+local wrap = require("rfc.help.text").wrap
 local plan = require("rfc.help.w3c.model")
 local render_blocks = require("rfc.help.w3c.blocks").render
 local help = require("rfc.help")
 local link = text.link
-local M = { wrap = text.wrap, heading_tags = plan.heading_tags, model = plan.model }
+local M = { heading_tags = plan.heading_tags, model = plan.model }
 
 ---@param id string
 ---@param lines string[]
@@ -50,7 +51,7 @@ function M.render_model(model)
     end
     for _, m in ipairs(head.meta) do
         local term = m.term:match(":$") and m.term or (m.term .. ":")
-        for _, l in ipairs(M.wrap(term .. " " .. link(m.text, ctx), "")) do
+        for _, l in ipairs(wrap(term .. " " .. link(m.text, ctx), "")) do
             table.insert(out, l)
         end
     end

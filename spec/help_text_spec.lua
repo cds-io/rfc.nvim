@@ -1,0 +1,11 @@
+local text = require("rfc.help.text")
+
+describe("wrap", function()
+    it("wraps at spaces within the width, keeping the indent and never splitting a tag", function()
+        assert.are.same({ "    aaa bbb", "    ccc" }, text.wrap("aaa bbb ccc", "    ", 11))
+        assert.are.same({ "x", "|w3c-a#1.2.3.4.5.6.7.8.9|", "y" }, text.wrap("x |w3c-a#1.2.3.4.5.6.7.8.9| y", "", 10))
+    end)
+    it("keeps a hard break", function()
+        assert.are.same({ "a b", "c" }, text.wrap("a b\nc", "", 78))
+    end)
+end)
